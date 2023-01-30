@@ -14,23 +14,26 @@ import (
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
+			"passwordsafe_secret":          getSecretByPath(),
 			"passwordsafe_managed_account": getManagedAccount(),
 		},
 		Schema: map[string]*schema.Schema{
-			"apikey": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("APIKEY", ""),
+			"api_key": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"url": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("URL", ""),
+				Type:     schema.TypeString,
+				Required: true,
 			},
-			"accountname": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ACCOUNTNAME", ""),
+			"account_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"bt_verify_ca": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 		},
 		ConfigureContextFunc: providerConfigure,
@@ -39,9 +42,10 @@ func Provider() *schema.Provider {
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 
-	apikey := d.Get("apikey").(string)
+	apikey := d.Get("api_key").(string)
 	url := d.Get("url").(string)
-	accountname := d.Get("accountname").(string)
+	accountname := d.Get("account_name").(string)
+	btVerifyca := d.Get("bt_verify_ca").(bool)
 
 	apikey = strings.TrimSpace(apikey)
 	url = strings.TrimSpace(url)
@@ -74,13 +78,38 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		})
 		return nil, diags
 	}
-	return client.NewClient(url, apikey, accountname), diags
+	return client.NewClient(url, apikey, accountname, btVerifyca), diags
 
+}
+
+func getSecretByPath() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: dataSourceSecret,
+		Schema: map[string]*schema.Schema{
+			"path": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"title": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"separator": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "/",
+			},
+			"value": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
+	}
 }
 
 func getManagedAccount() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSecretManagedAccount,
+		ReadContext: dataSourceManagedAccount,
 		Schema: map[string]*schema.Schema{
 			"system_name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -98,7 +127,8 @@ func getManagedAccount() *schema.Resource {
 	}
 }
 
-func dataSourceSecretManagedAccount(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceManagedAccount(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
 	var diags diag.Diagnostics
 
 	apiClient := m.(*client.Client)
@@ -117,6 +147,30 @@ func dataSourceSecretManagedAccount(ctx context.Context, d *schema.ResourceData,
 	d.SetId(hash(secret))
 
 	return diags
+}
+
+func dataSourceSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	var diags diag.Diagnostics
+
+	apiClient := m.(*client.Client)
+
+	secretPath := d.Get("path").(string)
+	secretTitle := d.Get("title").(string)
+	separator := d.Get("separator").(string)
+
+	secret, err := apiClient.SecretFlow(secretPath, secretTitle, separator)
+
+	if err != nil {
+		return diag.FromErr(err)
+		return diags
+	}
+
+	d.Set("value", secret)
+	d.SetId(hash(secret))
+
+	return diags
+
 }
 
 func hash(s string) string {
