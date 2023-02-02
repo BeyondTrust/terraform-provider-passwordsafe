@@ -22,19 +22,13 @@ type Client struct {
 	httpClient  *http.Client
 }
 
-type User struct {
-	UserId       int    `json:"UserId"`
-	EmailAddress string `json:"EmailAddress"`
-	UserName     string `json:"UserName"`
-	Name         string `json:"Name"`
-}
-
-func NewClient(url string, apitoken string, accountname string) *Client {
+func NewClient(url string, apitoken string, accountname string, btVerifyca bool) *Client {
 
 	// TSL Config
 	var tr = &http.Transport{
 		TLSClientConfig: &tls.Config{
-			Renegotiation: tls.RenegotiateOnceAsClient,
+			Renegotiation:      tls.RenegotiateOnceAsClient,
+			InsecureSkipVerify: !btVerifyca,
 		},
 	}
 
@@ -52,6 +46,8 @@ func NewClient(url string, apitoken string, accountname string) *Client {
 		httpClient:  client,
 	}
 }
+
+/******************************************* ManageAccountFlow Methods *******************************************/
 
 func (c *Client) ManageAccountFlow(systemName string, accountName string) (string, error) {
 
@@ -114,31 +110,8 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string) (strin
 		return "", errors.New(error_message)
 	}
 	secretValue, _ := strconv.Unquote(secret)
+	c.SignOut()
 	return secretValue, nil
-}
-
-func (c *Client) SignAppin() (User, error) {
-	body, err := c.httpRequest("Auth/SignAppin", "POST", bytes.Buffer{})
-	if err != nil {
-		return User{}, err
-	}
-	defer body.Close()
-	bodyBytes, err := ioutil.ReadAll(body)
-	if err != nil {
-		return User{}, err
-	}
-
-	var userObject User
-	json.Unmarshal(bodyBytes, &userObject)
-	return userObject, nil
-}
-
-func (c *Client) SignOut() error {
-	_, err := c.httpRequest("Auth/SignAppin", "POST", bytes.Buffer{})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (c *Client) ManagedAccountGet(systemName string, accountName string) (entities.ManagedAccount, error) {
@@ -232,6 +205,130 @@ func (c *Client) ManagedAccountRequestCheckIn(requestId string) (string, error) 
 	}
 
 	return "", nil
+}
+
+/******************************************* SecretFlow Methods *******************************************/
+
+func (c *Client) SecretFlow(secretPath string, secretTitle string, separator string) (string, error) {
+
+	secretPath = strings.TrimSpace(secretPath)
+	secretTitle = strings.TrimSpace(secretTitle)
+	separator = strings.TrimSpace(separator)
+
+	if secretPath == "" {
+		return "", errors.New("Please use a valid Path value")
+	}
+
+	if secretTitle == "" {
+		return "", errors.New("Please use a valid Title value")
+	}
+
+	_, err := c.SignAppin()
+
+	if err != nil {
+		error_message := err.Error()
+		fmt.Println(error_message)
+		c.SignOut()
+		return "", errors.New(error_message)
+	}
+
+	secret, err := c.SecretGetSecretByPath(secretPath, secretTitle, separator)
+
+	if err != nil {
+		error_message := err.Error()
+		fmt.Println(error_message)
+		c.SignOut()
+		return "", errors.New(error_message)
+	}
+
+	if strings.ToUpper(secret.SecretType) == "FILE" {
+		fileSecretContent, err := c.SecretGetFileSecret(secret.Id)
+		if err != nil {
+			error_message := err.Error()
+			fmt.Println(error_message)
+			c.SignOut()
+			return "", errors.New(error_message)
+		}
+		return fileSecretContent, nil
+	}
+
+	c.SignOut()
+	return secret.Password, nil
+
+}
+
+func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, separator string) (entities.Secret, error) {
+
+	path := fmt.Sprintf("secrets-safe/secrets?title=%v&path=%v&separator=%v", secretTitle, secretPath, separator)
+
+	body, err := c.httpRequest(path, "GET", bytes.Buffer{})
+	if err != nil {
+		return entities.Secret{}, err
+	}
+
+	if err != nil {
+		return entities.Secret{}, err
+	}
+
+	bodyBytes, err := ioutil.ReadAll(body)
+
+	if err != nil {
+		return entities.Secret{}, err
+	}
+
+	var SecretObject entities.Secret
+	json.Unmarshal(bodyBytes, &SecretObject)
+	return SecretObject, nil
+}
+
+func (c *Client) SecretGetFileSecret(secretId string) (string, error) {
+
+	path := fmt.Sprintf("secrets-safe/secrets/%v/file/download", secretId)
+
+	body, err := c.httpRequest(path, "GET", bytes.Buffer{})
+
+	if err != nil {
+		return "", err
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	responseData, err := ioutil.ReadAll(body)
+	if err != nil {
+		return "", err
+	}
+
+	responseString := string(responseData)
+	return responseString, nil
+
+}
+
+/******************************************* Common Methods *******************************************/
+
+func (c *Client) SignAppin() (entities.User, error) {
+	body, err := c.httpRequest("Auth/SignAppin", "POST", bytes.Buffer{})
+	if err != nil {
+		return entities.User{}, err
+	}
+	defer body.Close()
+	bodyBytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		return entities.User{}, err
+	}
+
+	var userObject entities.User
+	json.Unmarshal(bodyBytes, &userObject)
+	return userObject, nil
+}
+
+func (c *Client) SignOut() error {
+	_, err := c.httpRequest("Auth/SignAppin", "POST", bytes.Buffer{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *Client) httpRequest(path string, method string, body bytes.Buffer) (closer io.ReadCloser, err error) {

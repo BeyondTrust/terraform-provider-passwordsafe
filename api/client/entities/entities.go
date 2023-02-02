@@ -7,27 +7,6 @@ type User struct {
 	Name         string `json:"Name"`
 }
 
-type Folder struct {
-	Id          string
-	Name        string
-	ParentId    string
-	Description string
-	UserGroupId int
-}
-
-type SecretMetadata struct {
-	Id         string
-	Title      string
-	FolderPath string
-	SecretType string
-}
-
-type TextSecret struct {
-	Id    string
-	Title string
-	Text  string
-}
-
 type ManagedAccount struct {
 	SystemId  int
 	AccountId int
