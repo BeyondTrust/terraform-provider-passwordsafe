@@ -8,9 +8,12 @@ import (
 
 func main_test() {
 	apiKey := config.PS_API_KEY
-	accountName := config.PS_ACCOUNT_NAME
+	apiAccountName := config.PS_ACCOUNT_NAME
 	url := config.PS_URL
-	apiClient := client.NewClient(url, apiKey, accountName, false)
+	clientCertificatePath := config.CERTIFICATE_PATH
+	clientCertificateName := config.CERTIFICATE_NAME
+	clientCertificatePassword := config.CERTIFICATE_PASSWORD
+	apiClient, _ := client.NewClient(url, apiKey, apiAccountName, false, clientCertificatePath, clientCertificateName, clientCertificatePassword)
 
 	secret, err := apiClient.SecretFlow("felipe_test_group\\sub1\\sub2", "Testfile1", "\\")
 

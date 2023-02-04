@@ -19,21 +19,43 @@ func Provider() *schema.Provider {
 		},
 		Schema: map[string]*schema.Schema{
 			"api_key": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The api key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
 			},
 			"url": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The URL for the Password Safe instance from which to request a secret.",
 			},
-			"account_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"api_account_name": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The user name for the api request to the Password Safe instance. For use when authenticating with an api key.",
 			},
-			"bt_verify_ca": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+			"verify_ca": &schema.Schema{
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Indicates whether to verify the certificate authority on the Password Safe instance. For use when authenticating to Password Safe.",
+			},
+			"client_certificates_folder_path": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The path to the Client Certificate associated with the Password Safe instance for use when authenticating with an api key using a Client Certificate.",
+			},
+			"client_certificate_name": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The name of the Client Certificate for use when authenticating with an api key using a Client Certificate.",
+			},
+			"client_certificate_password": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The password associated with the Client Certificate. For use when authenticating with an api key using a Client Certificate",
 			},
 		},
 		ConfigureContextFunc: providerConfigure,
@@ -44,8 +66,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	apikey := d.Get("api_key").(string)
 	url := d.Get("url").(string)
-	accountname := d.Get("account_name").(string)
-	btVerifyca := d.Get("bt_verify_ca").(bool)
+	accountname := d.Get("api_account_name").(string)
+	verifyca := d.Get("verify_ca").(bool)
+	clientCertificatePath := d.Get("client_certificates_folder_path").(string)
+	clientCertificateName := d.Get("client_certificate_name").(string)
+	clientCertificatePassword := d.Get("client_certificate_password").(string)
 
 	apikey = strings.TrimSpace(apikey)
 	url = strings.TrimSpace(url)
@@ -78,7 +103,12 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		})
 		return nil, diags
 	}
-	return client.NewClient(url, apikey, accountname, btVerifyca), diags
+
+	apiClient, err := client.NewClient(url, apikey, accountname, verifyca, clientCertificatePath, clientCertificateName, clientCertificatePassword)
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+	return apiClient, diags
 
 }
 
@@ -140,7 +170,6 @@ func dataSourceManagedAccount(ctx context.Context, d *schema.ResourceData, m int
 
 	if err != nil {
 		return diag.FromErr(err)
-		return diags
 	}
 
 	d.Set("value", secret)
@@ -163,7 +192,6 @@ func dataSourceSecret(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	if err != nil {
 		return diag.FromErr(err)
-		return diags
 	}
 
 	d.Set("value", secret)

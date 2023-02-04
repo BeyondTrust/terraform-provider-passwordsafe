@@ -4,31 +4,80 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"terraform-provider-passwordsafe/api/client/entities"
+
+	"software.sslmate.com/src/go-pkcs12"
 )
 
 type Client struct {
-	url         string
-	apitoken    string
-	accountname string
-	httpClient  *http.Client
+	url            string
+	apiKey         string
+	apiAccountName string
+	httpClient     *http.Client
 }
 
-func NewClient(url string, apitoken string, accountname string, btVerifyca bool) *Client {
+func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, clientCertificatePath string, clientCertificateName string, clientCertificatePassword string) (*Client, error) {
+
+	var cert tls.Certificate
+
+	if clientCertificatePath != "" {
+		pfxFile, err := ioutil.ReadFile(filepath.Join(clientCertificatePath, clientCertificateName))
+		if err != nil {
+			return nil, err
+		}
+
+		pfxFileBlock, err := pkcs12.ToPEM(pfxFile, clientCertificatePassword)
+		if err != nil {
+			return nil, err
+		}
+
+		var keyBlock, certificateBlock *pem.Block
+		for _, pemBlock := range pfxFileBlock {
+			if pemBlock.Type == "PRIVATE KEY" {
+				keyBlock = pemBlock
+			} else if pemBlock.Type == "CERTIFICATE" {
+				certificateBlock = pemBlock
+			}
+		}
+
+		if keyBlock == nil {
+			return nil, errors.New("Error getting Key Block")
+		}
+		if certificateBlock == nil {
+			return nil, errors.New("Error getting Certificate Block")
+		}
+
+		privateKeyData := pem.EncodeToMemory(keyBlock)
+		if err := ioutil.WriteFile(filepath.Join(clientCertificatePath, "certificate_key.pem"), privateKeyData, 0644); err != nil {
+			return nil, err
+		}
+
+		certData := pem.EncodeToMemory(certificateBlock)
+		if err := ioutil.WriteFile(filepath.Join(clientCertificatePath, "certificate_cer.pem"), certData, 0644); err != nil {
+			return nil, err
+		}
+		cert, err = tls.LoadX509KeyPair(filepath.Join(clientCertificatePath, "certificate_cer.pem"), filepath.Join(clientCertificatePath, "certificate_key.pem"))
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	// TSL Config
 	var tr = &http.Transport{
 		TLSClientConfig: &tls.Config{
 			Renegotiation:      tls.RenegotiateOnceAsClient,
-			InsecureSkipVerify: !btVerifyca,
+			InsecureSkipVerify: !verifyca,
+			Certificates:       []tls.Certificate{cert},
 		},
 	}
 
@@ -40,11 +89,11 @@ func NewClient(url string, apitoken string, accountname string, btVerifyca bool)
 		Jar:       jar,
 	}
 	return &Client{
-		url:         url,
-		apitoken:    apitoken,
-		accountname: accountname,
-		httpClient:  client,
-	}
+		url:            url,
+		apiKey:         apiKey,
+		apiAccountName: apiAccountName,
+		httpClient:     client,
+	}, nil
 }
 
 /******************************************* ManageAccountFlow Methods *******************************************/
@@ -339,7 +388,7 @@ func (c *Client) httpRequest(path string, method string, body bytes.Buffer) (clo
 		return nil, err
 	}
 
-	var authorizationHeader string = fmt.Sprintf("PS-Auth key=%v;runas=%v;", c.apitoken, c.accountname)
+	var authorizationHeader string = fmt.Sprintf("PS-Auth key=%v;runas=%v;", c.apiKey, c.apiAccountName)
 
 	req.Header = http.Header{
 		"Content-Type":  {"application/json"},
