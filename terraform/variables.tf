@@ -6,6 +6,18 @@ variable url {
   type = string
 }
 
-variable account_name {
+variable api_account_name {
+  type = string
+}
+
+variable client_certificates_folder_path {
+  type = string
+}
+
+variable client_certificate_name {
+  type = string
+}
+
+variable client_certificate_password {
   type = string
 }

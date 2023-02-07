@@ -9,9 +9,12 @@ terraform {
 
 provider "passwordsafe" {
   api_key = "${var.api_key}"
-  url    = "${var.url}"
-  account_name = "${var.account_name}"
-  bt_verify_ca = false
+  url = "${var.url}"
+  api_account_name = "${var.api_account_name}"
+  verify_ca = false
+  client_certificates_folder_path = "${var.client_certificates_folder_path}"
+  client_certificate_name = "${var.client_certificate_name}"
+  client_certificate_password = "${var.client_certificate_password}"
 
 }
 
