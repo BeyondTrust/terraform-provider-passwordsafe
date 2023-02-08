@@ -325,9 +325,9 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 		return entities.Secret{}, err
 	}
 
-	var SecretObject entities.Secret
-	json.Unmarshal(bodyBytes, &SecretObject)
-	return SecretObject, nil
+	var SecretObjectList []entities.Secret
+	json.Unmarshal([]byte(bodyBytes), &SecretObjectList)
+	return SecretObjectList[0], nil
 }
 
 func (c *Client) SecretGetFileSecret(secretId string) (string, error) {
