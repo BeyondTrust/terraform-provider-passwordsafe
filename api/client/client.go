@@ -326,7 +326,10 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 	}
 
 	var SecretObjectList []entities.Secret
-	json.Unmarshal([]byte(bodyBytes), &SecretObjectList)
+	err = json.Unmarshal([]byte(bodyBytes), &SecretObjectList)
+	if err != nil {
+		return entities.Secret{}, errors.New(err.Error() + ", Ensure Password Safe version is 23.1 or greater.")
+	}
 	return SecretObjectList[0], nil
 }
 
