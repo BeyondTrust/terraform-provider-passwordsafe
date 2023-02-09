@@ -58,15 +58,10 @@ func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, 
 		}
 
 		privateKeyData := pem.EncodeToMemory(keyBlock)
-		if err := ioutil.WriteFile(filepath.Join(clientCertificatePath, "certificate_key.pem"), privateKeyData, 0644); err != nil {
-			return nil, err
-		}
-
 		certData := pem.EncodeToMemory(certificateBlock)
-		if err := ioutil.WriteFile(filepath.Join(clientCertificatePath, "certificate_cer.pem"), certData, 0644); err != nil {
-			return nil, err
-		}
-		cert, err = tls.LoadX509KeyPair(filepath.Join(clientCertificatePath, "certificate_cer.pem"), filepath.Join(clientCertificatePath, "certificate_key.pem"))
+
+		cert, err = tls.X509KeyPair([]byte(certData), []byte(privateKeyData))
+
 		if err != nil {
 			return nil, err
 		}
