@@ -1,0 +1,219 @@
+name: $(MajorMinor).$(Revision)
+
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+    - main
+
+# output: are parameters used by pipeline.
+parameters:
+  - name: artifactUploadTargetFolder
+    displayName: "Artifactory uploads Target"
+    type: string
+    default: terraform-provider
+  - name: goplugversion
+    displayName: "goplugversion"
+    type: string
+    default: 1.0.0
+  - name: pushprovider 
+    displayName: "pushprovider"
+    type: boolean
+    default: true
+  - name: signplugin
+    displayName: "signplugin"
+    type: boolean
+    default: true
+    
+resources:
+- repo: self
+
+stages:
+# output: Build, test go plugin terraform provider.
+- stage: BuildTestPack
+  displayName: 'Build, test and pack artifacts'
+  # output: load windows image.
+  pool:
+    vmImage: 'windows-latest'
+
+  jobs:
+  - job: Build
+
+    steps:
+    # output: download repository into the windows machine.
+    - checkout: self
+      clean: true
+      fetchDepth: 1
+      persistCredentials: true
+
+    # output: download go version.
+    - task: GoTool@0
+      inputs:
+        version: '1.19.5' 
+    
+    # output: confirm was installed sucessfully go version.
+    - task: CmdLine@2
+      displayName: 'Verify GO'
+      inputs:
+        script: go version
+
+    # output: show libraries installed.
+    - task: CmdLine@2
+      displayName: 'Install Libraries ENV-GO'
+      inputs:
+        script: go env 
+
+    # output: show code repository loaded for compile.
+    - task: CmdLine@2
+      displayName: 'Validate GO Plugin code charged'
+      inputs:
+        script: dir $(System.DefaultWorkingDirectory)
+    
+    # output: build terraform-provider-passwordsafe_xxx.            
+    - task: Go@0
+      displayName: 'go build'
+      inputs:
+        command: build
+        arguments: '-o $(System.DefaultWorkingDirectory)/terraform-provider-passwordsafe_${{ parameters.goplugversion }}'
+    
+    # output: validate was created go plugin terraform-provider-passwordsafe_xxx.            
+    - task: CmdLine@2
+      displayName: 'go plugin exist'
+      inputs:
+        script: dir $(System.DefaultWorkingDirectory)
+
+    # output: create a folder for put the plugin go generated.
+    - task: CmdLine@2
+      displayName: 'create temp for deploy'
+      inputs:
+        script: mkdir $(System.DefaultWorkingDirectory)\tmp
+    
+    # output: copy the plugin for tmp to zip output
+    - task: CmdLine@2
+      displayName: 'copy the plugin tmp'
+      inputs:
+        script: copy $(System.DefaultWorkingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}  $(System.DefaultWorkingDirectory)\tmp\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+
+    # output: go inside folder tmp for zip the plugin terraform provider.
+    - task: CmdLine@2
+      displayName: 'access tmp folder'
+      inputs:
+        script: cd $(System.DefaultWorkingDirectory)/tmp
+
+    # output: validate if the plugin terraform provider was copy sucessfully.
+    - task: CmdLine@2
+      displayName: 'plugin prepared'
+      inputs:
+        script: dir $(System.DefaultWorkingDirectory)\tmp
+
+    # output: zip the file to upload.
+    - task: ArchiveFiles@2
+      displayName: 'zip terraform-provider'
+      condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+      inputs:
+        rootFolderOrFile: $(System.DefaultWorkingDirectory)\tmp\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+        includeRootFolder: true
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/tmp/terraform-provider-windows.zip'
+        replaceExistingArchive: true
+
+    # output: update zip plugin terraform provider into jfrog
+    - task: ArtifactoryGenericUpload@2
+      displayName: 'Upload artifacts'
+      condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+      inputs:
+        artifactoryService: 'ArtifactoryTokenAccess'
+        specSource: 'taskConfiguration'
+        fileSpec: |
+          {
+            "files": [
+              {
+                "pattern": "$(Build.ArtifactStagingDirectory)/tmp/terraform-provider-windows.zip",
+                "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-windows-$(Build.SourceBranchName)-$(Build.BuildID)/"
+              }
+            ]
+          }
+        collectBuildInfo: true
+        buildName: '$(Build.DefinitionName)'
+        buildNumber: '$(Build.BuildNumber)'
+        failNoOp: true
+    
+- stage: SignGOPlugin
+  displayName: 'Sign the Go Plugin'
+  pool:
+    name: Core-Build
+    vmImage: 'windows-latest'
+
+  jobs:
+  - job: Build
+
+    steps:
+      # output: download the zip file from jfrog.
+      - task: ArtifactoryGenericDownload@3
+        displayName: Download artifact
+        inputs:
+          connection: 'ArtifactoryTokenAccess'
+          specSource: 'taskConfiguration'
+          fileSpec: |
+            {
+              "files": [
+                {
+                  "pattern": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-windows-$(Build.SourceBranchName)-$(Build.BuildID)/terraform-provider-windows.zip",
+                  "target": "$(Build.ArtifactStagingDirectory)/",
+                  "flat": "true",
+                  "explode": "true"
+                }
+              ]
+            }
+          failNoOp: true
+      
+      # output: valid the zip file from jfrog.
+      - task: CmdLine@2
+        displayName: 'valid jfrom zip'
+        inputs:
+          script: dir $(Build.ArtifactStagingDirectory)
+
+      # output: sign the packager utility
+      - ${{ if eq(parameters.signplugin, true) }}:
+        - template: "sign-assemblies.yml"
+          parameters:
+            fileNames:
+              $(Build.ArtifactStagingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+
+      # output: zip the sign plugin
+      - task: ArchiveFiles@2
+        displayName: 'zip terraform-provider-signed'
+        condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+        inputs:
+          rootFolderOrFile: $(Build.ArtifactStagingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+          includeRootFolder: true
+          archiveType: 'zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/terraform-provider-windows-signed.zip'
+          replaceExistingArchive: true
+      
+      # output: update zip plugin-sign to jfrog.        
+      - task: ArtifactoryGenericUpload@2
+        displayName: 'Upload Go Plugin Signed'
+        condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+        inputs:
+          artifactoryService: 'ArtifactoryTokenAccess'
+          specSource: 'taskConfiguration'
+          fileSpec: |
+            {
+              "files": [
+                {
+                  "pattern": "$(Build.ArtifactStagingDirectory)/terraform-provider-windows-signed.zip",
+                  "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-windows-$(Build.SourceBranchName)-$(Build.BuildID)/"
+                }
+              ]
+            }
+          collectBuildInfo: true
+          buildName: '$(Build.DefinitionName)'
+          buildNumber: '$(Build.BuildNumber)'
+          failNoOp: true

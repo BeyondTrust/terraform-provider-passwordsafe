@@ -1,0 +1,10 @@
+parameters:
+  - name: fileNames
+    type: string
+
+steps:
+  - task: CmdLine@1
+    displayName: Sign assemblies
+    inputs:
+      filename: signtool
+      arguments: sign /fd SHA256 /a /t "http://timestamp.digicert.com" ${{ parameters.fileNames }}
