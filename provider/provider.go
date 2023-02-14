@@ -1,3 +1,5 @@
+// Copyright 2023 BeyondTrust. All rights reserved.
+// Package Provider implements a terraform provider that can talk with Beyondtrust Secret Safe API.
 package provider
 
 import (
@@ -11,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// Provider Definition.
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		DataSourcesMap: map[string]*schema.Resource{
@@ -62,6 +65,7 @@ func Provider() *schema.Provider {
 	}
 }
 
+// Provider Init Config.
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 
 	apikey := d.Get("api_key").(string)
@@ -112,9 +116,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 }
 
+// getSecretByPath DataSource.
 func getSecretByPath() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSecret,
+		ReadContext: getSecretByPathReadContext,
 		Schema: map[string]*schema.Schema{
 			"path": &schema.Schema{
 				Type:     schema.TypeString,
@@ -137,9 +142,10 @@ func getSecretByPath() *schema.Resource {
 	}
 }
 
+// getManagedAccount DataSource.
 func getManagedAccount() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceManagedAccount,
+		ReadContext: getManagedAccountReadContext,
 		Schema: map[string]*schema.Schema{
 			"system_name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -157,7 +163,8 @@ func getManagedAccount() *schema.Resource {
 	}
 }
 
-func dataSourceManagedAccount(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// Read context for getManagedAccount Datasource.
+func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
@@ -166,7 +173,8 @@ func dataSourceManagedAccount(ctx context.Context, d *schema.ResourceData, m int
 	system_name := d.Get("system_name").(string)
 	account_name := d.Get("account_name").(string)
 
-	secret, err := apiClient.ManageAccountFlow(system_name, account_name)
+	paths := make(map[string]string)
+	secret, err := apiClient.ManageAccountFlow(system_name, account_name, paths)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -178,7 +186,8 @@ func dataSourceManagedAccount(ctx context.Context, d *schema.ResourceData, m int
 	return diags
 }
 
-func dataSourceSecret(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+// Read context for getSecretByPath Datasource.
+func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	var diags diag.Diagnostics
 
@@ -188,7 +197,8 @@ func dataSourceSecret(ctx context.Context, d *schema.ResourceData, m interface{}
 	secretTitle := d.Get("title").(string)
 	separator := d.Get("separator").(string)
 
-	secret, err := apiClient.SecretFlow(secretPath, secretTitle, separator)
+	paths := make(map[string]string)
+	secret, err := apiClient.SecretFlow(secretPath, secretTitle, separator, paths)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -201,6 +211,7 @@ func dataSourceSecret(ctx context.Context, d *schema.ResourceData, m interface{}
 
 }
 
+// hash function.
 func hash(s string) string {
 	sha := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(sha[:])

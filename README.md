@@ -1,20 +1,41 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Terraform Provider
+The Password Safe Terraform provider is a Terraform integration for Password Safe which enables using Password Safe secrets management capabilities with Terraform.
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+Terraform configuration files can be configured to retrieve secrets from Password Safe.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+ Permissions for access to secrets in Password Safe can be granted to specific accounts within BeyondInsight.
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Set up project
+- Install Go: [https://go.dev/doc/install](https://go.dev/doc/install)
+- Install Terraform: [https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+- Clone Repository
+
+    ```bash
+    git clone https://dev.azure.com/beyondtrust/BT/_git/passwordsafe-integrations-terraform
+    ```
+
+- Generate Provider Binary File from passwordsafe-integrations-terraform folder
+
+    ```bash
+    go build -o terraform-provider-passwordsafe_1.0.0
+    ```
+- Move Binary file to proper folder to be recognized by Terraform
+
+    On widows Path looks like:
+    
+    _C:\Users\<username>\AppData\Roaming\terraform.d\plugins\providers\beyondtrust\passwordsafe\1.0.0\windows_amd64_
+    
+- To run unit tests you can use:
+
+    ```bash
+   go test ./...
+    ```
+
+- Update _terraform/main.tf_ and _terraform/terraform.tfvars_ files according to your needs and configs and run terraform commands:
+
+    ```bash
+    terraform init
+    terraform plan
+    ```
+- to get more information about terraform, please go: [https://beyondtrust.atlassian.net/wiki/spaces/BI/pages/231800866/Password+Safe+Terraform](https://beyondtrust.atlassian.net/wiki/spaces/BI/pages/231800866/Password+Safe+Terraform)

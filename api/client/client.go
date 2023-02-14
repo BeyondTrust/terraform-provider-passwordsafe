@@ -1,3 +1,6 @@
+// Copyright 2023 BeyondTrust. All rights reserved.
+// Package client implements functions to call Beyondtrust Secret Safe API.
+
 package client
 
 import (
@@ -26,6 +29,7 @@ type Client struct {
 	httpClient     *http.Client
 }
 
+// NewClient returns a http.Transport object to call secret safe API.
 func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, clientCertificatePath string, clientCertificateName string, clientCertificatePassword string) (*Client, error) {
 
 	var cert tls.Certificate
@@ -93,10 +97,21 @@ func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, 
 
 /******************************************* ManageAccountFlow Methods *******************************************/
 
-func (c *Client) ManageAccountFlow(systemName string, accountName string) (string, error) {
+// ManageAccountFlow returns value for a specific System Name and Account Name.
+func (c *Client) ManageAccountFlow(systemName string, accountName string, paths map[string]string) (string, error) {
+
+	if len(paths) == 0 {
+		paths["SignAppinPath"] = "Auth/SignAppin"
+		paths["SignAppOutPath"] = "Auth/Signout"
+		paths["ManagedAccountGetPath"] = fmt.Sprintf("ManagedAccounts?systemName=%v&accountName=%v", systemName, accountName)
+		paths["ManagedAccountCreateRequestPath"] = "Requests"
+		paths["CredentialByRequestIdPath"] = "Credentials/%v"
+		paths["ManagedAccountRequestCheckInPath"] = "Requests/%v/checkin"
+	}
 
 	systemName = strings.TrimSpace(systemName)
 	accountName = strings.TrimSpace(accountName)
+	SignAppinOutUrl := c.requestPath(paths["SignAppOutPath"])
 
 	if systemName == "" {
 		return "", errors.New("Please use a valid system_name value")
@@ -106,63 +121,61 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string) (strin
 		return "", errors.New("Please use a valid account_name value")
 	}
 
-	_, err := c.SignAppin()
+	SignAppinUrl := c.requestPath(paths["SignAppinPath"])
+	_, err := c.SignAppin(SignAppinUrl)
 
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut()
+		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
 
-	managedAccount, err := c.ManagedAccountGet(systemName, accountName)
+	ManagedAccountGetUrl := c.requestPath(paths["ManagedAccountGetPath"])
+	managedAccount, err := c.ManagedAccountGet(systemName, accountName, ManagedAccountGetUrl)
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut()
+		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
 
-	requestId, err := c.ManagedAccountCreateRequest(managedAccount.SystemId, managedAccount.AccountId)
+	ManagedAccountCreateRequestUrl := c.requestPath(paths["ManagedAccountCreateRequestPath"])
+	requestId, err := c.ManagedAccountCreateRequest(managedAccount.SystemId, managedAccount.AccountId, ManagedAccountCreateRequestUrl)
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut()
+		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
 
-	secret, err := c.ManagedAccountGetCredentialByRequestId(requestId)
+	CredentialByRequestIdUrl := c.requestPath(fmt.Sprintf(paths["CredentialByRequestIdPath"], requestId))
+	secret, err := c.CredentialByRequestId(requestId, CredentialByRequestIdUrl)
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut()
+		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
 
-	_, err = c.ManagedAccountRequestCheckIn(requestId)
-	if err != nil {
-		error_message := err.Error()
-		fmt.Println(error_message)
-		c.SignOut()
-		return "", errors.New(error_message)
-	}
+	ManagedAccountRequestCheckInPath := fmt.Sprintf(paths["ManagedAccountRequestCheckInPath"], requestId)
+	ManagedAccountRequestCheckInUrl := c.requestPath(ManagedAccountRequestCheckInPath)
+	_, err = c.ManagedAccountRequestCheckIn(requestId, ManagedAccountRequestCheckInUrl)
 
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut()
+		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
 	secretValue, _ := strconv.Unquote(secret)
-	c.SignOut()
+	c.SignOut(SignAppinOutUrl)
 	return secretValue, nil
 }
 
-func (c *Client) ManagedAccountGet(systemName string, accountName string) (entities.ManagedAccount, error) {
+func (c *Client) ManagedAccountGet(systemName string, accountName string, url string) (entities.ManagedAccount, error) {
 
-	path := fmt.Sprintf("ManagedAccounts?systemName=%v&accountName=%v", systemName, accountName)
-
-	body, err := c.httpRequest(path, "GET", bytes.Buffer{})
+	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 	if err != nil {
 		return entities.ManagedAccount{}, err
 	}
@@ -183,14 +196,34 @@ func (c *Client) ManagedAccountGet(systemName string, accountName string) (entit
 
 }
 
-func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int) (string, error) {
+// ManagedAccountCreateRequest calls Secret Safe API Requests enpoint and returns a request Id as string.
+func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, url string) (string, error) {
 
 	data := fmt.Sprintf(`{"SystemID":%v, "AccountID":%v, "DurationMinutes":5, "Reason":"Tesr", "ConflictOption": "reuse"}`, systemName, accountName)
 	b := bytes.NewBufferString(data)
 
-	path := fmt.Sprintf("Requests")
+	body, err := c.httpRequest(url, "POST", *b)
+	if err != nil {
+		return "", err
+	}
 
-	body, err := c.httpRequest(path, "POST", *b)
+	bodyBytes, err := ioutil.ReadAll(body)
+
+	if err != nil {
+		return "", err
+	}
+
+	responseString := string(bodyBytes)
+
+	return responseString, nil
+
+}
+
+// CredentialByRequestId calls Secret Safe API Credentials/<request_id>
+// enpoint and returns secret value by request Id.
+func (c *Client) CredentialByRequestId(requestId string, url string) (string, error) {
+
+	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 	if err != nil {
 		return "", err
 	}
@@ -211,39 +244,12 @@ func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int) (s
 
 }
 
-func (c *Client) ManagedAccountGetCredentialByRequestId(requestId string) (string, error) {
-
-	path := fmt.Sprintf("Credentials/%v", requestId)
-
-	body, err := c.httpRequest(path, "GET", bytes.Buffer{})
-	if err != nil {
-		return "", err
-	}
-
-	if err != nil {
-		return "", err
-	}
-
-	bodyBytes, err := ioutil.ReadAll(body)
-
-	if err != nil {
-		return "", err
-	}
-
-	responseString := string(bodyBytes)
-
-	return responseString, nil
-
-}
-
-func (c *Client) ManagedAccountRequestCheckIn(requestId string) (string, error) {
+// ManagedAccountRequestCheckIn calls Secret Safe API "Requests/<request_id>/checkin enpoint.
+func (c *Client) ManagedAccountRequestCheckIn(requestId string, url string) (string, error) {
 
 	data := "{}"
 	b := bytes.NewBufferString(data)
-
-	path := fmt.Sprintf("Requests/%v/checkin", requestId)
-
-	_, err := c.httpRequest(path, "PUT", *b)
+	_, err := c.httpRequest(url, "PUT", *b)
 	if err != nil {
 		return "", err
 	}
@@ -253,11 +259,20 @@ func (c *Client) ManagedAccountRequestCheckIn(requestId string) (string, error) 
 
 /******************************************* SecretFlow Methods *******************************************/
 
-func (c *Client) SecretFlow(secretPath string, secretTitle string, separator string) (string, error) {
+// SecretFlow returns secret value for a specific path and title.
+func (c *Client) SecretFlow(secretPath string, secretTitle string, separator string, paths map[string]string) (string, error) {
+
+	if len(paths) == 0 {
+		paths["SignAppinPath"] = "Auth/SignAppin"
+		paths["SignAppOutPath"] = "Auth/Signout"
+		paths["SecretGetSecretByPathPath"] = fmt.Sprintf("secrets-safe/secrets?title=%v&path=%v&separator=%v", secretTitle, secretPath, separator)
+		paths["SecretGetFileSecretPath"] = "secrets-safe/secrets/%v/file/download"
+	}
 
 	secretPath = strings.TrimSpace(secretPath)
 	secretTitle = strings.TrimSpace(secretTitle)
 	separator = strings.TrimSpace(separator)
+	SignAppinOutUrl := c.requestPath(paths["SignAppOutPath"])
 
 	if secretPath == "" {
 		return "", errors.New("Please use a valid Path value")
@@ -267,45 +282,49 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 		return "", errors.New("Please use a valid Title value")
 	}
 
-	_, err := c.SignAppin()
+	SignAppinUrl := c.requestPath(paths["SignAppinPath"])
+	_, err := c.SignAppin(SignAppinUrl)
 
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut()
+		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
 
-	secret, err := c.SecretGetSecretByPath(secretPath, secretTitle, separator)
+	SecretGetSecretByPathUrl := c.requestPath(paths["SecretGetSecretByPathPath"])
+	secret, err := c.SecretGetSecretByPath(secretPath, secretTitle, separator, SecretGetSecretByPathUrl)
 
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut()
+		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
 
+	// When secret type is FILE, it calls SecretGetFileSecret method.
 	if strings.ToUpper(secret.SecretType) == "FILE" {
-		fileSecretContent, err := c.SecretGetFileSecret(secret.Id)
+
+		SecretGetFileSecretUrl := c.requestPath(fmt.Sprintf(paths["SecretGetFileSecretPath"], secret.Id))
+		fileSecretContent, err := c.SecretGetFileSecret(secret.Id, SecretGetFileSecretUrl)
 		if err != nil {
 			error_message := err.Error()
 			fmt.Println(error_message)
-			c.SignOut()
+			c.SignOut(SignAppinOutUrl)
 			return "", errors.New(error_message)
 		}
 		return fileSecretContent, nil
 	}
 
-	c.SignOut()
+	c.SignOut(SignAppinOutUrl)
 	return secret.Password, nil
 
 }
 
-func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, separator string) (entities.Secret, error) {
+// SecretGetSecretByPath returns secret object for a specific path, title.
+func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, separator string, url string) (entities.Secret, error) {
 
-	path := fmt.Sprintf("secrets-safe/secrets?title=%v&path=%v&separator=%v", secretTitle, secretPath, separator)
-
-	body, err := c.httpRequest(path, "GET", bytes.Buffer{})
+	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 	if err != nil {
 		return entities.Secret{}, err
 	}
@@ -328,11 +347,11 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 	return SecretObjectList[0], nil
 }
 
-func (c *Client) SecretGetFileSecret(secretId string) (string, error) {
+// SecretGetFileSecret call secrets-safe/secrets/<secret_id>/file/download enpoint
+// and returns file secret value.
+func (c *Client) SecretGetFileSecret(secretId string, url string) (string, error) {
 
-	path := fmt.Sprintf("secrets-safe/secrets/%v/file/download", secretId)
-
-	body, err := c.httpRequest(path, "GET", bytes.Buffer{})
+	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 
 	if err != nil {
 		return "", err
@@ -354,8 +373,9 @@ func (c *Client) SecretGetFileSecret(secretId string) (string, error) {
 
 /******************************************* Common Methods *******************************************/
 
-func (c *Client) SignAppin() (entities.User, error) {
-	body, err := c.httpRequest("Auth/SignAppin", "POST", bytes.Buffer{})
+func (c *Client) SignAppin(url string) (entities.User, error) {
+
+	body, err := c.httpRequest(url, "POST", bytes.Buffer{})
 	if err != nil {
 		return entities.User{}, err
 	}
@@ -370,16 +390,17 @@ func (c *Client) SignAppin() (entities.User, error) {
 	return userObject, nil
 }
 
-func (c *Client) SignOut() error {
-	_, err := c.httpRequest("Auth/SignAppin", "POST", bytes.Buffer{})
+// SignAppin signs out Secret Safe API.
+func (c *Client) SignOut(url string) error {
+	_, err := c.httpRequest(url, "POST", bytes.Buffer{})
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Client) httpRequest(path string, method string, body bytes.Buffer) (closer io.ReadCloser, err error) {
-	url := c.requestPath(path)
+// httpRequest template for Secret Safe API requests.
+func (c *Client) httpRequest(url string, method string, body bytes.Buffer) (closer io.ReadCloser, err error) {
 
 	req, err := http.NewRequest(method, url, &body)
 	if err != nil {
@@ -411,6 +432,7 @@ func (c *Client) httpRequest(path string, method string, body bytes.Buffer) (clo
 	return resp.Body, nil
 }
 
+// requestPath Build endpint path.
 func (c *Client) requestPath(path string) string {
 	return fmt.Sprintf("%v/%v", c.url, path)
 }

@@ -1,3 +1,5 @@
+// Copyright 2023 BeyondTrust. All rights reserved.
+// Package entities implements DTO's used by Beyondtrust Secret Safe API.
 package entities
 
 type User struct {
