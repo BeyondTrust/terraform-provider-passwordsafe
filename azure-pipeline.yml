@@ -35,10 +35,9 @@ resources:
 - repo: self
 
 stages:
-# output: Build, test go plugin terraform provider.
+# Build terraform providers.
 - stage: BuildTestPack
-  displayName: 'Build, test and pack artifacts'
-  # output: load windows image.
+  displayName: 'Build providers and uplload to jfrog'
   pool:
     vmImage: 'windows-latest'
 
@@ -69,63 +68,103 @@ stages:
       inputs:
         script: go env 
 
-    # output: show code repository loaded for compile.
-    - task: CmdLine@2
-      displayName: 'Validate GO Plugin code charged'
-      inputs:
-        script: dir $(System.DefaultWorkingDirectory)
+    # Windows
     
-    # output: build terraform-provider-passwordsafe_xxx.            
+    # build windows amd64 terraform-provider-passwordsafe_xxx.            
     - task: Go@0
-      displayName: 'go build'
+      displayName: 'go build windows'
       inputs:
         command: build
         arguments: '-o $(System.DefaultWorkingDirectory)/terraform-provider-passwordsafe_${{ parameters.goplugversion }}'
+
+    # create a folder to save the windows provider to.
+    - task: CmdLine@2
+      displayName: 'create folder for windows'
+      inputs:
+        script: mkdir $(System.DefaultWorkingDirectory)\win
     
-    # output: validate was created go plugin terraform-provider-passwordsafe_xxx.            
+    # copy the provider to the folder
     - task: CmdLine@2
-      displayName: 'go plugin exist'
+      displayName: 'copy provider to windows folder'
       inputs:
-        script: dir $(System.DefaultWorkingDirectory)
+        script: copy $(System.DefaultWorkingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}  $(System.DefaultWorkingDirectory)\win\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
 
-    # output: create a folder for put the plugin go generated.
-    - task: CmdLine@2
-      displayName: 'create temp for deploy'
-      inputs:
-        script: mkdir $(System.DefaultWorkingDirectory)\tmp
-    
-    # output: copy the plugin for tmp to zip output
-    - task: CmdLine@2
-      displayName: 'copy the plugin tmp'
-      inputs:
-        script: copy $(System.DefaultWorkingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}  $(System.DefaultWorkingDirectory)\tmp\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
-
-    # output: go inside folder tmp for zip the plugin terraform provider.
-    - task: CmdLine@2
-      displayName: 'access tmp folder'
-      inputs:
-        script: cd $(System.DefaultWorkingDirectory)/tmp
-
-    # output: validate if the plugin terraform provider was copy sucessfully.
-    - task: CmdLine@2
-      displayName: 'plugin prepared'
-      inputs:
-        script: dir $(System.DefaultWorkingDirectory)\tmp
-
-    # output: zip the file to upload.
+    # zip up the windows provider to be upload.
     - task: ArchiveFiles@2
-      displayName: 'zip terraform-provider'
+      displayName: 'zip windows terraform-provider'
       condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
       inputs:
-        rootFolderOrFile: $(System.DefaultWorkingDirectory)\tmp\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+        rootFolderOrFile: $(System.DefaultWorkingDirectory)\win\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
         includeRootFolder: true
         archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/tmp/terraform-provider-windows.zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/win/terraform-provider-windows-amd64.zip'
         replaceExistingArchive: true
 
-    # output: update zip plugin terraform provider into jfrog
+    # Linux
+       
+    # build linux amd64 terraform-provider-passwordsafe_xxx.
+    - task: CmdLine@2
+      displayName: 'go build linux'
+      inputs:
+        script: "SET GOOS=linux&& SET GOARCH=amd64&& go build -o $(System.DefaultWorkingDirectory)/terraform-provider-passwordsafe_${{ parameters.goplugversion }}"
+
+    # create a linux folder to copy the provider to.
+    - task: CmdLine@2
+      displayName: 'create linux folder'
+      inputs:
+        script: mkdir $(System.DefaultWorkingDirectory)\lin
+    
+    # copy the linux provider to the folder
+    - task: CmdLine@2
+      displayName: 'copy provider to linux folder'
+      inputs:
+        script: copy $(System.DefaultWorkingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}  $(System.DefaultWorkingDirectory)\lin\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+
+    # zip up the linux provider to be uploaded.
+    - task: ArchiveFiles@2
+      displayName: 'zip linux terraform-provider'
+      condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+      inputs:
+        rootFolderOrFile: $(System.DefaultWorkingDirectory)\lin\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+        includeRootFolder: true
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/lin/terraform-provider-linux-amd64.zip'
+        replaceExistingArchive: true
+
+    # Mac
+
+    # build mac amd64 terraform-provider-passwordsafe_xxx. 
+    - task: CmdLine@2
+      displayName: 'go build mac'
+      inputs:
+        script: "SET GOOS=darwin&& SET GOARCH=amd64&& go build -o $(System.DefaultWorkingDirectory)/terraform-provider-passwordsafe_${{ parameters.goplugversion }}"
+
+    # create a mac folder to copy the provider to.
+    - task: CmdLine@2
+      displayName: 'create mac folder'
+      inputs:
+        script: mkdir $(System.DefaultWorkingDirectory)\mac
+    
+    # copy the mac provider to the folder
+    - task: CmdLine@2
+      displayName: 'copy provider to mac folder'
+      inputs:
+        script: copy $(System.DefaultWorkingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}  $(System.DefaultWorkingDirectory)\mac\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+
+    # zip up the mac provider to upload.
+    - task: ArchiveFiles@2
+      displayName: 'zip mac terraform-provider'
+      condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+      inputs:
+        rootFolderOrFile: $(System.DefaultWorkingDirectory)\mac\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+        includeRootFolder: true
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/mac/terraform-provider-mac-amd64.zip'
+        replaceExistingArchive: true
+
+    # Upload zipped providers to jfrog
     - task: ArtifactoryGenericUpload@2
-      displayName: 'Upload artifacts'
+      displayName: 'Upload providers'
       condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
       inputs:
         artifactoryService: 'ArtifactoryTokenAccess'
@@ -134,8 +173,16 @@ stages:
           {
             "files": [
               {
-                "pattern": "$(Build.ArtifactStagingDirectory)/tmp/terraform-provider-windows.zip",
-                "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-windows-$(Build.SourceBranchName)-$(Build.BuildID)/"
+                "pattern": "$(Build.ArtifactStagingDirectory)/win/terraform-provider-windows-amd64.zip",
+                "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/"
+              },
+              {
+                "pattern": "$(Build.ArtifactStagingDirectory)/lin/terraform-provider-linux-amd64.zip",
+                "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/"
+              },
+              {
+                "pattern": "$(Build.ArtifactStagingDirectory)/mac/terraform-provider-mac-amd64.zip",
+                "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/"
               }
             ]
           }
@@ -144,8 +191,9 @@ stages:
         buildNumber: '$(Build.BuildNumber)'
         failNoOp: true
     
+  # The providers must be signed on Core-Build because these VMs have a certificate used for signing.
 - stage: SignGOPlugin
-  displayName: 'Sign the Go Plugin'
+  displayName: 'Sign the providers'
   pool:
     name: Core-Build
     vmImage: 'windows-latest'
@@ -154,9 +202,27 @@ stages:
   - job: Build
 
     steps:
-      # output: download the zip file from jfrog.
+      # create a windows folder to download the provider to.
+      - task: CmdLine@2
+        displayName: 'create windows folder'
+        inputs:
+          script: if not exist $(System.DefaultWorkingDirectory)\win mkdir $(System.DefaultWorkingDirectory)\win
+
+      # create a linux folder to download the provider to.
+      - task: CmdLine@2
+        displayName: 'create linux folder'
+        inputs:
+          script: if not exist $(System.DefaultWorkingDirectory)\lin mkdir $(System.DefaultWorkingDirectory)\lin
+
+      # create a mac folder to download the provider to.
+      - task: CmdLine@2
+        displayName: 'create mac folder'
+        inputs:
+          script: if not exist $(System.DefaultWorkingDirectory)\mac mkdir $(System.DefaultWorkingDirectory)\mac
+
+      # download the zipped providers from jfrog.
       - task: ArtifactoryGenericDownload@3
-        displayName: Download artifact
+        displayName: Download providers
         inputs:
           connection: 'ArtifactoryTokenAccess'
           specSource: 'taskConfiguration'
@@ -164,42 +230,84 @@ stages:
             {
               "files": [
                 {
-                  "pattern": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-windows-$(Build.SourceBranchName)-$(Build.BuildID)/terraform-provider-windows.zip",
-                  "target": "$(Build.ArtifactStagingDirectory)/",
+                  "pattern": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/terraform-provider-windows-amd64.zip",
                   "flat": "true",
-                  "explode": "true"
+                  "explode": "true",
+                  "target": "$(System.DefaultWorkingDirectory)/win/"
+                },
+                {
+                  "pattern": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/terraform-provider-linux-amd64.zip",
+                  "flat": "true",
+                  "explode": "true",
+                  "target": "$(System.DefaultWorkingDirectory)/lin/"
+                },
+                {
+                  "pattern": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/terraform-provider-mac-amd64.zip",
+                  "flat": "true",
+                  "explode": "true",
+                  "target": "$(System.DefaultWorkingDirectory)/mac/"
                 }
               ]
             }
           failNoOp: true
-      
-      # output: valid the zip file from jfrog.
-      - task: CmdLine@2
-        displayName: 'valid jfrom zip'
-        inputs:
-          script: dir $(Build.ArtifactStagingDirectory)
 
-      # output: sign the packager utility
+      # sign the windows provider
       - ${{ if eq(parameters.signplugin, true) }}:
         - template: "sign-assemblies.yml"
           parameters:
             fileNames:
-              $(Build.ArtifactStagingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+              $(System.DefaultWorkingDirectory)\win\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
 
-      # output: zip the sign plugin
+      # # sign the linux provider
+      # - ${{ if eq(parameters.signplugin, true) }}:
+      #   - template: "sign-assemblies.yml"
+      #     parameters:
+      #       fileNames:
+      #         $(System.DefaultWorkingDirectory)\lin\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+
+      # # sign the mac provider
+      # - ${{ if eq(parameters.signplugin, true) }}:
+      #   - template: "sign-assemblies.yml"
+      #     parameters:
+      #       fileNames:
+      #         $(System.DefaultWorkingDirectory)\mac\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+
+      # zip the signed windows provider
       - task: ArchiveFiles@2
-        displayName: 'zip terraform-provider-signed'
+        displayName: 'zip windows terraform-provider-signed'
         condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
         inputs:
-          rootFolderOrFile: $(Build.ArtifactStagingDirectory)\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+          rootFolderOrFile: $(System.DefaultWorkingDirectory)\win\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
           includeRootFolder: true
           archiveType: 'zip'
-          archiveFile: '$(Build.ArtifactStagingDirectory)/terraform-provider-windows-signed.zip'
+          archiveFile: '$(Build.ArtifactStagingDirectory)/terraform-provider-windows-amd64-signed.zip'
           replaceExistingArchive: true
+
+      # # zip the signed linux provider
+      # - task: ArchiveFiles@2
+      #   displayName: 'zip linux terraform-provider-signed'
+      #   condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+      #   inputs:
+      #     rootFolderOrFile: $(System.DefaultWorkingDirectory)\lin\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+      #     includeRootFolder: true
+      #     archiveType: 'zip'
+      #     archiveFile: '$(Build.ArtifactStagingDirectory)/terraform-provider-linux-amd64-signed.zip'
+      #     replaceExistingArchive: true
+
+      # # zip the signed mac provider
+      # - task: ArchiveFiles@2
+      #   displayName: 'zip mac terraform-provider-signed'
+      #   condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
+      #   inputs:
+      #     rootFolderOrFile: $(System.DefaultWorkingDirectory)\mac\terraform-provider-passwordsafe_${{ parameters.goplugversion }}
+      #     includeRootFolder: true
+      #     archiveType: 'zip'
+      #     archiveFile: '$(Build.ArtifactStagingDirectory)/terraform-provider-mac-amd64-signed.zip'
+      #     replaceExistingArchive: true
       
-      # output: update zip plugin-sign to jfrog.        
+      # upload zipped signed providers to jfrog.        
       - task: ArtifactoryGenericUpload@2
-        displayName: 'Upload Go Plugin Signed'
+        displayName: 'Upload signed providers'
         condition: and(succeeded(), eq('${{ parameters.pushprovider }}', 'true'))
         inputs:
           artifactoryService: 'ArtifactoryTokenAccess'
@@ -208,8 +316,8 @@ stages:
             {
               "files": [
                 {
-                  "pattern": "$(Build.ArtifactStagingDirectory)/terraform-provider-windows-signed.zip",
-                  "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-windows-$(Build.SourceBranchName)-$(Build.BuildID)/"
+                  "pattern": "$(Build.ArtifactStagingDirectory)/terraform-provider-windows-amd64-signed.zip",
+                  "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/"
                 }
               ]
             }
@@ -217,3 +325,13 @@ stages:
           buildName: '$(Build.DefinitionName)'
           buildNumber: '$(Build.BuildNumber)'
           failNoOp: true
+
+                # ,
+                # {
+                #   "pattern": "$(Build.ArtifactStagingDirectory)/terraform-provider-linux-amd64-signed.zip",
+                #   "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/"
+                # },
+                # {
+                #   "pattern": "$(Build.ArtifactStagingDirectory)/terraform-provider-mac-amd64-signed.zip",
+                #   "target": "eng-generic-scratch-local/${{ parameters.artifactUploadTargetFolder }}/terraform-provider-$(Build.SourceBranchName)-$(Build.BuildID)/"
+                # }
