@@ -6,6 +6,7 @@ import (
 	"terraform-provider-passwordsafe/config"
 )
 
+// main -This is just for testing purposes.
 func main_test() {
 	apiKey := config.PS_API_KEY
 	apiAccountName := config.PS_ACCOUNT_NAME
@@ -15,7 +16,9 @@ func main_test() {
 	clientCertificatePassword := config.CERTIFICATE_PASSWORD
 	apiClient, _ := client.NewClient(url, apiKey, apiAccountName, false, clientCertificatePath, clientCertificateName, clientCertificatePassword)
 
-	secret, err := apiClient.SecretFlow("felipe_test_group\\sub1\\sub2", "Testfile1", "\\")
+	paths := make(map[string]string)
+
+	secret, err := apiClient.SecretFlow("felipe_test_group\\sub1\\sub2", "Testfile1", "\\", paths)
 
 	if err != nil {
 		fmt.Printf("Error in SecretFlow: %v", err.Error())
@@ -23,7 +26,7 @@ func main_test() {
 
 	fmt.Println(secret)
 
-	secret, err = apiClient.SecretFlow("felipe_test_group*sub1*sub2", "Testfile1", "*")
+	secret, err = apiClient.SecretFlow("felipe_test_group*sub1*sub2", "Testfile1", "*", paths)
 
 	if err != nil {
 		fmt.Printf("Error in SecretFlow: %v", err.Error())
@@ -31,7 +34,9 @@ func main_test() {
 
 	fmt.Println(secret)
 
-	secret, err = apiClient.ManageAccountFlow("Computer01", "User04")
+	paths = make(map[string]string)
+
+	secret, err = apiClient.ManageAccountFlow("Computer01", "User04", paths)
 
 	if err != nil {
 		fmt.Printf("Error in SecretFlow: %v", err.Error())
