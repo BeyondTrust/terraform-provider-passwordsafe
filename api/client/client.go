@@ -17,10 +17,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"terraform-provider-passwordsafe/api/client/entities"
 
 	"software.sslmate.com/src/go-pkcs12"
 )
+
+var signInCount uint64
+var mu sync.Mutex
+var mu_out sync.Mutex
 
 type Client struct {
 	url            string
@@ -168,13 +174,13 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 		c.SignOut(SignAppinOutUrl)
 		return "", errors.New(error_message)
 	}
-	secretValue, _ := strconv.Unquote(secret)
 	c.SignOut(SignAppinOutUrl)
+	secretValue, _ := strconv.Unquote(secret)
 	return secretValue, nil
 }
 
 func (c *Client) ManagedAccountGet(systemName string, accountName string, url string) (entities.ManagedAccount, error) {
-
+	// log.debug("ManagedAccountGet")
 	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 	if err != nil {
 		return entities.ManagedAccount{}, err
@@ -313,6 +319,7 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 			c.SignOut(SignAppinOutUrl)
 			return "", errors.New(error_message)
 		}
+		c.SignOut(SignAppinOutUrl)
 		return fileSecretContent, nil
 	}
 
@@ -374,28 +381,56 @@ func (c *Client) SecretGetFileSecret(secretId string, url string) (string, error
 /******************************************* Common Methods *******************************************/
 
 func (c *Client) SignAppin(url string) (entities.User, error) {
+	mu.Lock()
+	var userObject entities.User
+	if atomic.LoadUint64(&signInCount) > 0 {
+		atomic.AddUint64(&signInCount, 1)
+		// TODO: log debug log("Already signed in ", atomic.LoadUint64(&signInCount))
+		mu.Unlock()
+		return userObject, nil
+	}
 
 	body, err := c.httpRequest(url, "POST", bytes.Buffer{})
 	if err != nil {
 		return entities.User{}, err
 	}
+
+	atomic.AddUint64(&signInCount, 1)
+	// TODO: log debug log("signin user ", atomic.LoadUint64(&signInCount)))
+	mu.Unlock()
+
 	defer body.Close()
 	bodyBytes, err := ioutil.ReadAll(body)
 	if err != nil {
 		return entities.User{}, err
 	}
 
-	var userObject entities.User
 	json.Unmarshal(bodyBytes, &userObject)
 	return userObject, nil
 }
 
-// SignAppin signs out Secret Safe API.
+// SignOut signs out Secret Safe API.
+// Warn: should only be called one time for all data sources.
 func (c *Client) SignOut(url string) error {
+	mu_out.Lock()
+	if atomic.LoadUint64(&signInCount) > 1 {
+		// TODO: log debug log("Ignore signout ", atomic.LoadUint64(&signInCount)))
+		// decrement counter, don't signout.
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+		return nil
+	}
+
+	fmt.Println(url)
 	_, err := c.httpRequest(url, "POST", bytes.Buffer{})
 	if err != nil {
 		return err
 	}
+
+	// decrement counter
+	// TODO: log debug log("signout user ", atomic.LoadUint64(&signInCount)))
+	atomic.AddUint64(&signInCount, ^uint64(0))
+	mu_out.Unlock()
 	return nil
 }
 
