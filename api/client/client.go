@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"path/filepath"
@@ -180,7 +181,7 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 }
 
 func (c *Client) ManagedAccountGet(systemName string, accountName string, url string) (entities.ManagedAccount, error) {
-	// log.debug("ManagedAccountGet")
+	log.Printf("%v %v", "GET", url)
 	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 	if err != nil {
 		return entities.ManagedAccount{}, err
@@ -204,7 +205,7 @@ func (c *Client) ManagedAccountGet(systemName string, accountName string, url st
 
 // ManagedAccountCreateRequest calls Secret Safe API Requests enpoint and returns a request Id as string.
 func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, url string) (string, error) {
-
+	log.Printf("%v %v", "POST", url)
 	data := fmt.Sprintf(`{"SystemID":%v, "AccountID":%v, "DurationMinutes":5, "Reason":"Tesr", "ConflictOption": "reuse"}`, systemName, accountName)
 	b := bytes.NewBufferString(data)
 
@@ -228,7 +229,7 @@ func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, ur
 // CredentialByRequestId calls Secret Safe API Credentials/<request_id>
 // enpoint and returns secret value by request Id.
 func (c *Client) CredentialByRequestId(requestId string, url string) (string, error) {
-
+	log.Printf("%v %v", "GET", url)
 	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 	if err != nil {
 		return "", err
@@ -252,7 +253,7 @@ func (c *Client) CredentialByRequestId(requestId string, url string) (string, er
 
 // ManagedAccountRequestCheckIn calls Secret Safe API "Requests/<request_id>/checkin enpoint.
 func (c *Client) ManagedAccountRequestCheckIn(requestId string, url string) (string, error) {
-
+	log.Printf("%v %v", "PUT", url)
 	data := "{}"
 	b := bytes.NewBufferString(data)
 	_, err := c.httpRequest(url, "PUT", *b)
@@ -330,7 +331,7 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 
 // SecretGetSecretByPath returns secret object for a specific path, title.
 func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, separator string, url string) (entities.Secret, error) {
-
+	log.Printf("%v %v", "GET", url)
 	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 	if err != nil {
 		return entities.Secret{}, err
@@ -357,7 +358,7 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 // SecretGetFileSecret call secrets-safe/secrets/<secret_id>/file/download enpoint
 // and returns file secret value.
 func (c *Client) SecretGetFileSecret(secretId string, url string) (string, error) {
-
+	log.Printf("%v %v", "GET", url)
 	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 
 	if err != nil {
@@ -385,7 +386,7 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 	var userObject entities.User
 	if atomic.LoadUint64(&signInCount) > 0 {
 		atomic.AddUint64(&signInCount, 1)
-		// TODO: log debug log("Already signed in ", atomic.LoadUint64(&signInCount))
+		log.Printf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount))
 		mu.Unlock()
 		return userObject, nil
 	}
@@ -396,7 +397,7 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 	}
 
 	atomic.AddUint64(&signInCount, 1)
-	// TODO: log debug log("signin user ", atomic.LoadUint64(&signInCount)))
+	log.Printf("%v %v", "signin", atomic.LoadUint64(&signInCount))
 	mu.Unlock()
 
 	defer body.Close()
@@ -414,7 +415,7 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 func (c *Client) SignOut(url string) error {
 	mu_out.Lock()
 	if atomic.LoadUint64(&signInCount) > 1 {
-		// TODO: log debug log("Ignore signout ", atomic.LoadUint64(&signInCount)))
+		log.Printf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount))
 		// decrement counter, don't signout.
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
@@ -427,8 +428,8 @@ func (c *Client) SignOut(url string) error {
 		return err
 	}
 
+	log.Printf("%v %v", "signout user", atomic.LoadUint64(&signInCount))
 	// decrement counter
-	// TODO: log debug log("signout user ", atomic.LoadUint64(&signInCount)))
 	atomic.AddUint64(&signInCount, ^uint64(0))
 	mu_out.Unlock()
 	return nil
