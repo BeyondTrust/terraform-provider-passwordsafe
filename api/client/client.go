@@ -15,13 +15,16 @@ import (
 	"log"
 	"net/http"
 	"net/http/cookiejar"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"terraform-provider-passwordsafe/api/client/entities"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"software.sslmate.com/src/go-pkcs12"
 )
 
@@ -30,10 +33,12 @@ var mu sync.Mutex
 var mu_out sync.Mutex
 
 type Client struct {
-	url            string
-	apiKey         string
-	apiAccountName string
-	httpClient     *http.Client
+	url                string
+	apiKey             string
+	apiAccountName     string
+	httpClient         *http.Client
+	exponentialBackOff *backoff.ExponentialBackOff
+	testMode           bool
 }
 
 // NewClient returns a http.Transport object to call secret safe API.
@@ -94,11 +99,32 @@ func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, 
 		Transport: tr,
 		Jar:       jar,
 	}
+
+	backoffDefinition := backoff.NewExponentialBackOff()
+
+	testMode := false
+
+	//Checking TEST_MODE env variable, if value is "true" means is for unit tests.
+	if strings.ToLower(os.Getenv("TEST_MODE")) == "true" {
+		// Test mode true for unit tests
+		testMode = true
+		// Configuring ExponentialBackOff object with just one retry for unit tests.
+		backoffDefinition.MaxElapsedTime = time.Second
+	} else {
+		// Configuring ExponentialBackOff object with custom configuration for real scenario
+		backoffDefinition := backoff.NewExponentialBackOff()
+		backoffDefinition.InitialInterval = 1 * time.Second
+		backoffDefinition.MaxElapsedTime = 30 * time.Second
+		backoffDefinition.RandomizationFactor = 0.5
+	}
+
 	return &Client{
-		url:            url,
-		apiKey:         apiKey,
-		apiAccountName: apiAccountName,
-		httpClient:     client,
+		url:                url,
+		apiKey:             apiKey,
+		apiAccountName:     apiAccountName,
+		httpClient:         client,
+		exponentialBackOff: backoffDefinition,
+		testMode:           testMode,
 	}, nil
 }
 
@@ -182,10 +208,17 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 
 func (c *Client) ManagedAccountGet(systemName string, accountName string, url string) (entities.ManagedAccount, error) {
 	log.Printf("%v %v", "GET", url)
-	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
-	if err != nil {
-		return entities.ManagedAccount{}, err
-	}
+
+	var body io.ReadCloser
+	var err error
+
+	err = backoff.Retry(func() error {
+		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
 
 	if err != nil {
 		return entities.ManagedAccount{}, err
@@ -209,10 +242,16 @@ func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, ur
 	data := fmt.Sprintf(`{"SystemID":%v, "AccountID":%v, "DurationMinutes":5, "Reason":"Tesr", "ConflictOption": "reuse"}`, systemName, accountName)
 	b := bytes.NewBufferString(data)
 
-	body, err := c.httpRequest(url, "POST", *b)
-	if err != nil {
-		return "", err
-	}
+	var body io.ReadCloser
+	var err error
+
+	err = backoff.Retry(func() error {
+		body, err = c.httpRequest(url, "POST", *b)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
 
 	bodyBytes, err := ioutil.ReadAll(body)
 
@@ -230,10 +269,17 @@ func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, ur
 // enpoint and returns secret value by request Id.
 func (c *Client) CredentialByRequestId(requestId string, url string) (string, error) {
 	log.Printf("%v %v", "GET", url)
-	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
-	if err != nil {
-		return "", err
-	}
+
+	var body io.ReadCloser
+	var err error
+
+	err = backoff.Retry(func() error {
+		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
 
 	if err != nil {
 		return "", err
@@ -256,7 +302,16 @@ func (c *Client) ManagedAccountRequestCheckIn(requestId string, url string) (str
 	log.Printf("%v %v", "PUT", url)
 	data := "{}"
 	b := bytes.NewBufferString(data)
-	_, err := c.httpRequest(url, "PUT", *b)
+
+	var err error
+	err = backoff.Retry(func() error {
+		_, err := c.httpRequest(url, "PUT", *b)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
+
 	if err != nil {
 		return "", err
 	}
@@ -332,10 +387,17 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 // SecretGetSecretByPath returns secret object for a specific path, title.
 func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, separator string, url string) (entities.Secret, error) {
 	log.Printf("%v %v", "GET", url)
-	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
-	if err != nil {
-		return entities.Secret{}, err
-	}
+
+	var body io.ReadCloser
+	var err error
+
+	err = backoff.Retry(func() error {
+		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
 
 	if err != nil {
 		return entities.Secret{}, err
@@ -359,11 +421,17 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 // and returns file secret value.
 func (c *Client) SecretGetFileSecret(secretId string, url string) (string, error) {
 	log.Printf("%v %v", "GET", url)
-	body, err := c.httpRequest(url, "GET", bytes.Buffer{})
 
-	if err != nil {
-		return "", err
-	}
+	var body io.ReadCloser
+	var err error
+
+	err = backoff.Retry(func() error {
+		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
 
 	if err != nil {
 		return "", err
@@ -382,23 +450,39 @@ func (c *Client) SecretGetFileSecret(secretId string, url string) (string, error
 /******************************************* Common Methods *******************************************/
 
 func (c *Client) SignAppin(url string) (entities.User, error) {
-	mu.Lock()
+
 	var userObject entities.User
-	if atomic.LoadUint64(&signInCount) > 0 {
-		atomic.AddUint64(&signInCount, 1)
-		log.Printf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount))
-		mu.Unlock()
-		return userObject, nil
+
+	if !c.testMode {
+		mu.Lock()
+		if atomic.LoadUint64(&signInCount) > 0 {
+			atomic.AddUint64(&signInCount, 1)
+			log.Printf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount))
+			mu.Unlock()
+			return userObject, nil
+		}
 	}
 
-	body, err := c.httpRequest(url, "POST", bytes.Buffer{})
+	var body io.ReadCloser
+	var err error
+
+	err = backoff.Retry(func() error {
+		body, err = c.httpRequest(url, "POST", bytes.Buffer{})
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
+
 	if err != nil {
 		return entities.User{}, err
 	}
 
-	atomic.AddUint64(&signInCount, 1)
-	log.Printf("%v %v", "signin", atomic.LoadUint64(&signInCount))
-	mu.Unlock()
+	if !c.testMode {
+		atomic.AddUint64(&signInCount, 1)
+		log.Printf("%v %v", "signin", atomic.LoadUint64(&signInCount))
+		mu.Unlock()
+	}
 
 	defer body.Close()
 	bodyBytes, err := ioutil.ReadAll(body)
@@ -413,25 +497,39 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 // SignOut signs out Secret Safe API.
 // Warn: should only be called one time for all data sources.
 func (c *Client) SignOut(url string) error {
-	mu_out.Lock()
-	if atomic.LoadUint64(&signInCount) > 1 {
-		log.Printf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount))
-		// decrement counter, don't signout.
-		atomic.AddUint64(&signInCount, ^uint64(0))
-		mu_out.Unlock()
-		return nil
+	if !c.testMode {
+		mu_out.Lock()
+		if atomic.LoadUint64(&signInCount) > 1 {
+			log.Printf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount))
+			// decrement counter, don't signout.
+			atomic.AddUint64(&signInCount, ^uint64(0))
+			mu_out.Unlock()
+			return nil
+		}
 	}
 
 	fmt.Println(url)
-	_, err := c.httpRequest(url, "POST", bytes.Buffer{})
+
+	var err error
+
+	err = backoff.Retry(func() error {
+		_, err = c.httpRequest(url, "POST", bytes.Buffer{})
+		if err != nil {
+			return err
+		}
+		return nil
+	}, c.exponentialBackOff)
+
 	if err != nil {
 		return err
 	}
 
-	log.Printf("%v %v", "signout user", atomic.LoadUint64(&signInCount))
-	// decrement counter
-	atomic.AddUint64(&signInCount, ^uint64(0))
-	mu_out.Unlock()
+	if !c.testMode {
+		log.Printf("%v %v", "signout user", atomic.LoadUint64(&signInCount))
+		// decrement counter
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+	}
 	return nil
 }
 
