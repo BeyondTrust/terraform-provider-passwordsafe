@@ -114,7 +114,7 @@ func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, 
 		// Configuring ExponentialBackOff object with custom configuration for real scenario
 		backoffDefinition := backoff.NewExponentialBackOff()
 		backoffDefinition.InitialInterval = 1 * time.Second
-		backoffDefinition.MaxElapsedTime = 30 * time.Second
+		backoffDefinition.MaxElapsedTime = 15 * time.Second
 		backoffDefinition.RandomizationFactor = 0.5
 	}
 
@@ -210,18 +210,24 @@ func (c *Client) ManagedAccountGet(systemName string, accountName string, url st
 	log.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
-	var err error
+	var technicalError error
+	var businessError error
 
-	err = backoff.Retry(func() error {
-		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
-		if err != nil {
-			return err
+	technicalError = backoff.Retry(func() error {
+		body, technicalError, businessError, _ = c.callSecretSafeAPI(url, "GET", bytes.Buffer{}, "ManagedAccountGet")
+		if technicalError != nil {
+			return technicalError
 		}
 		return nil
+
 	}, c.exponentialBackOff)
 
-	if err != nil {
-		return entities.ManagedAccount{}, err
+	if technicalError != nil {
+		return entities.ManagedAccount{}, technicalError
+	}
+
+	if businessError != nil {
+		return entities.ManagedAccount{}, businessError
 	}
 
 	bodyBytes, err := ioutil.ReadAll(body)
@@ -232,6 +238,7 @@ func (c *Client) ManagedAccountGet(systemName string, accountName string, url st
 
 	var managedAccountObject entities.ManagedAccount
 	json.Unmarshal(bodyBytes, &managedAccountObject)
+
 	return managedAccountObject, nil
 
 }
@@ -243,15 +250,21 @@ func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, ur
 	b := bytes.NewBufferString(data)
 
 	var body io.ReadCloser
-	var err error
+	var technicalError error
+	var businessError error
 
-	err = backoff.Retry(func() error {
-		body, err = c.httpRequest(url, "POST", *b)
-		if err != nil {
-			return err
-		}
-		return nil
+	technicalError = backoff.Retry(func() error {
+		body, technicalError, businessError, _ = c.callSecretSafeAPI(url, "POST", *b, "ManagedAccountCreateRequest")
+		return technicalError
 	}, c.exponentialBackOff)
+
+	if technicalError != nil {
+		return "", technicalError
+	}
+
+	if businessError != nil {
+		return "", businessError
+	}
 
 	bodyBytes, err := ioutil.ReadAll(body)
 
@@ -271,18 +284,20 @@ func (c *Client) CredentialByRequestId(requestId string, url string) (string, er
 	log.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
-	var err error
+	var technicalError error
+	var businessError error
 
-	err = backoff.Retry(func() error {
-		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
-		if err != nil {
-			return err
-		}
-		return nil
+	technicalError = backoff.Retry(func() error {
+		body, technicalError, businessError, _ = c.callSecretSafeAPI(url, "GET", bytes.Buffer{}, "CredentialByRequestId")
+		return technicalError
 	}, c.exponentialBackOff)
 
-	if err != nil {
-		return "", err
+	if technicalError != nil {
+		return "", technicalError
+	}
+
+	if businessError != nil {
+		return "", businessError
 	}
 
 	bodyBytes, err := ioutil.ReadAll(body)
@@ -303,17 +318,20 @@ func (c *Client) ManagedAccountRequestCheckIn(requestId string, url string) (str
 	data := "{}"
 	b := bytes.NewBufferString(data)
 
-	var err error
-	err = backoff.Retry(func() error {
-		_, err := c.httpRequest(url, "PUT", *b)
-		if err != nil {
-			return err
-		}
-		return nil
+	var technicalError error
+	var businessError error
+
+	technicalError = backoff.Retry(func() error {
+		_, technicalError, businessError, _ = c.callSecretSafeAPI(url, "PUT", *b, "ManagedAccountRequestCheckIn")
+		return technicalError
 	}, c.exponentialBackOff)
 
-	if err != nil {
-		return "", err
+	if technicalError != nil {
+		return "", technicalError
+	}
+
+	if businessError != nil {
+		return "", businessError
 	}
 
 	return "", nil
@@ -389,18 +407,21 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 	log.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
-	var err error
+	var technicalError error
+	var businessError error
+	var scode int
 
-	err = backoff.Retry(func() error {
-		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
-		if err != nil {
-			return err
-		}
-		return nil
+	technicalError = backoff.Retry(func() error {
+		body, technicalError, businessError, scode = c.callSecretSafeAPI(url, "GET", bytes.Buffer{}, "SecretGetSecretByPath")
+		return technicalError
 	}, c.exponentialBackOff)
 
-	if err != nil {
-		return entities.Secret{}, err
+	if technicalError != nil {
+		return entities.Secret{}, technicalError
+	}
+
+	if businessError != nil {
+		return entities.Secret{}, businessError
 	}
 
 	bodyBytes, err := ioutil.ReadAll(body)
@@ -414,6 +435,11 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 	if err != nil {
 		return entities.Secret{}, errors.New(err.Error() + ", Ensure Password Safe version is 23.1 or greater.")
 	}
+
+	if len(SecretObjectList) == 0 {
+		return entities.Secret{}, fmt.Errorf("Error %v: StatusCode: %v ", "SecretGetSecretByPath, Secret was not found", scode)
+	}
+
 	return SecretObjectList[0], nil
 }
 
@@ -423,18 +449,20 @@ func (c *Client) SecretGetFileSecret(secretId string, url string) (string, error
 	log.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
-	var err error
+	var technicalError error
+	var businessError error
 
-	err = backoff.Retry(func() error {
-		body, err = c.httpRequest(url, "GET", bytes.Buffer{})
-		if err != nil {
-			return err
-		}
-		return nil
+	technicalError = backoff.Retry(func() error {
+		body, technicalError, businessError, _ = c.callSecretSafeAPI(url, "GET", bytes.Buffer{}, "SecretGetFileSecret")
+		return technicalError
 	}, c.exponentialBackOff)
 
-	if err != nil {
-		return "", err
+	if technicalError != nil {
+		return "", technicalError
+	}
+
+	if businessError != nil {
+		return "", businessError
 	}
 
 	responseData, err := ioutil.ReadAll(body)
@@ -464,18 +492,20 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 	}
 
 	var body io.ReadCloser
-	var err error
+	var technicalError error
+	var businessError error
 
-	err = backoff.Retry(func() error {
-		body, err = c.httpRequest(url, "POST", bytes.Buffer{})
-		if err != nil {
-			return err
-		}
-		return nil
+	technicalError = backoff.Retry(func() error {
+		body, technicalError, businessError, _ = c.callSecretSafeAPI(url, "POST", bytes.Buffer{}, "SignAppin")
+		return technicalError
 	}, c.exponentialBackOff)
 
-	if err != nil {
-		return entities.User{}, err
+	if technicalError != nil {
+		return entities.User{}, technicalError
+	}
+
+	if businessError != nil {
+		return entities.User{}, businessError
 	}
 
 	if !c.testMode {
@@ -510,18 +540,20 @@ func (c *Client) SignOut(url string) error {
 
 	fmt.Println(url)
 
-	var err error
+	var technicalError error
+	var businessError error
 
-	err = backoff.Retry(func() error {
-		_, err = c.httpRequest(url, "POST", bytes.Buffer{})
-		if err != nil {
-			return err
-		}
-		return nil
+	technicalError = backoff.Retry(func() error {
+		_, technicalError, businessError, _ = c.callSecretSafeAPI(url, "POST", bytes.Buffer{}, "SignOut")
+		return technicalError
 	}, c.exponentialBackOff)
 
-	if err != nil {
-		return err
+	if businessError != nil {
+		return businessError
+	}
+
+	if businessError != nil {
+		return businessError
 	}
 
 	if !c.testMode {
@@ -534,11 +566,11 @@ func (c *Client) SignOut(url string) error {
 }
 
 // httpRequest template for Secret Safe API requests.
-func (c *Client) httpRequest(url string, method string, body bytes.Buffer) (closer io.ReadCloser, err error) {
+func (c *Client) httpRequest(url string, method string, body bytes.Buffer) (closer io.ReadCloser, technicalError error, businessError error, scode int) {
 
 	req, err := http.NewRequest(method, url, &body)
 	if err != nil {
-		return nil, err
+		return nil, err, nil, 0
 	}
 
 	var authorizationHeader string = fmt.Sprintf("PS-Auth key=%v;runas=%v;", c.apiKey, c.apiAccountName)
@@ -550,23 +582,36 @@ func (c *Client) httpRequest(url string, method string, body bytes.Buffer) (clos
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, err, nil, resp.StatusCode
+	}
+
+	if resp.StatusCode >= http.StatusInternalServerError || resp.StatusCode == http.StatusRequestTimeout {
+		return nil, fmt.Errorf("Error %v: StatusCode: %v, %v, %v", method, scode, err, body), nil, resp.StatusCode
 	}
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		respBody := new(bytes.Buffer)
-		_, err := respBody.ReadFrom(resp.Body)
-
-		if err != nil {
-			return nil, fmt.Errorf("got a non 200 status code: %v", resp.StatusCode)
-		}
-		return nil, fmt.Errorf("got a non 200 status code: %v - %s", resp.StatusCode, respBody.String())
+		respBody.ReadFrom(resp.Body)
+		return nil, nil, fmt.Errorf("got a non 200 status code: %v - %v", resp.StatusCode, respBody), resp.StatusCode
 	}
 
-	return resp.Body, nil
+	return resp.Body, nil, nil, resp.StatusCode
 }
 
 // requestPath Build endpint path.
 func (c *Client) requestPath(path string) string {
 	return fmt.Sprintf("%v/%v", c.url, path)
+}
+
+// call httpRequest method according to parameters.
+func (c *Client) callSecretSafeAPI(url string, httpMethod string, body bytes.Buffer, method string) (io.ReadCloser, error, error, int) {
+	response, technicalError, businessError, scode := c.httpRequest(url, httpMethod, body)
+	if technicalError != nil {
+		fmt.Printf("Error in %v %v \n", method, technicalError)
+	}
+
+	if businessError != nil {
+		fmt.Printf("Error in %v: %v \n", method, businessError)
+	}
+	return response, technicalError, businessError, scode
 }
