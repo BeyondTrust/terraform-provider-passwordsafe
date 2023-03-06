@@ -144,7 +144,6 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 
 	systemName = strings.TrimSpace(systemName)
 	accountName = strings.TrimSpace(accountName)
-	SignAppinOutUrl := c.requestPath(paths["SignAppOutPath"])
 
 	if systemName == "" {
 		return "", errors.New("Please use a valid system_name value")
@@ -154,54 +153,50 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 		return "", errors.New("Please use a valid account_name value")
 	}
 
-	SignAppinUrl := c.requestPath(paths["SignAppinPath"])
+	SignAppinUrl := c.RequestPath(paths["SignAppinPath"])
 	_, err := c.SignAppin(SignAppinUrl)
-
 	if err != nil {
-		error_message := err.Error()
-		fmt.Println(error_message)
-		c.SignOut(SignAppinOutUrl)
-		return "", errors.New(error_message)
+		return "", err
 	}
 
-	ManagedAccountGetUrl := c.requestPath(paths["ManagedAccountGetPath"])
+	ManagedAccountGetUrl := c.RequestPath(paths["ManagedAccountGetPath"])
 	managedAccount, err := c.ManagedAccountGet(systemName, accountName, ManagedAccountGetUrl)
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut(SignAppinOutUrl)
+
 		return "", errors.New(error_message)
 	}
 
-	ManagedAccountCreateRequestUrl := c.requestPath(paths["ManagedAccountCreateRequestPath"])
+	ManagedAccountCreateRequestUrl := c.RequestPath(paths["ManagedAccountCreateRequestPath"])
 	requestId, err := c.ManagedAccountCreateRequest(managedAccount.SystemId, managedAccount.AccountId, ManagedAccountCreateRequestUrl)
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut(SignAppinOutUrl)
+
 		return "", errors.New(error_message)
 	}
 
-	CredentialByRequestIdUrl := c.requestPath(fmt.Sprintf(paths["CredentialByRequestIdPath"], requestId))
+	CredentialByRequestIdUrl := c.RequestPath(fmt.Sprintf(paths["CredentialByRequestIdPath"], requestId))
 	secret, err := c.CredentialByRequestId(requestId, CredentialByRequestIdUrl)
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut(SignAppinOutUrl)
+
 		return "", errors.New(error_message)
 	}
 
 	ManagedAccountRequestCheckInPath := fmt.Sprintf(paths["ManagedAccountRequestCheckInPath"], requestId)
-	ManagedAccountRequestCheckInUrl := c.requestPath(ManagedAccountRequestCheckInPath)
+	ManagedAccountRequestCheckInUrl := c.RequestPath(ManagedAccountRequestCheckInPath)
 	_, err = c.ManagedAccountRequestCheckIn(requestId, ManagedAccountRequestCheckInUrl)
 
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut(SignAppinOutUrl)
+
 		return "", errors.New(error_message)
 	}
-	c.SignOut(SignAppinOutUrl)
+
 	secretValue, _ := strconv.Unquote(secret)
 	return secretValue, nil
 }
@@ -352,7 +347,6 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 	secretPath = strings.TrimSpace(secretPath)
 	secretTitle = strings.TrimSpace(secretTitle)
 	separator = strings.TrimSpace(separator)
-	SignAppinOutUrl := c.requestPath(paths["SignAppOutPath"])
 
 	if secretPath == "" {
 		return "", errors.New("Please use a valid Path value")
@@ -362,42 +356,37 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 		return "", errors.New("Please use a valid Title value")
 	}
 
-	SignAppinUrl := c.requestPath(paths["SignAppinPath"])
+	SignAppinUrl := c.RequestPath(paths["SignAppinPath"])
 	_, err := c.SignAppin(SignAppinUrl)
-
 	if err != nil {
-		error_message := err.Error()
-		fmt.Println(error_message)
-		c.SignOut(SignAppinOutUrl)
-		return "", errors.New(error_message)
+		return "", err
 	}
 
-	SecretGetSecretByPathUrl := c.requestPath(paths["SecretGetSecretByPathPath"])
+	SecretGetSecretByPathUrl := c.RequestPath(paths["SecretGetSecretByPathPath"])
 	secret, err := c.SecretGetSecretByPath(secretPath, secretTitle, separator, SecretGetSecretByPathUrl)
 
 	if err != nil {
 		error_message := err.Error()
 		fmt.Println(error_message)
-		c.SignOut(SignAppinOutUrl)
+
 		return "", errors.New(error_message)
 	}
 
 	// When secret type is FILE, it calls SecretGetFileSecret method.
 	if strings.ToUpper(secret.SecretType) == "FILE" {
 
-		SecretGetFileSecretUrl := c.requestPath(fmt.Sprintf(paths["SecretGetFileSecretPath"], secret.Id))
+		SecretGetFileSecretUrl := c.RequestPath(fmt.Sprintf(paths["SecretGetFileSecretPath"], secret.Id))
 		fileSecretContent, err := c.SecretGetFileSecret(secret.Id, SecretGetFileSecretUrl)
 		if err != nil {
 			error_message := err.Error()
 			fmt.Println(error_message)
-			c.SignOut(SignAppinOutUrl)
+
 			return "", errors.New(error_message)
 		}
-		c.SignOut(SignAppinOutUrl)
+
 		return fileSecretContent, nil
 	}
 
-	c.SignOut(SignAppinOutUrl)
 	return secret.Password, nil
 
 }
@@ -494,17 +483,34 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 	var body io.ReadCloser
 	var technicalError error
 	var businessError error
+	var scode int
 
-	technicalError = backoff.Retry(func() error {
-		body, technicalError, businessError, _ = c.callSecretSafeAPI(url, "POST", bytes.Buffer{}, "SignAppin")
+	err := backoff.Retry(func() error {
+		body, technicalError, businessError, scode = c.callSecretSafeAPI(url, "POST", bytes.Buffer{}, "SignAppin")
+		if scode == 0 {
+			return nil
+		}
 		return technicalError
 	}, c.exponentialBackOff)
 
-	if technicalError != nil {
+	if err != nil {
+		if !c.testMode {
+			mu.Unlock()
+		}
+		return entities.User{}, err
+	}
+
+	if scode == 0 {
+		if !c.testMode {
+			mu.Unlock()
+		}
 		return entities.User{}, technicalError
 	}
 
 	if businessError != nil {
+		if !c.testMode {
+			mu.Unlock()
+		}
 		return entities.User{}, businessError
 	}
 
@@ -582,7 +588,7 @@ func (c *Client) httpRequest(url string, method string, body bytes.Buffer) (clos
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, err, nil, resp.StatusCode
+		return nil, err, nil, 0
 	}
 
 	if resp.StatusCode >= http.StatusInternalServerError || resp.StatusCode == http.StatusRequestTimeout {
@@ -599,7 +605,7 @@ func (c *Client) httpRequest(url string, method string, body bytes.Buffer) (clos
 }
 
 // requestPath Build endpint path.
-func (c *Client) requestPath(path string) string {
+func (c *Client) RequestPath(path string) string {
 	return fmt.Sprintf("%v/%v", c.url, path)
 }
 

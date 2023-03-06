@@ -183,6 +183,9 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 	d.Set("value", secret)
 	d.SetId(hash(secret))
 
+	SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
+	apiClient.SignOut(SignAppinOutUrl)
+
 	return diags
 }
 
@@ -207,8 +210,9 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("value", secret)
 	d.SetId(hash(secret))
 
+	SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
+	apiClient.SignOut(SignAppinOutUrl)
 	return diags
-
 }
 
 // hash function.
