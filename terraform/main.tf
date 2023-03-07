@@ -2,7 +2,7 @@ terraform {
   required_providers {
     passwordsafe = {
       source = "providers/beyondtrust/passwordsafe"
-      version = "1.0.0"
+      version = "1.0.1"
     }
   }
 }
@@ -18,41 +18,110 @@ provider "passwordsafe" {
 
 }
 
+
+
+data "passwordsafe_managed_account" "manage_account_01" {
+  system_name = "server01"
+  account_name = "managed_account_01"
+}
+
+output "manage_account_01" {
+  value = "${data.passwordsafe_managed_account.manage_account_01.value}"
+}
+
+data "passwordsafe_managed_account" "manage_account_02" {
+  system_name = "server01"
+  account_name = "managed_account_02"
+}
+
+output "manage_account_02" {
+  value = "${data.passwordsafe_managed_account.manage_account_02.value}"
+}
+
+data "passwordsafe_managed_account" "manage_account_03" {
+  system_name = "server01"
+  account_name = "managed_account_03"
+}
+
+output "manage_account_03" {
+  value = "${data.passwordsafe_managed_account.manage_account_03.value}"
+}
+
+
+data "passwordsafe_managed_account" "manage_account_04" {
+  system_name = "server01"
+  account_name = "managed_account_04"
+}
+
+output "manage_account_04" {
+  value = "${data.passwordsafe_managed_account.manage_account_04.value}"
+}
+
+
+data "passwordsafe_managed_account" "manage_account_05" {
+  system_name = "server01"
+  account_name = "managed_account_05"
+}
+
+output "manage_account_05" {
+  value = "${data.passwordsafe_managed_account.manage_account_05.value}"
+}
+
+
+data "passwordsafe_managed_account" "manage_account_06" {
+  system_name = "server01"
+  account_name = "managed_account_06"
+}
+
+output "manage_account_06" {
+  value = "${data.passwordsafe_managed_account.manage_account_06.value}"
+}
+
+
+data "passwordsafe_managed_account" "manage_account_07" {
+  system_name = "server01"
+  account_name = "managed_account_07"
+}
+
+output "manage_account_07" {
+  value = "${data.passwordsafe_managed_account.manage_account_07.value}"
+}
+
+data "passwordsafe_managed_account" "manage_account_08" {
+  system_name = "server01"
+  account_name = "managed_account_08"
+}
+
+output "manage_account_08" {
+  value = "${data.passwordsafe_managed_account.manage_account_08.value}"
+}
+
+
+data "passwordsafe_managed_account" "manage_account_09" {
+  system_name = "server01"
+  account_name = "managed_account_09"
+}
+
+output "manage_account_09" {
+  value = "${data.passwordsafe_managed_account.manage_account_09.value}"
+}
+
+data "passwordsafe_managed_account" "managed_account_10" {
+  system_name = "server01"
+  account_name = "managed_account_10"
+}
+
+output "managed_account_10" {
+  value = "${data.passwordsafe_managed_account.managed_account_10.value}"
+}
+
+
 data "passwordsafe_secret" "secret_text" {
-  path = "felipe_test_group*sub1*sub2*sub3"
-  title = "text_in_sub_3"
-  separator = "*"
+  path = "local"
+  title = "my_credential"
+  separator = "/"
 }
 
 output "secret_text" {
   value = "${data.passwordsafe_secret.secret_text.value}"
 }
-
-data "passwordsafe_secret" "secret_credential" {
-  path = "felipe_test_group/sub1/sub2/sub3"
-  title = "credential_in_sub_3"
-}
-
-output "secret_credential" {
-  value = "${data.passwordsafe_secret.secret_credential.value}"
-}
-
-data "passwordsafe_secret" "secret_file" {
-  path = "felipe_test_group/sub1/sub2/sub3"
-  title = "file_in_sub3"
-}
-
-output "secret_file" {
-  value = "${data.passwordsafe_secret.secret_file.value}"
-}
-
-data "passwordsafe_managed_account" "manage_account" {
-  system_name = "Computer01"
-  account_name = "User03"
-}
-
-output "manage_account" {
-  value = "${data.passwordsafe_managed_account.manage_account.value}"
-}
-
-
