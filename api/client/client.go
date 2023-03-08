@@ -25,12 +25,14 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"software.sslmate.com/src/go-pkcs12"
+	"golang.org/x/crypto/pkcs12"
 )
 
 var signInCount uint64
 var mu sync.Mutex
 var mu_out sync.Mutex
+
+var logger = log.New(os.Stdout, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
 
 type Client struct {
 	url                string
@@ -43,6 +45,9 @@ type Client struct {
 
 // NewClient returns a http.Transport object to call secret safe API.
 func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, clientCertificatePath string, clientCertificateName string, clientCertificatePassword string) (*Client, error) {
+
+	logFile, _ := os.Create("ProviderLogs.log")
+	logger.SetOutput(logFile)
 
 	var cert tls.Certificate
 
@@ -163,7 +168,7 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 	managedAccount, err := c.ManagedAccountGet(systemName, accountName, ManagedAccountGetUrl)
 	if err != nil {
 		error_message := err.Error()
-		fmt.Println(error_message)
+		logger.Println(error_message)
 
 		return "", errors.New(error_message)
 	}
@@ -172,7 +177,7 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 	requestId, err := c.ManagedAccountCreateRequest(managedAccount.SystemId, managedAccount.AccountId, ManagedAccountCreateRequestUrl)
 	if err != nil {
 		error_message := err.Error()
-		fmt.Println(error_message)
+		logger.Println(error_message)
 
 		return "", errors.New(error_message)
 	}
@@ -181,7 +186,7 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 	secret, err := c.CredentialByRequestId(requestId, CredentialByRequestIdUrl)
 	if err != nil {
 		error_message := err.Error()
-		fmt.Println(error_message)
+		logger.Println(error_message)
 
 		return "", errors.New(error_message)
 	}
@@ -192,7 +197,7 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 
 	if err != nil {
 		error_message := err.Error()
-		fmt.Println(error_message)
+		logger.Println(error_message)
 
 		return "", errors.New(error_message)
 	}
@@ -202,7 +207,7 @@ func (c *Client) ManageAccountFlow(systemName string, accountName string, paths 
 }
 
 func (c *Client) ManagedAccountGet(systemName string, accountName string, url string) (entities.ManagedAccount, error) {
-	log.Printf("%v %v", "GET", url)
+	logger.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
 	var technicalError error
@@ -240,7 +245,7 @@ func (c *Client) ManagedAccountGet(systemName string, accountName string, url st
 
 // ManagedAccountCreateRequest calls Secret Safe API Requests enpoint and returns a request Id as string.
 func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, url string) (string, error) {
-	log.Printf("%v %v", "POST", url)
+	logger.Printf("%v %v", "POST", url)
 	data := fmt.Sprintf(`{"SystemID":%v, "AccountID":%v, "DurationMinutes":5, "Reason":"Tesr", "ConflictOption": "reuse"}`, systemName, accountName)
 	b := bytes.NewBufferString(data)
 
@@ -276,7 +281,7 @@ func (c *Client) ManagedAccountCreateRequest(systemName int, accountName int, ur
 // CredentialByRequestId calls Secret Safe API Credentials/<request_id>
 // enpoint and returns secret value by request Id.
 func (c *Client) CredentialByRequestId(requestId string, url string) (string, error) {
-	log.Printf("%v %v", "GET", url)
+	logger.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
 	var technicalError error
@@ -309,7 +314,7 @@ func (c *Client) CredentialByRequestId(requestId string, url string) (string, er
 
 // ManagedAccountRequestCheckIn calls Secret Safe API "Requests/<request_id>/checkin enpoint.
 func (c *Client) ManagedAccountRequestCheckIn(requestId string, url string) (string, error) {
-	log.Printf("%v %v", "PUT", url)
+	logger.Printf("%v %v", "PUT", url)
 	data := "{}"
 	b := bytes.NewBufferString(data)
 
@@ -367,7 +372,7 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 
 	if err != nil {
 		error_message := err.Error()
-		fmt.Println(error_message)
+		logger.Println(error_message)
 
 		return "", errors.New(error_message)
 	}
@@ -379,7 +384,7 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 		fileSecretContent, err := c.SecretGetFileSecret(secret.Id, SecretGetFileSecretUrl)
 		if err != nil {
 			error_message := err.Error()
-			fmt.Println(error_message)
+			logger.Println(error_message)
 
 			return "", errors.New(error_message)
 		}
@@ -393,7 +398,7 @@ func (c *Client) SecretFlow(secretPath string, secretTitle string, separator str
 
 // SecretGetSecretByPath returns secret object for a specific path, title.
 func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, separator string, url string) (entities.Secret, error) {
-	log.Printf("%v %v", "GET", url)
+	logger.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
 	var technicalError error
@@ -435,7 +440,7 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 // SecretGetFileSecret call secrets-safe/secrets/<secret_id>/file/download enpoint
 // and returns file secret value.
 func (c *Client) SecretGetFileSecret(secretId string, url string) (string, error) {
-	log.Printf("%v %v", "GET", url)
+	logger.Printf("%v %v", "GET", url)
 
 	var body io.ReadCloser
 	var technicalError error
@@ -474,7 +479,7 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 		mu.Lock()
 		if atomic.LoadUint64(&signInCount) > 0 {
 			atomic.AddUint64(&signInCount, 1)
-			log.Printf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount))
+			logger.Printf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount))
 			mu.Unlock()
 			return userObject, nil
 		}
@@ -516,7 +521,7 @@ func (c *Client) SignAppin(url string) (entities.User, error) {
 
 	if !c.testMode {
 		atomic.AddUint64(&signInCount, 1)
-		log.Printf("%v %v", "signin", atomic.LoadUint64(&signInCount))
+		logger.Printf("%v %v", "signin", atomic.LoadUint64(&signInCount))
 		mu.Unlock()
 	}
 
@@ -536,7 +541,7 @@ func (c *Client) SignOut(url string) error {
 	if !c.testMode {
 		mu_out.Lock()
 		if atomic.LoadUint64(&signInCount) > 1 {
-			log.Printf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount))
+			logger.Printf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount))
 			// decrement counter, don't signout.
 			atomic.AddUint64(&signInCount, ^uint64(0))
 			mu_out.Unlock()
@@ -544,7 +549,7 @@ func (c *Client) SignOut(url string) error {
 		}
 	}
 
-	fmt.Println(url)
+	logger.Println(url)
 
 	var technicalError error
 	var businessError error
@@ -563,7 +568,7 @@ func (c *Client) SignOut(url string) error {
 	}
 
 	if !c.testMode {
-		log.Printf("%v %v", "signout user", atomic.LoadUint64(&signInCount))
+		logger.Printf("%v %v", "signout user", atomic.LoadUint64(&signInCount))
 		// decrement counter
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
