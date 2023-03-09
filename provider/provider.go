@@ -6,12 +6,19 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"terraform-provider-passwordsafe/api/client"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var signInCount uint64
+var mu sync.Mutex
+var mu_out sync.Mutex
 
 // Provider Definition.
 func Provider() *schema.Provider {
@@ -173,6 +180,25 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 	system_name := d.Get("system_name").(string)
 	account_name := d.Get("account_name").(string)
 
+	mu.Lock()
+	if atomic.LoadUint64(&signInCount) > 0 {
+		atomic.AddUint64(&signInCount, 1)
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount)))
+		mu.Unlock()
+
+	} else {
+		SignAppinUrl := apiClient.RequestPath("Auth/SignAppin")
+		_, err := apiClient.SignAppin(SignAppinUrl)
+		if err != nil {
+			mu.Unlock()
+			client.Logging("ERROR", err.Error())
+			return diag.FromErr(err)
+		}
+		atomic.AddUint64(&signInCount, 1)
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(&signInCount)))
+		mu.Unlock()
+	}
+
 	paths := make(map[string]string)
 	secret, err := apiClient.ManageAccountFlow(system_name, account_name, paths)
 
@@ -183,8 +209,21 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 	d.Set("value", secret)
 	d.SetId(hash(secret))
 
-	SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
-	apiClient.SignOut(SignAppinOutUrl)
+	mu_out.Lock()
+	if atomic.LoadUint64(&signInCount) > 1 {
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
+		// decrement counter, don't signout.
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+	} else {
+		SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
+		apiClient.SignOut(SignAppinOutUrl)
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
+		// decrement counter
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+
+	}
 
 	return diags
 }
@@ -200,6 +239,25 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	secretTitle := d.Get("title").(string)
 	separator := d.Get("separator").(string)
 
+	mu.Lock()
+	if atomic.LoadUint64(&signInCount) > 0 {
+		atomic.AddUint64(&signInCount, 1)
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount)))
+		mu.Unlock()
+
+	} else {
+		SignAppinUrl := apiClient.RequestPath("Auth/SignAppin")
+		_, err := apiClient.SignAppin(SignAppinUrl)
+		if err != nil {
+			mu.Unlock()
+			client.Logging("ERROR", err.Error())
+			return diag.FromErr(err)
+		}
+		atomic.AddUint64(&signInCount, 1)
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(&signInCount)))
+		mu.Unlock()
+	}
+
 	paths := make(map[string]string)
 	secret, err := apiClient.SecretFlow(secretPath, secretTitle, separator, paths)
 
@@ -210,8 +268,22 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	d.Set("value", secret)
 	d.SetId(hash(secret))
 
-	SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
-	apiClient.SignOut(SignAppinOutUrl)
+	mu_out.Lock()
+	if atomic.LoadUint64(&signInCount) > 1 {
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
+		// decrement counter, don't signout.
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+	} else {
+		SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
+		apiClient.SignOut(SignAppinOutUrl)
+		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
+		// decrement counter
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+
+	}
+
 	return diags
 }
 
