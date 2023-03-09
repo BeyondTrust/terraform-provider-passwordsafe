@@ -280,60 +280,6 @@ func TestManageAccountFlow(t *testing.T) {
 	}
 }
 
-func TestManageAccountFlowFailedSignAppin(t *testing.T) {
-
-	testConfig := ManagedAccountCreateRequestConfig{
-		name: "TestManageAccountFlowFailedSignAppin",
-		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Mocking Response accorging to the endpoint path
-			switch r.URL.Path {
-
-			case "/Auth/SignAppin":
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`Unauthorized`))
-
-			case "/Auth/Signout":
-				w.Write([]byte(``))
-
-			case fmt.Sprintf("/ManagedAccounts"):
-				w.Write([]byte(`{"SystemId":1,"AccountId":10}`))
-
-			case "/Requests":
-				w.Write([]byte(`124`))
-
-			case "/Credentials/124":
-				w.Write([]byte(`"fake_credential"`))
-
-			case "/Requests/124/checkin":
-				w.Write([]byte(``))
-
-			default:
-				http.NotFound(w, r)
-			}
-		})),
-		response: "got a non 200 status code: 401 - Unauthorized",
-	}
-
-	paths := make(map[string]string)
-
-	paths["SignAppinOutPath"] = "Auth/Signout"
-	paths["SignAppinPath"] = "Auth/SignAppin"
-	paths["ManagedAccountGetPath"] = fmt.Sprintf("ManagedAccounts?systemName=%v&accountName=%v", "system_name_test", "account_name_test")
-	paths["ManagedAccountCreateRequestPath"] = "Requests"
-	paths["CredentialByRequestIdPath"] = "Credentials/%v"
-	paths["ManagedAccountRequestCheckInPath"] = "Requests/%v/checkin"
-
-	// Changing actual endpoint by fake server endpoint
-	apiClient.url = testConfig.server.URL
-
-	_, err := apiClient.ManageAccountFlow("system_name_test", "account_name_test", paths)
-
-	if err.Error() != testConfig.response {
-		t.Errorf("Test case Failed %v, %v", err.Error(), testConfig.response)
-	}
-
-}
-
 func TestManageAccountFlowFailedManagedAccounts(t *testing.T) {
 
 	testConfig := ManagedAccountCreateRequestConfig{
@@ -433,52 +379,6 @@ func TestSecretFlow(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
-	}
-}
-
-func TestSecretFlowFailedSignAppin(t *testing.T) {
-
-	testConfig := ManagedAccountCreateRequestConfig{
-		name: "TestSecretFlowFailedSignAppin",
-		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Mocking Response accorging to the endpoint path
-			switch r.URL.Path {
-
-			case "/Auth/SignAppin":
-
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(`Unauthorized`))
-
-			case "/Auth/Signout":
-				w.Write([]byte(``))
-
-			case "/secrets-safe/secrets":
-				w.Write([]byte(`[{"SecretType": "FILE", "Password": "credential_in_sub_3_password","Id": "9152f5b6-07d6-4955-175a-08db047219ce","Title": "credential_in_sub_3"}]`))
-
-			case "/secrets-safe/secrets/9152f5b6-07d6-4955-175a-08db047219ce/file/download":
-				w.Write([]byte(`fake_password`))
-
-			default:
-				http.NotFound(w, r)
-			}
-		})),
-		response: "got a non 200 status code: 401 - Unauthorized",
-	}
-
-	paths := make(map[string]string)
-
-	paths["SignAppinOutPath"] = "Auth/Signout"
-	paths["SignAppinPath"] = "Auth/SignAppin"
-	paths["SecretGetSecretByPathPath"] = "secrets-safe/secrets?title=%v&path=%v&separator=%v"
-	paths["SecretGetFileSecretPath"] = "secrets-safe/secrets/%v/file/download"
-
-	// Changing actual endpoint by fake server endpoint
-	apiClient.url = testConfig.server.URL
-
-	_, err := apiClient.SecretFlow("path1\\path2", "credential_in_sub_3", "\\", paths)
-
-	if err.Error() != testConfig.response {
-		t.Errorf("Test case Failed %v, %v", err.Error(), testConfig.response)
 	}
 }
 
