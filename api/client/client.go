@@ -97,6 +97,8 @@ func NewClient(url string, apiKey string, apiAccountName string, verifyca bool, 
 			Renegotiation:      tls.RenegotiateOnceAsClient,
 			InsecureSkipVerify: !verifyca,
 			Certificates:       []tls.Certificate{cert},
+			MinVersion:         tls.VersionTLS12,
+			MaxVersion:         tls.VersionTLS12,
 		},
 	}
 
