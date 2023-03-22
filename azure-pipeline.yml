@@ -195,7 +195,7 @@ stages:
 - stage: SignGOPlugin
   displayName: 'Sign the providers'
   pool:
-    name: Core-Build
+    name: Core-Build-V2
     vmImage: 'windows-latest'
 
   jobs:
