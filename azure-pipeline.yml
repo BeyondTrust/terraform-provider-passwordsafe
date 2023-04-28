@@ -54,7 +54,7 @@ stages:
     # output: download go version.
     - task: GoTool@0
       inputs:
-        version: '1.20.2' 
+        version: '1.20.3' 
     
     # output: confirm was installed sucessfully go version.
     - task: CmdLine@2
