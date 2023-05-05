@@ -430,6 +430,7 @@ func (c *Client) SecretGetSecretByPath(secretPath string, secretTitle string, se
 	}
 
 	if len(SecretObjectList) == 0 {
+		scode = 404
 		err = fmt.Errorf("Error %v: StatusCode: %v ", "SecretGetSecretByPath, Secret was not found", scode)
 		return entities.Secret{}, err
 	}
