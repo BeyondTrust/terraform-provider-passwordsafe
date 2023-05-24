@@ -38,4 +38,9 @@ Terraform configuration files can be configured to retrieve secrets from Passwor
     terraform init
     terraform plan
     ```
-- to get more information about terraform, please go: [https://beyondtrust.atlassian.net/wiki/spaces/BI/pages/231800866/Password+Safe+Terraform](https://beyondtrust.atlassian.net/wiki/spaces/BI/pages/231800866/Password+Safe+Terraform)
+
+## Usage
+- please refer to the [Documentation](https://www.beyondtrust.com/docs/beyondinsight-password-safe/)
+
+## License
+- Distributed under the GNU General Public License (GPL) v3.0 License. See `LICENSE.txt` for more information.
