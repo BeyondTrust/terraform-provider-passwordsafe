@@ -1,4 +1,8 @@
-# Terraform Provider
+<a href="https://www.beyondtrust.com">
+    <img src="images/beyondtrust_logo.svg" alt="BeyondTrust" title="BeyondTrust" align="right" height="50">
+</a>
+
+# Password Safe Terraform Provider
 The Password Safe Terraform provider is a Terraform integration for Password Safe which enables using Password Safe secrets management capabilities with Terraform.
 
 Terraform configuration files can be configured to retrieve secrets from Password Safe.
@@ -44,3 +48,6 @@ Terraform configuration files can be configured to retrieve secrets from Passwor
 
 ## License
 - Distributed under the GNU General Public License (GPL) v3.0 License. See `LICENSE.txt` for more information.
+
+## Get Help
+- Contact [BeyondTrust support](https://www.beyondtrust.com/docs/index.htm#support)
