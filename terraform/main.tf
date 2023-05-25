@@ -2,7 +2,7 @@ terraform {
   required_providers {
     passwordsafe = {
       source = "providers/beyondtrust/passwordsafe"
-      version = "1.0.1"
+      version = "1.0.0"
     }
   }
 }
@@ -117,9 +117,8 @@ output "managed_account_10" {
 
 
 data "passwordsafe_secret" "secret_text" {
-  path = "local"
+  path = "local/folder"
   title = "my_credential"
-  separator = "/"
 }
 
 output "secret_text" {
