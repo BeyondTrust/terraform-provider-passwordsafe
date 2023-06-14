@@ -5,11 +5,11 @@ name: Release
 # "v*" (e.g. v0.1.0) is created.
 on:
   workflow_dispatch
-  push:
-    tags:
-      - 'v*'
-    branches:
-      - main
+  #push:
+    #tags:
+    #  - 'v*'
+    #branches:
+    #  - main
 
 # Releases need permissions to read and write the repository contents.
 # GitHub considers creating releases and uploading assets as writing contents.
