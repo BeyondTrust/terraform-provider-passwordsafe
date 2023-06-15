@@ -9,6 +9,7 @@ on:
       - 'v*'
     branches:
       - main
+  workflow_dispatch:
 
 # Releases need permissions to read and write the repository contents.
 # GitHub considers creating releases and uploading assets as writing contents.
@@ -35,7 +36,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
       - name: Run GoReleaser release
         uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') 
         with:
           args: release --clean
         env:
