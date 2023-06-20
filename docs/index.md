@@ -47,7 +47,7 @@ terraform {
 `Add terraform.tfvars`
 
 ```json
-api_key = "b02bc5558de80066ed40120d8cf8c894211929f4de18aa03529d6241b2969ae5316955a4f040e07eaa5499417931fac4d6807e6f342ff9ae8b820d30580bb1a6"
+api_key = "*******************************************************************************"
 url = "https://example.com:443/Beyondtrust/api/public/v3"
 api_account_name = "apiuser"
 client_certificates_folder_path = "C:\\Code"
