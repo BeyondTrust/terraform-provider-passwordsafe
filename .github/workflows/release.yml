@@ -60,4 +60,4 @@ jobs:
         env:
           JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
       - name: ping Jfrog 
-        run: jfrog sconfig show
+        run: jfrog config show
