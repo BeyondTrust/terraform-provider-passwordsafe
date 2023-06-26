@@ -59,5 +59,15 @@ jobs:
         uses: jfrog/setup-jfrog-cli@v2
         env:
           JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
-      - name: ping Jfrog 
-        run: jfrog config show
+      - name: check artifacts in dist
+        run: |
+          ls -alt
+          cd dist
+          ls -alt
+          ls -alt terraform-provider-passwordsafe_linux_amd64_v1
+          ls -alt terraform-provider-passwordsafe_windows_amd64_v1
+          ls -alt terraform-provider-passwordsafe_darwin_amd64_v1
+      
+      #- name: Send artifacts to Jfrog 
+      #  run: |
+      #    jfrog rt u terraform-provider-passwordsafe_linux_amd64_v1/terraform-provider-passwordsafe_v1.0.1
