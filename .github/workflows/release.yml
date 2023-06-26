@@ -1,6 +1,7 @@
 # Terraform Provider release workflow.
 name: Release
-
+env:
+  JFROG_SERVER: eng-generic-scratch-local
 # This GitHub action creates a release when a tag that matches the pattern
 # "v*" (e.g. v0.1.0) is created.
 on:
@@ -24,6 +25,7 @@ jobs:
         with:
           # Allow goreleaser to access older tag information.
           fetch-depth: 0
+      
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: 'go.mod'
@@ -55,19 +57,14 @@ jobs:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #    GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      
       - name: Jfrog setup
         uses: jfrog/setup-jfrog-cli@v2
         env:
           JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
-      - name: check artifacts in dist
-        run: |
-          ls -alt
-          cd dist
-          ls -alt
-          ls -alt terraform-provider-passwordsafe_linux_amd64_v1
-          ls -alt terraform-provider-passwordsafe_windows_amd64_v1
-          ls -alt terraform-provider-passwordsafe_darwin_amd64_v1
       
-      #- name: Send artifacts to Jfrog 
-      #  run: |
-      #    jfrog rt u terraform-provider-passwordsafe_linux_amd64_v1/terraform-provider-passwordsafe_v1.0.1
+      - name: Send artifacts to Jfrog 
+        run: |
+          jfrog rt u terraform-provider-passwordsafe_linux_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
+          jfrog rt u terraform-provider-passwordsafe_windows_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
+          jfrog rt u terraform-provider-passwordsafe_darwin_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
