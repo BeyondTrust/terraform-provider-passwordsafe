@@ -65,6 +65,7 @@ jobs:
       
       - name: Send artifacts to Jfrog 
         run: |
+          cd dist
           jfrog rt u terraform-provider-passwordsafe_linux_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
           jfrog rt u terraform-provider-passwordsafe_windows_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
           jfrog rt u terraform-provider-passwordsafe_darwin_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
