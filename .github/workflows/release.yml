@@ -2,6 +2,7 @@
 name: Release
 env:
   JFROG_SERVER: eng-generic-scratch-local
+  JFROG_CLI_BUILD_NAME: ${{ github.repository }}
 # This GitHub action creates a release when a tag that matches the pattern
 # "v*" (e.g. v0.1.0) is created.
 on:
@@ -69,3 +70,12 @@ jobs:
           jfrog rt u terraform-provider-passwordsafe_linux_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
           jfrog rt u terraform-provider-passwordsafe_windows_amd64_v1/terraform-provider-passwordsafe_v1.0.1.exe ${{ env. JFROG_SERVER}}
           jfrog rt u terraform-provider-passwordsafe_darwin_amd64_v1/terraform-provider-passwordsafe_v1.0.1 ${{ env. JFROG_SERVER}}
+      
+      - name: Publish Build Information
+        run: |
+          jfrog rt build-add-git
+          jfrog rt build-collect-env
+          jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
+
+      - name: Scan Build
+        run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
