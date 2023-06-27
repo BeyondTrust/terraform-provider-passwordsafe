@@ -5,7 +5,7 @@
 # 3. PRs touching any code with a codeowner must be signed off by at least one
 #    person on the codeowner team.
 
-* @beyondtrust/contractors/password-safe-integrations-contractors
+* @beyondtrust/password-safe-integrations-contractors
 
 # BeyondTrust Global Codeowners
 # DO NOT MODIFY BELOW THIS LINE
