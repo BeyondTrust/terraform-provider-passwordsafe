@@ -39,14 +39,14 @@ jobs:
       #    passphrase: ${{ secrets.PASSPHRASE }}
       # Release the tag into Github. If draft in .goreleaser.yml is on true, not going to auto-publish the build
       # It would work only is the is a tag pushed.
-      #- name: Run GoReleaser release
-      #  uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
-      #  if: startsWith(github.ref, 'refs/tags/') 
-      #  with:
-      #    args: release --clean
-      #  env:
+      - name: Run GoReleaser release
+        uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
+        if: startsWith(github.ref, 'refs/tags/') 
+        with:
+          args: release --clean
+        env:
           # GitHub sets the GITHUB_TOKEN secret automatically.
-      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #    GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
       # Builds binaries artifacts from the tag that is being push.
       - name: Run GoReleaser build
