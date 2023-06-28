@@ -31,6 +31,12 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
+
+      - name: Jfrog setup
+        uses: jfrog/setup-jfrog-cli@v2
+        env:
+          JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+
       #- name: Import GPG key
       #  uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41 # v5.3.0
       #  id: import_gpg
@@ -59,23 +65,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #    GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
       
-      - name: Jfrog setup
-        uses: jfrog/setup-jfrog-cli@v2
-        env:
-          JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+      - name: Preparing artifacts
+        run: |
+          cd dist
+          mkdir terraform-provider-passwordsafe
+          mv *.zip terraform-provider-passwordsafe
       
       - name: Send artifacts to Jfrog 
         run: |
-          ls -alt
           cd dist
-          ls -alt
-          ls -alt terraform-provider-passwordsafe_darwin_amd64_v1
-          ls -alt terraform-provider-passwordsafe_windows_amd64_v1
-          ls -alt terraform-provider-passwordsafe_linux_amd64_v1
-          terraform-provider-passwordsafe_linux_amd64_v1
-          jfrog rt u terraform-provider-passwordsafe_1.0.1_windows_amd64.zip ${{ env. JFROG_SERVER}}
-          jfrog rt u terraform-provider-passwordsafe_1.0.1_linux_amd64.zip ${{ env. JFROG_SERVER}}
-          jfrog rt u terraform-provider-passwordsafe_1.0.1_darwin_amd64.zip ${{ env. JFROG_SERVER}}
+          jfrog rt u terraform-provider-passwordsafe/*.zip ${{ env. JFROG_SERVER}}
       
       - name: Publish Build Information
         run: |
