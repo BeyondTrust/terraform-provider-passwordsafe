@@ -1,6 +1,8 @@
 # Terraform Provider release workflow.
 name: Release
-
+env:
+  JFROG_SERVER: eng-generic-scratch-local
+  JFROG_CLI_BUILD_NAME: ${{ github.repository }}
 # This GitHub action creates a release when a tag that matches the pattern
 # "v*" (e.g. v0.1.0) is created.
 on:
@@ -24,16 +26,25 @@ jobs:
         with:
           # Allow goreleaser to access older tag information.
           fetch-depth: 0
+      
       - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753 # v4.0.1
         with:
           go-version-file: 'go.mod'
           cache: true
+
+      - name: Jfrog setup
+        uses: jfrog/setup-jfrog-cli@v2
+        env:
+          JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41 # v5.3.0
         id: import_gpg
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
+      # Release the tag into Github. If draft in .goreleaser.yml is on true, not going to auto-publish the build
+      # It would work only is the is a tag pushed.
       - name: Run GoReleaser release
         uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
         if: startsWith(github.ref, 'refs/tags/') 
@@ -43,12 +54,33 @@ jobs:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      # Builds binaries artifacts.
       - name: Run GoReleaser build
         uses: goreleaser/goreleaser-action@f82d6c1c344bcacabba2c841718984797f664a6b # v4.2.0
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
-          args: build --clean
+          args: release --snapshot --clean 
         env:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+      
+      - name: Preparing artifacts
+        run: |
+          cd dist
+          mkdir terraform-provider-passwordsafe
+          mv *.zip terraform-provider-passwordsafe
+      
+      - name: Send artifacts to Jfrog 
+        run: |
+          cd dist
+          jfrog rt u "terraform-provider-passwordsafe/*" ${{ env.JFROG_SERVER}}
+      
+      - name: Publish Build Information
+        run: |
+          jfrog rt build-add-git
+          jfrog rt build-collect-env
+          jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
+
+      - name: Scan Build
+        run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
