@@ -74,7 +74,7 @@ jobs:
       - name: Send artifacts to Jfrog 
         run: |
           cd dist
-          jfrog rt u "terraform-provider-passwordsafe/*" ${{ env. JFROG_SERVER}}
+          jfrog rt u "terraform-provider-passwordsafe/*" ${{ env.JFROG_SERVER}}
       
       - name: Publish Build Information
         run: |
