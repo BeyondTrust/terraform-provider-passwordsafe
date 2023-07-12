@@ -2,7 +2,7 @@
  
 ## [v1.0.1] - 20203-07-07
  
-First version for Passwordsafe Terraform Provider Publish at Public Terraform Registry [published here](https://registry.terraform.io/providers/BeyondTrust/passwordsafe/1.0.1).
+Make Password Safe Terraform Provider available in the Public Terraform Registry [published here](https://registry.terraform.io/providers/BeyondTrust/passwordsafe/1.0.1).
  
 ### Added
 - Version [v1.0.1](https://github.com/BeyondTrust/terraform-provider-passwordsafe/releases/tag/v1.0.1)
