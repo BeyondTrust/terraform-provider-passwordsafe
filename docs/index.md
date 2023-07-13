@@ -37,8 +37,8 @@ Permissions for access to secrets in Password Safe can be granted to specific ac
 terraform {
   required_providers {
     passwordsafe = {
-      source = "providers/beyondtrust/passwordsafe"
-      version = "1.0.0"
+      source = "beyondtrust/passwordsafe"
+      version = "1.0.1"
     }
   }
 }
