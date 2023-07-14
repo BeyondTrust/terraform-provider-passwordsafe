@@ -1,0 +1,38 @@
+name: Build promotion from
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_env:
+          type: choice
+          description: Target environment for the promotion
+          required: true
+          options:
+            - dev
+            - qa
+            - prod
+            - scratch
+      source_env:
+          type: choice
+          description: Source environment for the promotion
+          required: true
+          options:
+            - dev
+            - qa
+            - prod
+            - scratch
+      build_number:
+          description: Build number to promote
+          required: true
+jobs:
+  promotion:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Jfrog setup
+          uses: jfrog/setup-jfrog-cli@v2
+          env:
+            JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+
+        - name: Promote artifact from eng-generic-{{ github.event.input.source_env }}-local to eng-generic-{{ github.event.input.target_env }}-local
+          run: |
+            jf rt bpr my-build-name {{ github.event.input.build_number }} eng-generic-{{ github.event.input.target_env }}-local
