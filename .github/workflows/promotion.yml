@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - name: Jfrog setup
-          uses: jfrog/setup-jfrog-cli@v2
+          uses: jfrog/setup-jfrog-cli@v3
           env:
             JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
 
