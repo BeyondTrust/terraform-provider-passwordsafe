@@ -37,6 +37,6 @@ jobs:
           env:
             JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
 
-        - name: Promote artifact from eng-generic-${{ github.event.input.source_env }}-local to eng-generic-${{ github.event.input.target_env }}-local
+        - name: Promote artifact from eng-generic-${{ github.event.inputs.source_env }}-local to eng-generic-${{ github.event.inputs.target_env }}-local
           run: |
-            jf rt bpr my-build-name ${{ github.event.input.build_number }} eng-generic-${{ github.event.input.target_env }}-local
+            jf rt bpr ${{ github.event.inputs.build_name }} ${{ github.event.inputs.build_number }} eng-generic-${{ github.event.inputs.target_env }}-local
