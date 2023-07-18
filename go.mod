@@ -3,7 +3,7 @@ module terraform-provider-passwordsafe
 go 1.19
 
 require (
-	github.com/cenkalti/backoff/v4 v4.2.0
+	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.27.0
 	github.com/joho/godotenv v1.5.1
 	golang.org/x/crypto v0.10.0
