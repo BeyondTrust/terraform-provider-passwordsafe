@@ -1,0 +1,11 @@
+-  params:
+    git:
+      repoName: terraform-provider-passwordsafe
+      branches:
+        - main
+    scan:
+      includeAllVulnerabilities: true
+      failOnSecurityIssues: false
+      projects:
+        - workingDirs:
+            - "."
