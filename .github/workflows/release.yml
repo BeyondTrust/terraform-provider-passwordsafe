@@ -3,6 +3,7 @@ name: Release
 env:
   JFROG_SERVER: eng-generic-scratch-local
   JFROG_CLI_BUILD_NAME: ${{ github.repository }}
+  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
 # This GitHub action creates a release when a tag that matches the pattern
 # "v*" (e.g. v0.1.0) is created.
 on:
@@ -65,7 +66,7 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          
+
   goreleaser:
     runs-on: ubuntu-latest
     steps:
