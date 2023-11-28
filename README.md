@@ -2,6 +2,8 @@
     <img src="images/beyondtrust_logo.svg" alt="BeyondTrust" title="BeyondTrust" align="right" height="50">
 </a>
 
+[![Scanned by Frogbot](https://raw.github.com/jfrog/frogbot/master/images/frogbot-badge.svg)](https://github.com/jfrog/frogbot#readme)
+
 # Password Safe Terraform Provider
 The Password Safe Terraform provider is a Terraform integration for Password Safe which enables using Password Safe secrets management capabilities with Terraform.
 
