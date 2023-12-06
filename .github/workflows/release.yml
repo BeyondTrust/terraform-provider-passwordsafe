@@ -32,12 +32,13 @@ jobs:
       - name: Run unit tests
         run: |
           cd api/client
-          go test -coverprofile=coverage.txt -covermode count -v
+          go test -race -coverprofile=coverage.txt -covermode count -v
           ls -alt
       
       - name: Run coverage
         run: |
           go get github.com/boumenot/gocover-cobertura
+          ls -alt
           $GOPATH/bin/gocover-cobertura < api/client/coverage.txt > coverage.xml
           
   sonarqube:
