@@ -38,7 +38,7 @@ jobs:
       - name: Run coverage
         run: |
           go get github.com/boumenot/gocover-cobertura
-          gocover-cobertura < api/client/coverage.txt > coverage.xml
+          $GOPATH/bin/gocover-cobertura < api/client/coverage.txt > coverage.xml
           
   sonarqube:
   # Sonar scan is not required for dependabot PRs
