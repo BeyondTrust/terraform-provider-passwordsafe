@@ -32,7 +32,7 @@ jobs:
       - name: Run unit tests
         run: |
           cd api/client
-          go test -race -coverprofile=coverage.txt -covermode count -v
+          go test -race -coverprofile=coverage.txt -v
           ls -alt
       
       - name: Run coverage
