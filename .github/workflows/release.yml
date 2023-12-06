@@ -31,8 +31,8 @@ jobs:
 
       - name: Run unit tests
         run: |
-          go get github.com/boumenot/gocover-cobertura
           cd api/client
+          go get github.com/boumenot/gocover-cobertura
           go test -coverprofile=coverage.txt -covermode count -v
           gocover-cobertura < coverage.txt > coverage.xml
           ls -alt
