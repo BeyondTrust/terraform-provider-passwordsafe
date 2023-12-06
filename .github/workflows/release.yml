@@ -31,6 +31,7 @@ jobs:
 
       - name: Run unit tests
         run: |
+          cd api/client
           go test -v
           
   sonarqube:
