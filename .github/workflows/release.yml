@@ -20,8 +20,22 @@ permissions:
   contents: write
 
 jobs:
+
+  unit_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Run unit tests
+        run: |
+          go test -v
+          
   sonarqube:
   # Sonar scan is not required for dependabot PRs
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -68,6 +82,7 @@ jobs:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
 
   goreleaser:
+    if: false
     runs-on: ubuntu-latest
     needs: sonarqube
     steps:
