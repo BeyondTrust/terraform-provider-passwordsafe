@@ -32,14 +32,9 @@ jobs:
       - name: Run unit tests
         run: |
           cd api/client
-          go test -race -coverprofile=coverage.txt -v
+          go test -race -coverprofile=coverage.out -v
           ls -alt
-      
-      - name: Run coverage
-        run: |
-          go get github.com/boumenot/gocover-cobertura
-          ls -alt
-          $GOPATH/bin/gocover-cobertura < api/client/coverage.txt > coverage.xml
+          go tool cover -func="coverage.out"
           
   sonarqube:
   # Sonar scan is not required for dependabot PRs
