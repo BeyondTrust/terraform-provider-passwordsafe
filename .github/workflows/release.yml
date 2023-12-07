@@ -67,7 +67,7 @@ jobs:
             -Dsonar.pullrequest.key=${{ github.event.number }}
             -Dsonar.pullrequest.branch=${{ github.head_ref }}
             -Dsonar.pullrequest.base=${{ github.base_ref }}
-            -Dsonar.go.tests.reportPaths=coverage.out
+            -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
@@ -79,7 +79,7 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.go.tests.reportPaths=coverage.out
+            -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
