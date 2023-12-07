@@ -35,16 +35,26 @@ jobs:
           go test -race -coverprofile=coverage.out -v
           ls -alt
           go tool cover -func="coverage.out"
+      
+      - name: Save unit tests coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: api/client/coverage.out
           
   sonarqube:
   # Sonar scan is not required for dependabot PRs
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         with:
           fetch-depth: 0
+        
+      - name: Download coverage
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage
 
       - name: SonarQube Scan on PR
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
@@ -56,9 +66,7 @@ jobs:
             -Dsonar.pullrequest.key=${{ github.event.number }}
             -Dsonar.pullrequest.branch=${{ github.head_ref }}
             -Dsonar.pullrequest.base=${{ github.base_ref }}
-#            -Dsonar.exclusions=tests/**,*/*_client.py
-#            -Dsonar.python.coverage.reportPaths=coverage.xml
-#            -Dsonar.python.version=3.11
+            -Dsonar.go.tests.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
@@ -70,9 +78,7 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.projectKey=${{ github.event.repository.name }}
-#            -Dsonar.exclusions=tests/**,*/*_client.py,**/utils.py,**/exceptions.py
-#            -Dsonar.python.coverage.reportPaths=coverage.xml
-#            -Dsonar.python.version=3.11
+            -Dsonar.go.tests.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
