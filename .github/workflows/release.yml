@@ -1,7 +1,7 @@
 # Terraform Provider release workflow.
 name: Release
 env:
-  JFROG_SERVER: eng-generic-scratch-local
+  JFROG_SERVER: eng-go-dev-local
   JFROG_CLI_BUILD_NAME: ${{ github.repository }}
   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
 # This GitHub action creates a release when a tag that matches the pattern
