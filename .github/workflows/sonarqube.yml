@@ -30,7 +30,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage
-          path: api/client/coverage.outs
+          path: api/client/coverage.out
           
   sonarqube:
   # Sonar scan is not required for dependabot PRs
