@@ -3,7 +3,7 @@
 </a>
 
 # BeyondTrust Password Safe Terraform Provider
-The [BeyondTrust Password Safe Terraform Provider](https://registry.terraform.io/providers/BeyondTrust/passwordsafe/latest/docs) allows [Terraform](https://terraform.io) to manage access to resources to Password Safe secrets management capabilities.  Terraform configuration files can be configured to retrieve secrets from Password Safe and permissions for access to secrets in Password Safe can be granted to specific accounts within BeyondInsight.
+The [BeyondTrust Password Safe Terraform Provider](https://registry.terraform.io/providers/BeyondTrust/passwordsafe/latest/docs) allows [Terraform](https://terraform.io) to manage access to resources in Password Safe.  Terraform configuration files can be configured to retrieve secrets from Password Safe and permissions for access to secrets in Password Safe can be granted to specific accounts within BeyondInsight.
 
 ## Build Requirements
 If you wish to build this project locally, please complete the following steps.
