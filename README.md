@@ -20,7 +20,7 @@ If you wish to build this project locally, please complete the following steps.
 1. Generate the provider binary file from passwordsafe-integrations-terraform folder.
 
     ```bash
-    go build -o terraform-provider-passwordsafe
+    go build -o terraform-provider-passwordsafe_major_minor_build
     ```
 
 
