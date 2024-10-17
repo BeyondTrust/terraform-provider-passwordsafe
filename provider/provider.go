@@ -10,7 +10,15 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"terraform-provider-passwordsafe/api/client"
+	"time"
+
+	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
+	"github.com/BeyondTrust/go-client-library-passwordsafe/api/logging"
+	managed_accounts "github.com/BeyondTrust/go-client-library-passwordsafe/api/managed_account"
+	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
+	"github.com/BeyondTrust/go-client-library-passwordsafe/api/utils"
+	backoff "github.com/cenkalti/backoff/v4"
+	"go.uber.org/zap"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,6 +27,9 @@ import (
 var signInCount uint64
 var mu sync.Mutex
 var mu_out sync.Mutex
+
+var logger *zap.Logger
+var zapLogger *logging.ZapLogger
 
 // Provider Definition.
 func Provider() *schema.Provider {
@@ -32,6 +43,16 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The api key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
+			},
+			"client_id": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "",
+			},
+			"client_secret": &schema.Schema{
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "",
 			},
 			"url": &schema.Schema{
 				Type:        schema.TypeString,
@@ -75,7 +96,12 @@ func Provider() *schema.Provider {
 // Provider Init Config.
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 
+	logger, _ = zap.NewDevelopment()
+	zapLogger := logging.NewZapLogger(logger)
+
 	apikey := d.Get("api_key").(string)
+	client_id := d.Get("client_id").(string)
+	client_secret := d.Get("client_secret").(string)
 	url := d.Get("url").(string)
 	accountname := d.Get("api_account_name").(string)
 	verifyca := d.Get("verify_ca").(bool)
@@ -97,6 +123,25 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		})
 		return nil, diags
 	}
+
+	if client_id == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid client_id",
+			Detail:   "Please add a proper client_id",
+		})
+		return nil, diags
+	}
+
+	if client_secret == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid client_secret",
+			Detail:   "Please add a proper client_secret",
+		})
+		return nil, diags
+	}
+
 	if url == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -115,11 +160,38 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diags
 	}
 
-	apiClient, err := client.NewClient(url, apikey, accountname, verifyca, clientCertificatePath, clientCertificateName, clientCertificatePassword)
-	if err != nil {
-		return nil, diag.FromErr(err)
+	if accountname == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Account Name",
+			Detail:   "Please add a proper Account Name",
+		})
+		return nil, diags
 	}
-	return apiClient, diags
+
+	backoffDefinition := backoff.NewExponentialBackOff()
+	backoffDefinition.InitialInterval = 1 * time.Second
+	backoffDefinition.MaxElapsedTime = time.Duration(15) * time.Second
+	backoffDefinition.RandomizationFactor = 0.5
+
+	certificate := ""
+	certificateKey := ""
+
+	if clientCertificateName != "" {
+		certificate, certificateKey, _ := utils.GetPFXContent(clientCertificatePath, clientCertificateName, clientCertificatePassword, zapLogger)
+	}
+
+	httpClientObj, _ := utils.GetHttpClient(45, verifyca, certificate, certificateKey, zapLogger)
+
+	// If this variable is set, we're using API Key authentication
+	// (previous/old authentication method)
+	if apikey != "" {
+		authenticate, _ := auth.AuthenticateUsingApiKey(*httpClientObj, backoffDefinition, d.Get("url").(string), client_id, client_secret, zapLogger, 15, apikey)
+		return authenticate, diags
+	}
+
+	authenticate, _ := auth.Authenticate(*httpClientObj, backoffDefinition, d.Get("url").(string), client_id, client_secret, zapLogger, 15)
+	return authenticate, diags
 
 }
 
@@ -175,7 +247,7 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 
 	var diags diag.Diagnostics
 
-	apiClient := m.(*client.Client)
+	authenticationObj := m.(*auth.AuthenticationObj)
 
 	system_name := d.Get("system_name").(string)
 	account_name := d.Get("account_name").(string)
@@ -183,42 +255,40 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 	mu.Lock()
 	if atomic.LoadUint64(&signInCount) > 0 {
 		atomic.AddUint64(&signInCount, 1)
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount)))
+		zapLogger.Debug(fmt.Sprintf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount)))
 		mu.Unlock()
 
 	} else {
-		SignAppinUrl := apiClient.RequestPath("Auth/SignAppin")
-		_, err := apiClient.SignAppin(SignAppinUrl)
+		_, err := authenticationObj.GetPasswordSafeAuthentication()
 		if err != nil {
 			mu.Unlock()
-			client.Logging("ERROR", err.Error())
+			zapLogger.Error(err.Error())
 			return diag.FromErr(err)
 		}
 		atomic.AddUint64(&signInCount, 1)
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(&signInCount)))
+		zapLogger.Debug(fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(&signInCount)))
 		mu.Unlock()
 	}
 
-	paths := make(map[string]string)
-	secret, err := apiClient.ManageAccountFlow(system_name, account_name, paths)
+	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*authenticationObj, zapLogger)
+	gotManagedAccount, err := manageAccountObj.GetSecret(system_name+"/"+account_name, "/")
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.Set("value", secret)
-	d.SetId(hash(secret))
+	d.Set("value", gotManagedAccount)
+	d.SetId(hash(gotManagedAccount))
 
 	mu_out.Lock()
 	if atomic.LoadUint64(&signInCount) > 1 {
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
+		zapLogger.Debug(fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
 		// decrement counter, don't signout.
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
 	} else {
-		SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
-		apiClient.SignOut(SignAppinOutUrl)
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
+		authenticationObj.SignOut()
+		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
 		// decrement counter
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
@@ -233,7 +303,7 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 
 	var diags diag.Diagnostics
 
-	apiClient := m.(*client.Client)
+	authenticationObj := m.(*auth.AuthenticationObj)
 
 	secretPath := d.Get("path").(string)
 	secretTitle := d.Get("title").(string)
@@ -242,24 +312,23 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	mu.Lock()
 	if atomic.LoadUint64(&signInCount) > 0 {
 		atomic.AddUint64(&signInCount, 1)
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount)))
+		zapLogger.Debug(fmt.Sprintf("%v %v", "Already signed in", atomic.LoadUint64(&signInCount)))
 		mu.Unlock()
 
 	} else {
-		SignAppinUrl := apiClient.RequestPath("Auth/SignAppin")
-		_, err := apiClient.SignAppin(SignAppinUrl)
+		_, err := authenticationObj.GetPasswordSafeAuthentication()
 		if err != nil {
 			mu.Unlock()
-			client.Logging("ERROR", err.Error())
+			zapLogger.Error(err.Error())
 			return diag.FromErr(err)
 		}
 		atomic.AddUint64(&signInCount, 1)
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(&signInCount)))
+		zapLogger.Debug(fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(&signInCount)))
 		mu.Unlock()
 	}
 
-	paths := make(map[string]string)
-	secret, err := apiClient.SecretFlow(secretPath, secretTitle, separator, paths)
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secret, err := secretObj.GetSecret(secretPath+separator+secretTitle, separator)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -270,14 +339,13 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 
 	mu_out.Lock()
 	if atomic.LoadUint64(&signInCount) > 1 {
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
+		zapLogger.Debug(fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
 		// decrement counter, don't signout.
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
 	} else {
-		SignAppinOutUrl := apiClient.RequestPath("Auth/Signout")
-		apiClient.SignOut(SignAppinOutUrl)
-		client.Logging("DEBUG", fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
+		authenticationObj.SignOut()
+		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
 		// decrement counter
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
