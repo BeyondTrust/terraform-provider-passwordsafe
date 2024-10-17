@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     passwordsafe = {
-      source = "beyondtrust/passwordsafe"
+      source = "providers/beyondtrust/passwordsafe"
       version = "1.0.1"
     }
   }
@@ -9,15 +9,15 @@ terraform {
 
 provider "passwordsafe" {
   api_key = "${var.api_key}"
+  client_id = "${var.client_id}"
+  client_secret = "${var.client_secret}"
   url = "${var.url}"
   api_account_name = "${var.api_account_name}"
   verify_ca = false
   client_certificates_folder_path = "${var.client_certificates_folder_path}"
   client_certificate_name = "${var.client_certificate_name}"
   client_certificate_password = "${var.client_certificate_password}"
-
 }
-
 
 
 data "passwordsafe_managed_account" "manage_account_01" {
