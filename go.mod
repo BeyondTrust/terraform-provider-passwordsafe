@@ -7,7 +7,6 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.32.0
 	github.com/joho/godotenv v1.5.1
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.26.0
 )
 
 require (
@@ -18,6 +17,7 @@ require (
 	github.com/go-playground/validator/v10 v10.19.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 )
 
 require (
@@ -52,8 +52,8 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.14.2 // indirect
 	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231106174013-bbf56f31fb17 // indirect
 	google.golang.org/grpc v1.61.0 // indirect
