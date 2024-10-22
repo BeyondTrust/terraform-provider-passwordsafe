@@ -53,18 +53,18 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"api_key": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "The api key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
 			},
 			"client_id": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "",
+				Optional:    true,
+				Description: "API OAuth Client ID.",
 			},
 			"client_secret": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "",
+				Optional:    true,
+				Description: " API OAuth Client Secret.",
 			},
 			"url": &schema.Schema{
 				Type:        schema.TypeString,
@@ -128,7 +128,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Invalid Authentication method",
-			Detail:   "Please add a valid credential",
+			Detail:   "Please add a valid credential (API Key / Client Credentials)",
 		})
 		return nil, diags
 	}
