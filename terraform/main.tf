@@ -126,7 +126,7 @@ output "secret_text" {
 }
 
 
-resource "passwordsafe_create_managed_account" "my_managed_account" {
+resource "passwordsafe_managed_account" "my_managed_account" {
   system_name = "system_integration_test"
   account_name = "managed_account_Test"
   password = "MyTest101*!"
