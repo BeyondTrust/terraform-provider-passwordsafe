@@ -48,7 +48,7 @@ var zapLogger = logging.NewZapLogger(logger)
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
-			"passwordsafe_create_managed_account": resourceManagedAccount(),
+			"passwordsafe_managed_account": resourceManagedAccount(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"passwordsafe_secret":          getSecretByPath(),
@@ -173,7 +173,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	certificate := ""
 	certificateKey := ""
-	var err error = nil
+	var err error
 
 	if clientCertificateName != "" {
 		certificate, certificateKey, err = utils.GetPFXContent(clientCertificatePath, clientCertificateName, clientCertificatePassword, zapLogger)
@@ -495,7 +495,10 @@ func resourceManagedAccountCreate(d *schema.ResourceData, m interface{}) error {
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
 	} else {
-		authenticationObj.SignOut()
+		err = authenticationObj.SignOut()
+		if err != nil {
+			return err
+		}
 		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
 		// decrement counter
 		atomic.AddUint64(&signInCount, ^uint64(0))
@@ -557,7 +560,12 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.Set("value", gotManagedAccount)
+	err = d.Set("value", gotManagedAccount)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.SetId(hash(gotManagedAccount))
 
 	mu_out.Lock()
@@ -567,7 +575,10 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
 	} else {
-		authenticationObj.SignOut()
+		err = authenticationObj.SignOut()
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
 		// decrement counter
 		atomic.AddUint64(&signInCount, ^uint64(0))
@@ -614,7 +625,12 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 
-	d.Set("value", secret)
+	err = d.Set("value", secret)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.SetId(hash(secret))
 
 	mu_out.Lock()
@@ -624,7 +640,10 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 		atomic.AddUint64(&signInCount, ^uint64(0))
 		mu_out.Unlock()
 	} else {
-		authenticationObj.SignOut()
+		err = authenticationObj.SignOut()
+		if err != nil {
+			return diag.FromErr(err)
+		}
 		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
 		// decrement counter
 		atomic.AddUint64(&signInCount, ^uint64(0))
