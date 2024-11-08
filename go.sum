@@ -1,5 +1,5 @@
-github.com/BeyondTrust/go-client-library-passwordsafe v0.8.2 h1:rEh3Xk3Xv2x5ozi3eNdQYZ+UWwbjMjKHayi6AlTMEq4=
-github.com/BeyondTrust/go-client-library-passwordsafe v0.8.2/go.mod h1:TnbBwWYg9rtfDxQGF7pmD0gCPcbWgCUQIqum3dFMRTk=
+github.com/BeyondTrust/go-client-library-passwordsafe v0.9.0 h1:7uY74cRTycrdmae/6Jm46Ji0NLcEWfmk8gWNb5+LVZA=
+github.com/BeyondTrust/go-client-library-passwordsafe v0.9.0/go.mod h1:TnbBwWYg9rtfDxQGF7pmD0gCPcbWgCUQIqum3dFMRTk=
 github.com/agext/levenshtein v1.2.2 h1:0S/Yg6LYmFJ5stwQeRp6EeOcCbj7xiqQSdNelsXvaqE=
 github.com/agext/levenshtein v1.2.2/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJEynmyUenKwP++x/+DdGV/Ec=
