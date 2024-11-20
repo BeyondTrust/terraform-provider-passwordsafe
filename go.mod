@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
+	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.32.0
 	github.com/joho/godotenv v1.5.1
 	go.uber.org/zap v1.27.0
@@ -21,7 +22,7 @@ require (
 )
 
 require (
-	github.com/BeyondTrust/go-client-library-passwordsafe v0.9.0
+	github.com/BeyondTrust/go-client-library-passwordsafe v0.10.6-beta
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
