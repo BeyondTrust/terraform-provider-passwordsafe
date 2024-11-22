@@ -362,6 +362,9 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	folderName := d.Get("folder_name").(string)
 
 	signApinResponse, err := autenticate(d, m)
+	if err != nil {
+		return err
+	}
 
 	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
 
