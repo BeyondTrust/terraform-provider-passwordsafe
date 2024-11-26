@@ -132,3 +132,35 @@ resource "passwordsafe_managed_account" "my_managed_account" {
   password = "MyTest101*!"
   api_enabled = true
 }
+
+
+resource "passwordsafe_credential_secret" "my_credenial_secret" {
+  folder_name = "folder1"
+  title = "Credential_Secret_from_Terraform"
+  description = "my credential secret description"
+  username = "my_user_name"
+  password = "password_content"
+  owner_type = "User"
+  notes = "My Notes"
+}
+
+
+resource "passwordsafe_text_secret" "my_text_secret" {
+  folder_name = "folder1"
+  title = "Text_Secret_from_Terraform"
+  description = "my text secret description"
+  owner_type = "User"
+  text = "password_text"
+  notes = "My notes"
+}
+
+
+resource "passwordsafe_file_secret" "my_file_secret" {
+  folder_name = "folder1"
+  title = "File_Secret_from_Terraform"
+  description = "my file secret description"
+  owner_type = "User"
+  file_content = file("test_secret.txt")
+  file_name = "my_secret.txt"
+  notes= "My notes"
+}
