@@ -49,6 +49,7 @@ func Provider() *schema.Provider {
 			"passwordsafe_credential_secret": resourceCredentialSecret(),
 			"passwordsafe_text_secret":       resourceTextSecret(),
 			"passwordsafe_file_secret":       resourceFileSecret(),
+			"passwordsafe_folder":            resourceFolder(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"passwordsafe_secret":          getSecretByPath(),
