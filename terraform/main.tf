@@ -169,3 +169,8 @@ resource "passwordsafe_folder" "my_folder" {
   parent_folder_name = "folder1"
   name= "my_new_folder_mame"
 }
+
+resource "passwordsafe_safe" "my_safe" {
+  name = "my_new_safe_mame"
+  description="my_safe_description"
+}

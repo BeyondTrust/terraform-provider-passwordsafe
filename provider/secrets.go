@@ -3,11 +3,16 @@
 package provider
 
 import (
+	"context"
+	"fmt"
+	"sync/atomic"
+
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
 	"github.com/google/uuid"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -458,4 +463,56 @@ func resourceSecretUpdate(d *schema.ResourceData, m interface{}) error {
 // Delete context for resourceSecret Resource.
 func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
+}
+
+// Read context for getSecretByPath Datasource.
+func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	var diags diag.Diagnostics
+
+	authenticationObj := m.(*auth.AuthenticationObj)
+
+	secretPath := d.Get("path").(string)
+	secretTitle := d.Get("title").(string)
+	separator := d.Get("separator").(string)
+
+	_, err := autenticate(d, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secret, err := secretObj.GetSecret(secretPath+separator+secretTitle, separator)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	err = d.Set("value", secret)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(hash(secret))
+
+	mu_out.Lock()
+	if atomic.LoadUint64(&signInCount) > 1 {
+		zapLogger.Debug(fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
+		// decrement counter, don't signout.
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+	} else {
+		err = authenticationObj.SignOut()
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
+		// decrement counter
+		atomic.AddUint64(&signInCount, ^uint64(0))
+		mu_out.Unlock()
+
+	}
+
+	return diags
 }

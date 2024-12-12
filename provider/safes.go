@@ -10,19 +10,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// resourceFolder Resource.
-func resourceFolder() *schema.Resource {
+// resourceSafe Resource.
+func resourceSafe() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFolderCreate,
-		Read:   resourceFolderRead,
-		Update: resourceFolderUpdate,
-		Delete: resourceFolderDelete,
+		Create: resourceSafeCreate,
+		Read:   resourceSafeRead,
+		Update: resourceSafeUpdate,
+		Delete: resourceSafeDelete,
 
 		Schema: map[string]*schema.Schema{
-			"parent_folder_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
@@ -31,19 +27,14 @@ func resourceFolder() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"user_group_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
 		},
 	}
 
 }
 
-// Create context for resourceFolder Resource.
-func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
+// Create context for resourceSafe Resource.
+func resourceSafeCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
-	parent_folder_name := d.Get("parent_folder_name").(string)
 
 	_, err := autenticate(d, m)
 	if err != nil {
@@ -54,16 +45,13 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
-	userGroupId := d.Get("user_group_id").(int)
-
-	folder := entities.FolderDetails{
+	safe := entities.FolderDetails{
 		Name:        name,
 		Description: description,
-		UserGroupId: userGroupId,
-		FolderType:  "FOLDER",
+		FolderType:  "SAFE",
 	}
 
-	createdFolder, err := secretObj.CreateFolderFlow(parent_folder_name, folder)
+	createdSafe, err := secretObj.CreateFolderFlow("", safe)
 
 	if err != nil {
 		return err
@@ -74,21 +62,21 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(createdFolder.Id.String())
+	d.SetId(createdSafe.Id.String())
 	return nil
 }
 
-// Read context for resourceFolder Resource.
-func resourceFolderRead(d *schema.ResourceData, m interface{}) error {
+// Read context for resourceSafe Resource.
+func resourceSafeRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-// Update context for resourceFolder Resource.
-func resourceFolderUpdate(d *schema.ResourceData, m interface{}) error {
+// Update context for resourceSafe Resource.
+func resourceSafeUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-// Delete context for resourceFolder Resource.
-func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
+// Delete context for resourceSafe Resource.
+func resourceSafeDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
