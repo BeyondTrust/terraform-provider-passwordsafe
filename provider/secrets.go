@@ -491,36 +491,13 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	if err != nil {
 		return diag.FromErr(err)
 	}
-<<<<<<< HEAD
+
 	err = signOut(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(hash(secret))
-
-=======
-
-	d.SetId(hash(secret))
-
-	mu_out.Lock()
-	if atomic.LoadUint64(&signInCount) > 1 {
-		zapLogger.Debug(fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(&signInCount)))
-		// decrement counter, don't signout.
-		atomic.AddUint64(&signInCount, ^uint64(0))
-		mu_out.Unlock()
-	} else {
-		err = authenticationObj.SignOut()
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(&signInCount)))
-		// decrement counter
-		atomic.AddUint64(&signInCount, ^uint64(0))
-		mu_out.Unlock()
-
-	}
-
->>>>>>> 32fb78c (feat: add creating safes feature in terraform provider (#91))
+  
 	return diags
 }
