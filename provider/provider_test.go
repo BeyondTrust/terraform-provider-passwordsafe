@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,7 +30,7 @@ func TestProviderConfigureWithApiKey(t *testing.T) {
 	})
 
 	// Call the function and check results
-	_, diags := providerConfigure(nil, resourceData)
+	_, diags := providerConfigure(context.Background(), resourceData)
 
 	assert.Empty(t, diags, "Diagnostics should be empty if no errors")
 }
@@ -48,7 +49,7 @@ func TestProviderConfigureWithCredentials(t *testing.T) {
 	})
 
 	// Call the function and check results
-	_, diags := providerConfigure(nil, resourceData)
+	_, diags := providerConfigure(context.Background(), resourceData)
 
 	assert.Empty(t, diags, "Diagnostics should be empty if no errors")
 }
@@ -66,7 +67,7 @@ func TestProviderConfigureEmtyUrl(t *testing.T) {
 		"client_certificate_password":     "",
 	})
 
-	autenticate, diags := providerConfigure(nil, resourceData)
+	autenticate, diags := providerConfigure(context.Background(), resourceData)
 
 	if autenticate != nil {
 		t.Errorf("Error %v", diags)
@@ -91,7 +92,7 @@ func TestProviderConfigureEmptyCredentials(t *testing.T) {
 		"client_certificate_password":     "",
 	})
 
-	autenticate, diags := providerConfigure(nil, resourceData)
+	autenticate, diags := providerConfigure(context.Background(), resourceData)
 
 	if autenticate != nil {
 		t.Errorf("Error %v", diags)
@@ -116,7 +117,7 @@ func TestProviderConfigureEmptyAccountName(t *testing.T) {
 		"client_certificate_password":     "",
 	})
 
-	autenticate, diags := providerConfigure(nil, resourceData)
+	autenticate, diags := providerConfigure(context.Background(), resourceData)
 
 	if autenticate != nil {
 		t.Errorf("Error %v", diags)

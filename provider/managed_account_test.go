@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -259,7 +260,7 @@ func TestGetManagedAccountReadContext(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := getManagedAccountReadContext(nil, data, authenticate)
+	err := getManagedAccountReadContext(context.Background(), data, authenticate)
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)

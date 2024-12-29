@@ -26,7 +26,7 @@ func TestSecretSafeFlow(t *testing.T) {
 
 	rawData := map[string]interface{}{
 		"name":        "MySafe",
-		"description": "A secure folder for testing",
+		"description": "A secure safe for testing",
 	}
 	var resourceSchema = map[string]*schema.Schema{
 		"name": {
@@ -93,7 +93,7 @@ func TestSecretSafeFlow(t *testing.T) {
 func TestSecretFolderFlow(t *testing.T) {
 
 	rawData := map[string]interface{}{
-		"name":               "MySafe",
+		"name":               "MyFolder",
 		"description":        "A secure folder for testing",
 		"parent_folder_name": "folder_test",
 		"user_group_id":      1,
@@ -179,7 +179,7 @@ func TestSecretFolderFlow(t *testing.T) {
 func TestSecretFolderFlowError(t *testing.T) {
 
 	rawData := map[string]interface{}{
-		"name":               "MySafe",
+		"name":               "MyFolder",
 		"description":        "A secure folder for testing",
 		"parent_folder_name": "",
 		"user_group_id":      1,

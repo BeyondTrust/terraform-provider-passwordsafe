@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -20,11 +21,11 @@ func TestResourceFileSecretCreate(t *testing.T) {
 
 	rawData := map[string]interface{}{
 		"folder_name":  "folder_test",
-		"name":         "Secret",
-		"description":  "Description",
-		"title":        "Secret Title",
+		"name":         "File Secret name",
+		"description":  "File Secret Description",
+		"title":        "File Secret title",
 		"file_name":    "file.txt",
-		"file_content": "file_content",
+		"file_content": "P@ssw0rd123!$",
 		"owner_id":     1,
 		"owner_type":   "User",
 	}
@@ -160,7 +161,7 @@ func TestResourceFileSecretCreateError(t *testing.T) {
 		"description":  "Description",
 		"title":        "Secret Title",
 		"file_name":    "file.txt",
-		"file_content": "file_content",
+		"file_content": "P@ssw0rd123!$",
 		"owner_id":     1,
 		"owner_type":   "User",
 	}
@@ -266,11 +267,11 @@ func TestResourceCredentialSecretCreate(t *testing.T) {
 
 	rawData := map[string]interface{}{
 		"folder_name": "folder_test",
-		"name":        "Secret",
-		"description": "Description",
+		"name":        "Secret Name",
+		"description": "Secret Description",
 		"title":       "Secret Title",
 		"username":    "username",
-		"password":    "password",
+		"password":    "P@ssw0rd123!$",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -402,10 +403,10 @@ func TestResourceCredentialSecretCreateError(t *testing.T) {
 	rawData := map[string]interface{}{
 		"folder_name": "folder_test",
 		"name":        "Secret",
-		"description": "Description",
-		"title":       "Secret Title",
+		"description": "Credential Description",
+		"title":       "Credential Title",
 		"username":    "",
-		"password":    "password",
+		"password":    "P@ssw0rd123!$",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -614,7 +615,7 @@ func TestGetSecretByPathReadContext(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := getSecretByPathReadContext(nil, data, authenticate)
+	err := getSecretByPathReadContext(context.Background(), data, authenticate)
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -704,7 +705,7 @@ func TestGetSecretByPathReadContextError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	diags := getSecretByPathReadContext(nil, data, authenticate)
+	diags := getSecretByPathReadContext(context.Background(), data, authenticate)
 
 	if diags[0].Summary != "error SecretGetSecretByPath, Secret was not found: StatusCode: 404 " {
 		t.Errorf("Test case Failed %v, %v", diags[0].Summary, "error SecretGetSecretByPath, Secret was not found: StatusCode: 404 ")
@@ -716,10 +717,10 @@ func TestResourceTextSecretCreate(t *testing.T) {
 
 	rawData := map[string]interface{}{
 		"folder_name": "folder_test",
-		"name":        "Secret",
-		"description": "Description",
-		"title":       "Secret Title",
-		"text":        "Text",
+		"name":        "Text secret name",
+		"description": "Text secret description",
+		"title":       "Text secret title",
+		"text":        "P@ssw0rd123!$",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -846,9 +847,9 @@ func TestResourceTextSecretCreateError(t *testing.T) {
 
 	rawData := map[string]interface{}{
 		"folder_name": "folder_test",
-		"name":        "Secret",
-		"description": "Description",
-		"title":       "Secret Title",
+		"name":        "Text secret name",
+		"description": "Text secret Description",
+		"title":       "Text secret Secret Title",
 		"text":        "",
 		"owner_id":    1,
 		"owner_type":  "User",
