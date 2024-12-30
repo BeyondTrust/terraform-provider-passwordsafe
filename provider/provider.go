@@ -148,16 +148,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diags
 	}
 
-	if accountname == "" {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid Account Name",
-			Detail:   "Please add a proper Account Name",
-		})
-		return nil, diags
-	}
-
-	if accountname == "" {
+	if apikey != "" && accountname == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Invalid Account Name",
