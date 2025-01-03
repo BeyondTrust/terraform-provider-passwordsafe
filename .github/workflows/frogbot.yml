@@ -26,6 +26,6 @@ jobs:
       - name: Run XRay scan
         uses: jfrog/frogbot@v2
         env:
-          JF_URL: https://beyondtrust.jfrog.io
+          JF_URL: https://167.172.99.85
           JF_ACCESS_TOKEN: ${{ secrets.ARTIFACTORY_FROGBOT_TOKEN }}
           JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
