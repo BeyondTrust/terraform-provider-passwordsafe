@@ -2,7 +2,7 @@
 name: Release
 env:
   JFROG_SERVER: eng-generic-dev-local
-  JFROG_CLI_BUILD_NAME: ${{ github.repository }}
+  JFROG_CLI_BUILD_NAME: ${{ github.event.repository.name }}
   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
 # This GitHub action creates a release when a tag that matches the pattern
 # "v*" (e.g. v0.1.0) is created.
@@ -34,7 +34,6 @@ jobs:
           cd provider
           go mod tidy
           go test -race -coverprofile=coverage.out -v
-          ls -alt
           go tool cover -func="coverage.out"
       
       - name: Save unit tests coverage
