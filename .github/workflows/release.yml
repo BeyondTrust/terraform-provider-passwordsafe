@@ -32,6 +32,7 @@ jobs:
       - name: Run unit tests
         run: |
           cd provider
+          go mod tidy
           go test -race -coverprofile=coverage.out -v
           ls -alt
           go tool cover -func="coverage.out"
