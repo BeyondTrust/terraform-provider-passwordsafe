@@ -2,41 +2,35 @@ name: Build promotion
 
 on:
   workflow_dispatch:
-    inputs:
-      target_env:
-          type: choice
-          description: Target environment for the promotion
-          required: true
-          options:
-            - dev
-            - qa
-            - prod
-            - scratch
-      source_env:
-          type: choice
-          description: Source environment for the promotion
-          required: true
-          options:
-            - dev
-            - qa
-            - prod
-            - scratch
-      build_number:
-          description: Build number to promote
-          required: true
-      build_name:
-          description: Build name to promote.
-          required: true
 
 jobs:
   promotion:
     runs-on: ubuntu-latest
     steps:
         - name: Jfrog setup
-          uses: jfrog/setup-jfrog-cli@v4
+          uses: jfrog/setup-jfrog-cli@96153976e4e81b3701e9cc0a5b9597e80614af81 # v4.5.1
           env:
             JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
 
-        - name: Promote artifact from eng-generic-${{ github.event.inputs.source_env }}-local to eng-generic-${{ github.event.inputs.target_env }}-local
+        - name: Extract version
+          uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+          id: version
+          with:
+            script: |
+              const version = context.ref.match(/[\d][\d*\.]*$/)[0];
+              core.setOutput("version", version);
+
+        - name: Promote artifact
           run: |
-            jf rt bpr ${{ github.event.inputs.build_name }} ${{ github.event.inputs.build_number }} eng-generic-${{ github.event.inputs.target_env }}-local
+            VERSION="${{ steps.version.outputs.version }}"
+            BUILD_NAME="${{ github.event.repository.name }}"  
+            
+            BUILD_NUMBER="$(jfrog rt curl api/build/${BUILD_NAME} -s | jq -e -r '[.buildsNumbers[] | select(.uri | contains("'$VERSION'"))] | sort_by(.started) | reverse | .[0].uri[1:]')"
+
+            if [ -z "$BUILD_NUMBER" ]; then
+              echo "::error::Error retrieving build from Artifactory. No matching name/version. Name: $BUILD_NAME; Version: $VERSION"
+              exit 1
+            fi
+
+            echo "Promoting generic"
+            jfrog rt build-promote  "$BUILD_NAME" "$BUILD_NUMBER" eng-generic-prod-local --status released --copy=true
