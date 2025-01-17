@@ -208,6 +208,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
+			GroupId: signApinResponse.UserId,
 			OwnerId: signApinResponse.UserId,
 			Owner:   signApinResponse.UserName,
 			Email:   signApinResponse.EmailAddress,
@@ -295,6 +296,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
+			GroupId: signApinResponse.UserId,
 			OwnerId: signApinResponse.UserId,
 			Owner:   signApinResponse.UserName,
 			Email:   signApinResponse.EmailAddress,
@@ -383,6 +385,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
+			GroupId: signApinResponse.UserId,
 			OwnerId: signApinResponse.UserId,
 			Owner:   signApinResponse.UserName,
 			Email:   signApinResponse.EmailAddress,
@@ -498,6 +501,6 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	}
 
 	d.SetId(hash(secret))
-  
+
 	return diags
 }

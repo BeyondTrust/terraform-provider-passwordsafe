@@ -14,6 +14,10 @@ variable url {
   type = string
 }
 
+variable api_version {
+  type = string
+}
+
 variable api_account_name {
   type = string
 }

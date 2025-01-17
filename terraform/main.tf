@@ -12,6 +12,7 @@ provider "passwordsafe" {
   client_id = "${var.client_id}"
   client_secret = "${var.client_secret}"
   url = "${var.url}"
+  api_version = "${var.api_version}"
   api_account_name = "${var.api_account_name}"
   verify_ca = false
   client_certificates_folder_path = "${var.client_certificates_folder_path}"

@@ -77,6 +77,12 @@ func Provider() *schema.Provider {
 				Required:    true,
 				Description: "The URL for the Password Safe instance from which to request a secret.",
 			},
+			"api_version": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "The recommended version is 3.1. If no version is specified, the default API version 3.0 will be used",
+			},
 			"api_account_name": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
@@ -118,6 +124,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	client_id := d.Get("client_id").(string)
 	client_secret := d.Get("client_secret").(string)
 	url := d.Get("url").(string)
+	apiVersion := d.Get("api_version").(string)
 	accountname := d.Get("api_account_name").(string)
 	verifyca := d.Get("verify_ca").(bool)
 	clientCertificatePath := d.Get("client_certificates_folder_path").(string)
@@ -183,14 +190,36 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	// If this variable is set, we're using API Key authentication
 	// (previous/old authentication method)
 	if apikey != "" {
-		authenticate, err := auth.AuthenticateUsingApiKey(*httpClientObj, backoffDefinition, d.Get("url").(string), zapLogger, retryMaxElapsedTimeMinutes, fmt.Sprintf("%v;runas=%v;", apikey, accountname))
+		authParamsApiKey := &auth.AuthenticationParametersObj{
+			HTTPClient:                 *httpClientObj,
+			BackoffDefinition:          backoffDefinition,
+			EndpointURL:                url,
+			APIVersion:                 apiVersion,
+			ClientID:                   "",
+			ClientSecret:               "",
+			ApiKey:                     fmt.Sprintf("%v;runas=%v;", apikey, accountname),
+			Logger:                     zapLogger,
+			RetryMaxElapsedTimeSeconds: retryMaxElapsedTimeMinutes,
+		}
+		authenticate, err := auth.AuthenticateUsingApiKey(*authParamsApiKey)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
 		return authenticate, diags
 	}
 
-	authenticate, err := auth.Authenticate(*httpClientObj, backoffDefinition, d.Get("url").(string), client_id, client_secret, zapLogger, retryMaxElapsedTimeMinutes)
+	authParamsOauth := &auth.AuthenticationParametersObj{
+		HTTPClient:                 *httpClientObj,
+		BackoffDefinition:          backoffDefinition,
+		EndpointURL:                url,
+		APIVersion:                 apiVersion,
+		ClientID:                   client_id,
+		ClientSecret:               client_secret,
+		ApiKey:                     "",
+		Logger:                     zapLogger,
+		RetryMaxElapsedTimeSeconds: retryMaxElapsedTimeMinutes,
+	}
+	authenticate, err := auth.Authenticate(*authParamsOauth)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
