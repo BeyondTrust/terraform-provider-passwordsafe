@@ -17,7 +17,39 @@ import (
 	"go.uber.org/zap"
 )
 
+// the recommended version is 3.1. If no version is specified,
+// the default API version 3.0 will be used
+var apiVersion string = "3.1"
+
+var AuthParams *authentication.AuthenticationParametersObj
+
+func InitializeGlobalConfig() {
+
+	logger, _ := zap.NewDevelopment()
+
+	zapLogger = logging.NewZapLogger(logger)
+
+	httpClientObj, _ := utils.GetHttpClient(5, false, "", "", zapLogger)
+
+	backoffDefinition := backoff.NewExponentialBackOff()
+	backoffDefinition.MaxElapsedTime = time.Second
+
+	AuthParams = &authentication.AuthenticationParametersObj{
+		HTTPClient:                 *httpClientObj,
+		BackoffDefinition:          backoffDefinition,
+		EndpointURL:                "https://fake.api.com:443/BeyondTrust/api/public/v3/",
+		APIVersion:                 apiVersion,
+		ClientID:                   "fakeone_a654+9sdf7+8we4f",
+		ClientSecret:               "fakeone_a654+9sdf7+8we4f",
+		ApiKey:                     "",
+		Logger:                     zapLogger,
+		RetryMaxElapsedTimeSeconds: 300,
+	}
+}
+
 func TestResourceManagedAccountCreate(t *testing.T) {
+
+	InitializeGlobalConfig()
 
 	rawData := map[string]interface{}{
 		"system_name":  "system01",
@@ -28,14 +60,7 @@ func TestResourceManagedAccountCreate(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	logger, _ := zap.NewDevelopment()
-
-	// authenticate config
-	zapLogger := logging.NewZapLogger(logger)
-	httpClientObj, _ := utils.GetHttpClient(5, false, "", "", zapLogger)
-	backoffDefinition := backoff.NewExponentialBackOff()
-	backoffDefinition.MaxElapsedTime = time.Second
-	var authenticate, _ = authentication.Authenticate(*httpClientObj, backoffDefinition, "https://fake.api.com:443/BeyondTrust/api/public/v3/", "fakeone_a654+9sdf7+8we4f", "fakeone_aasd156465sfdef", zapLogger, 300)
+	var authenticate, _ = authentication.Authenticate(*AuthParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -94,6 +119,8 @@ func TestResourceManagedAccountCreate(t *testing.T) {
 
 func TestResourceManagedAccountCreateError(t *testing.T) {
 
+	InitializeGlobalConfig()
+
 	rawData := map[string]interface{}{
 		"system_name":  "system0101",
 		"account_name": "account_name",
@@ -104,14 +131,7 @@ func TestResourceManagedAccountCreateError(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	logger, _ := zap.NewDevelopment()
-
-	// authenticate config
-	zapLogger := logging.NewZapLogger(logger)
-	httpClientObj, _ := utils.GetHttpClient(5, false, "", "", zapLogger)
-	backoffDefinition := backoff.NewExponentialBackOff()
-	backoffDefinition.MaxElapsedTime = time.Second
-	var authenticate, _ = authentication.Authenticate(*httpClientObj, backoffDefinition, "https://fake.api.com:443/BeyondTrust/api/public/v3/", "fakeone_a654+9sdf7+8we4f", "fakeone_aasd156465sfdef", zapLogger, 300)
+	var authenticate, _ = authentication.Authenticate(*AuthParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -192,14 +212,7 @@ func TestGetManagedAccountReadContext(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	logger, _ := zap.NewDevelopment()
-
-	// authenticate config
-	zapLogger := logging.NewZapLogger(logger)
-	httpClientObj, _ := utils.GetHttpClient(5, false, "", "", zapLogger)
-	backoffDefinition := backoff.NewExponentialBackOff()
-	backoffDefinition.MaxElapsedTime = time.Second
-	var authenticate, _ = authentication.Authenticate(*httpClientObj, backoffDefinition, "https://fake.api.com:443/BeyondTrust/api/public/v3/", "fakeone_a654+9sdf7+8we4f", "fakeone_aasd156465sfdef", zapLogger, 300)
+	var authenticate, _ = authentication.Authenticate(*AuthParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
