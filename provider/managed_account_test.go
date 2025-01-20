@@ -21,7 +21,7 @@ import (
 // the default API version 3.0 will be used
 var apiVersion string = "3.1"
 
-var AuthParams *authentication.AuthenticationParametersObj
+var authParams *authentication.AuthenticationParametersObj
 
 func InitializeGlobalConfig() {
 
@@ -34,7 +34,7 @@ func InitializeGlobalConfig() {
 	backoffDefinition := backoff.NewExponentialBackOff()
 	backoffDefinition.MaxElapsedTime = time.Second
 
-	AuthParams = &authentication.AuthenticationParametersObj{
+	authParams = &authentication.AuthenticationParametersObj{
 		HTTPClient:                 *httpClientObj,
 		BackoffDefinition:          backoffDefinition,
 		EndpointURL:                "https://fake.api.com:443/BeyondTrust/api/public/v3/",
@@ -60,7 +60,7 @@ func TestResourceManagedAccountCreate(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -131,7 +131,7 @@ func TestResourceManagedAccountCreateError(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -212,7 +212,7 @@ func TestGetManagedAccountReadContext(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{

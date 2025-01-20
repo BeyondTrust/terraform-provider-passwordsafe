@@ -37,7 +37,7 @@ func TestSecretSafeFlow(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -110,7 +110,7 @@ func TestSecretFolderFlow(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -191,7 +191,7 @@ func TestSecretFolderFlowError(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{

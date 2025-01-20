@@ -91,7 +91,7 @@ func TestResourceFileSecretCreate(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -196,7 +196,7 @@ func TestResourceFileSecretCreateError(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -326,7 +326,7 @@ func TestResourceCredentialSecretCreate(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -456,7 +456,7 @@ func TestResourceCredentialSecretCreateError(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -541,7 +541,7 @@ func TestGetSecretByPathReadContext(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -626,7 +626,7 @@ func TestGetSecretByPathReadContextError(t *testing.T) {
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -751,7 +751,7 @@ func TestResourceTextSecretCreate(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -876,7 +876,7 @@ func TestResourceTextSecretCreateError(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	var authenticate, _ = authentication.Authenticate(*AuthParams)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
