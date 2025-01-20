@@ -78,6 +78,10 @@ func TestResourceFileSecretCreate(t *testing.T) {
 			Type:     schema.TypeInt,
 			Optional: true,
 		},
+		"group_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
 		"owner_type": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
@@ -180,6 +184,10 @@ func TestResourceFileSecretCreateError(t *testing.T) {
 			Required: true,
 		},
 		"owner_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"group_id": &schema.Schema{
 			Type:     schema.TypeInt,
 			Optional: true,
 		},
@@ -313,6 +321,10 @@ func TestResourceCredentialSecretCreate(t *testing.T) {
 			Type:     schema.TypeInt,
 			Optional: true,
 		},
+		"group_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
 		"owner_type": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
@@ -440,6 +452,10 @@ func TestResourceCredentialSecretCreateError(t *testing.T) {
 			Required: true,
 		},
 		"owner_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"group_id": &schema.Schema{
 			Type:     schema.TypeInt,
 			Optional: true,
 		},
@@ -738,6 +754,10 @@ func TestResourceTextSecretCreate(t *testing.T) {
 			Type:     schema.TypeInt,
 			Optional: true,
 		},
+		"group_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
 		"owner_type": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
@@ -860,6 +880,10 @@ func TestResourceTextSecretCreateError(t *testing.T) {
 			Required: true,
 		},
 		"owner_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"group_id": &schema.Schema{
 			Type:     schema.TypeInt,
 			Optional: true,
 		},
