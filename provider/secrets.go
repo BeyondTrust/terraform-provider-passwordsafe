@@ -73,6 +73,10 @@ func resourceCredentialSecret() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"group_id": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"owner_type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -118,6 +122,10 @@ func resourceTextSecret() *schema.Resource {
 				Required: true,
 			},
 			"owner_id": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"group_id": &schema.Schema{
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -169,6 +177,10 @@ func resourceFileSecret() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"group_id": &schema.Schema{
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"owner_type": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -201,6 +213,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	ownerId := d.Get("owner_id").(int)
+	groupId := d.Get("group_id").(int)
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
@@ -208,6 +221,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
+			GroupId: groupId,
 			OwnerId: signApinResponse.UserId,
 			Owner:   signApinResponse.UserName,
 			Email:   signApinResponse.EmailAddress,
@@ -288,6 +302,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	text := d.Get("text").(string)
 	ownerId := d.Get("owner_id").(int)
+	groupId := d.Get("group_id").(int)
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
@@ -295,6 +310,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
+			GroupId: groupId,
 			OwnerId: signApinResponse.UserId,
 			Owner:   signApinResponse.UserName,
 			Email:   signApinResponse.EmailAddress,
@@ -375,6 +391,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	description := d.Get("description").(string)
 	fileContent := d.Get("file_content").(string)
 	ownerId := d.Get("owner_id").(int)
+	groupId := d.Get("group_id").(int)
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 	file_name := d.Get("file_name").(string)
@@ -383,6 +400,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
+			GroupId: groupId,
 			OwnerId: signApinResponse.UserId,
 			Owner:   signApinResponse.UserName,
 			Email:   signApinResponse.EmailAddress,
@@ -498,6 +516,6 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	}
 
 	d.SetId(hash(secret))
-  
+
 	return diags
 }

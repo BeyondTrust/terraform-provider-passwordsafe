@@ -142,6 +142,7 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
   password = "password_content"
   owner_type = "User"
   notes = "My Notes"
+  group_id = 1
 }
 
 
@@ -152,6 +153,7 @@ resource "passwordsafe_text_secret" "my_text_secret" {
   owner_type = "User"
   text = "password_text"
   notes = "My notes"
+  group_id = 1
 }
 
 
@@ -163,6 +165,7 @@ resource "passwordsafe_file_secret" "my_file_secret" {
   file_content = file("test_secret.txt")
   file_name = "my_secret.txt"
   notes= "My notes"
+  group_id = 1
 }
 
 resource "passwordsafe_folder" "my_folder" {

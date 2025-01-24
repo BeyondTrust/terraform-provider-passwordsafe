@@ -6,14 +6,9 @@ import (
 	"net/url"
 
 	"testing"
-	"time"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
-	"github.com/BeyondTrust/go-client-library-passwordsafe/api/logging"
-	"github.com/BeyondTrust/go-client-library-passwordsafe/api/utils"
-	backoff "github.com/cenkalti/backoff/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"go.uber.org/zap"
 )
 
 type SecretTestConfigStringResponse struct {
@@ -23,6 +18,8 @@ type SecretTestConfigStringResponse struct {
 }
 
 func TestSecretSafeFlow(t *testing.T) {
+
+	InitializeGlobalConfig()
 
 	rawData := map[string]interface{}{
 		"name":        "MySafe",
@@ -40,14 +37,7 @@ func TestSecretSafeFlow(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	logger, _ := zap.NewDevelopment()
-
-	// authenticate config
-	zapLogger := logging.NewZapLogger(logger)
-	httpClientObj, _ := utils.GetHttpClient(5, false, "", "", zapLogger)
-	backoffDefinition := backoff.NewExponentialBackOff()
-	backoffDefinition.MaxElapsedTime = time.Second
-	var authenticate, _ = authentication.Authenticate(*httpClientObj, backoffDefinition, "https://fake.api.com:443/BeyondTrust/api/public/v3/", "fakeone_a654+9sdf7+8we4f", "fakeone_aasd156465sfdef", zapLogger, 300)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -92,6 +82,8 @@ func TestSecretSafeFlow(t *testing.T) {
 
 func TestSecretFolderFlow(t *testing.T) {
 
+	InitializeGlobalConfig()
+
 	rawData := map[string]interface{}{
 		"name":               "MyFolder",
 		"description":        "A secure folder for testing",
@@ -118,14 +110,7 @@ func TestSecretFolderFlow(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	logger, _ := zap.NewDevelopment()
-
-	// authenticate config
-	zapLogger := logging.NewZapLogger(logger)
-	httpClientObj, _ := utils.GetHttpClient(5, false, "", "", zapLogger)
-	backoffDefinition := backoff.NewExponentialBackOff()
-	backoffDefinition.MaxElapsedTime = time.Second
-	var authenticate, _ = authentication.Authenticate(*httpClientObj, backoffDefinition, "https://fake.api.com:443/BeyondTrust/api/public/v3/", "fakeone_a654+9sdf7+8we4f", "fakeone_aasd156465sfdef", zapLogger, 300)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
@@ -178,6 +163,8 @@ func TestSecretFolderFlow(t *testing.T) {
 
 func TestSecretFolderFlowError(t *testing.T) {
 
+	InitializeGlobalConfig()
+
 	rawData := map[string]interface{}{
 		"name":               "MyFolder",
 		"description":        "A secure folder for testing",
@@ -204,14 +191,7 @@ func TestSecretFolderFlowError(t *testing.T) {
 	}
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
 
-	logger, _ := zap.NewDevelopment()
-
-	// authenticate config
-	zapLogger := logging.NewZapLogger(logger)
-	httpClientObj, _ := utils.GetHttpClient(5, false, "", "", zapLogger)
-	backoffDefinition := backoff.NewExponentialBackOff()
-	backoffDefinition.MaxElapsedTime = time.Second
-	var authenticate, _ = authentication.Authenticate(*httpClientObj, backoffDefinition, "https://fake.api.com:443/BeyondTrust/api/public/v3/", "fakeone_a654+9sdf7+8we4f", "fakeone_aasd156465sfdef", zapLogger, 300)
+	var authenticate, _ = authentication.Authenticate(*authParams)
 
 	// mock config
 	testConfig := SecretTestConfigStringResponse{
