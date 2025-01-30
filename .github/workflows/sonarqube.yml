@@ -56,7 +56,7 @@ jobs:
           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
 
       - name: SonarQube Quality Gate check
-        if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
+        if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
         uses: sonarsource/sonarqube-quality-gate-action@master
         timeout-minutes: 5
         env:
