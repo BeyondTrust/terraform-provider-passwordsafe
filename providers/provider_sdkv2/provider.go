@@ -31,7 +31,7 @@ var config = zap.Config{
 	Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
 	Encoding:         "console", // You can use "json" for structured logging
 	EncoderConfig:    zap.NewDevelopmentEncoderConfig(),
-	OutputPaths:      []string{"stderr", "ProviderLogs.log"}, // Logs to both stderr and the file
+	OutputPaths:      []string{"stderr", "providerSdkv2.log"}, // Logs to both stderr and the file
 	ErrorOutputPaths: []string{"stderr"},
 }
 
