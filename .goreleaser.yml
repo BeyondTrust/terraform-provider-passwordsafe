@@ -53,5 +53,5 @@ release:
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   # If you want to manually examine the release before its live, uncomment this line:
   draft: false
-changelog:
-  skip: true
+#changelog:
+#  skip: true
