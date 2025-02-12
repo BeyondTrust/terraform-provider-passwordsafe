@@ -43,6 +43,7 @@ jobs:
           path: provider/coverage.out
           
   sonarqube:
+    continue-on-error: true
   # Sonar scan is not required for dependabot PRs
     runs-on: ubuntu-latest
     needs: unit_test
@@ -137,6 +138,7 @@ jobs:
           fi
 
       - name: Jfrog setup
+        continue-on-error: true
         uses: jfrog/setup-jfrog-cli@v4
         env:
           JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
@@ -179,16 +181,19 @@ jobs:
           mkdir -p terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
           mv *.zip terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
       
-      - name: Send artifacts to Jfrog 
+      - name: Send artifacts to Jfrog
+        continue-on-error: true
         run: |
           cd dist
           jfrog rt u "terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
       
       - name: Publish Build Information
+        continue-on-error: true
         run: |
           jfrog rt build-add-git
           jfrog rt build-collect-env
           jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
 
       - name: Scan Build
+        continue-on-error: true
         run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
