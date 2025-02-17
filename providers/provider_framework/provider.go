@@ -90,7 +90,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
 				Optional:    true,
-				Description: "The api key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
+				Description: "The API key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
 			},
 			"client_id": schema.StringAttribute{
 				Optional:    true,
@@ -98,7 +98,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"client_secret": schema.StringAttribute{
 				Optional:    true,
-				Description: " API OAuth Client Secret.",
+				Description: "API OAuth Client Secret.",
 			},
 			"url": schema.StringAttribute{
 				Required:    true,
@@ -110,7 +110,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"api_account_name": schema.StringAttribute{
 				Required:    true,
-				Description: "The user name for the api request to the Password Safe instance. For use when authenticating with an api key.",
+				Description: "The user name for the API request to the Password Safe instance. For use when authenticating with an API key.",
 			},
 			"verify_ca": schema.BoolAttribute{
 				Optional:    true,
@@ -118,15 +118,15 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"client_certificates_folder_path": schema.StringAttribute{
 				Optional:    true,
-				Description: "The path to the Client Certificate associated with the Password Safe instance for use when authenticating with an api key using a Client Certificate.",
+				Description: "The path to the Client Certificate associated with the Password Safe instance for use when authenticating with an API key using a Client Certificate.",
 			},
 			"client_certificate_name": schema.StringAttribute{
 				Optional:    true,
-				Description: "The name of the Client Certificate for use when authenticating with an api key using a Client Certificate.",
+				Description: "The name of the Client Certificate for use when authenticating with an API key using a Client Certificate.",
 			},
 			"client_certificate_password": schema.StringAttribute{
 				Optional:    true,
-				Description: "The password associated with the Client Certificate. For use when authenticating with an api key using a Client Certificate",
+				Description: "The password associated with the Client Certificate. For use when authenticating with an API key using a Client Certificate",
 			},
 		},
 	}
