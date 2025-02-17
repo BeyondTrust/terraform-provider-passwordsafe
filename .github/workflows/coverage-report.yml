@@ -21,7 +21,7 @@ jobs:
 
       - name: Run unit tests
         run: |
-          cd provider
+          cd providers
           go mod tidy
           go test -cover -coverprofile=coverage.txt ./...
       
@@ -29,7 +29,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: provider/coverage.txt        
+          path: providers/coverage.txt        
 
   code_coverage:
     name: "Code coverage report"
