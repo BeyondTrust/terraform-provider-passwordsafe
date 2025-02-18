@@ -89,14 +89,13 @@ func (e *EphemeralSecret) Open(ctx context.Context, request ephemeral.OpenReques
 	}
 
 	// instantiating secret obj
-	secretObj, err := secrets.NewSecretObj(*e.providerInfo.authenticationObj, zapLogger, 5000000)
+	secretObj, err := secrets.NewSecretObj(*e.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes)
 
 	if err != nil {
 		response.Diagnostics.AddError("Error getting secret", err.Error())
 		return
 	}
 
-	separator := "/"
 	if data.Separator.ValueString() != "" {
 		separator = data.Separator.ValueString()
 	}

@@ -165,31 +165,3 @@ func testManagedAccountEphemeralResourceUsingOauth(serverURL string) string {
 
 		`, serverURL)
 }
-
-func testManagedAccountEphemeralResourceError(serverURL string) string {
-	return fmt.Sprintf(`
-		provider "passwordsafe" {
-			api_key = ""
-			client_id = ""
-			client_secret = ""
-			url =  %[1]q
-			api_account_name = "apikey_user"
-			client_certificates_folder_path = ""
-			client_certificate_name = ""
-			client_certificate_password = ""
-			api_version = "3.1"
-		}
-
-		ephemeral "passwordsafe_managed_acccount_ephemeral" "test" {
-		system_name = "server01"
-		account_name = "managed_account_01"
-		}
-
-		provider "echo" {
-		data = ephemeral.passwordsafe_managed_acccount_ephemeral.test
-		}
-
-		resource "echo" "test" {}
-
-		`, serverURL)
-}
