@@ -21,6 +21,7 @@ jobs:
 
       - name: Run unit tests
         run: |
+          export TF_ACC=1
           cd providers
           go mod tidy
           go test -cover -coverprofile=coverage.txt ./...
