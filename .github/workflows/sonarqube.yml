@@ -21,8 +21,11 @@ jobs:
 
       - name: Run unit tests
         run: |
-          cd api/client
+          export TF_ACC=1
+          cd providers
+          go mod tidy
           go test -race -coverprofile=coverage.out -v
+          go test ./... -cover
           ls -alt
           go tool cover -func="coverage.out"
 
