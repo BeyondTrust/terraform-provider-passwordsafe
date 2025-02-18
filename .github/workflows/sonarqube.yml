@@ -24,8 +24,7 @@ jobs:
           export TF_ACC=1
           cd providers
           go mod tidy
-          go test -race -coverprofile=coverage.out -v
-          go test ./... -cover
+          go test ./... -cover -coverprofile=coverage.out -v
           ls -alt
           go tool cover -func="coverage.out"
 
