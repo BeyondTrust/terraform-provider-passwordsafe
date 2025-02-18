@@ -32,9 +32,9 @@ jobs:
       - name: Run unit tests
         run: |
           export TF_ACC=1
-          cd provider
+          cd providers
           go mod tidy
-          go test -race -coverprofile=coverage.out -v
+          go test ./... -cover -coverprofile=coverage.out -v
           go tool cover -func="coverage.out"
       
       - name: Save unit tests coverage
