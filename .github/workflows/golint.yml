@@ -23,7 +23,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: stable
+          go-version: '1.23.6'
           
       - name: Go mod tidy
         run: |
@@ -32,4 +32,4 @@ jobs:
       - name: Go Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.60
+          version: latest

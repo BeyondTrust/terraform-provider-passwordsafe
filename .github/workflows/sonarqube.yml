@@ -3,7 +3,7 @@ env:
   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
 
@@ -21,8 +21,10 @@ jobs:
 
       - name: Run unit tests
         run: |
-          cd api/client
-          go test -race -coverprofile=coverage.out -v
+          export TF_ACC=1
+          cd providers
+          go mod tidy
+          go test ./... -cover -coverprofile=coverage.out -v
           ls -alt
           go tool cover -func="coverage.out"
 
@@ -36,7 +38,6 @@ jobs:
             -Dsonar.pullrequest.key=${{ github.event.number }}
             -Dsonar.pullrequest.branch=${{ github.head_ref }}
             -Dsonar.pullrequest.base=${{ github.base_ref }}
-            -Dsonar.exclusions=provider/**,main.go,api/client/client_test.go
             -Dsonar.go.coverage.reportPaths=api/client/coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
@@ -49,7 +50,6 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.exclusions=provider/**,main.go,api/client/client_test.go
             -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}

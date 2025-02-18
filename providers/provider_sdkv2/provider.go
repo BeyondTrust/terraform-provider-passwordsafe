@@ -31,7 +31,7 @@ var config = zap.Config{
 	Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
 	Encoding:         "console", // You can use "json" for structured logging
 	EncoderConfig:    zap.NewDevelopmentEncoderConfig(),
-	OutputPaths:      []string{"stderr", "ProviderLogs.log"}, // Logs to both stderr and the file
+	OutputPaths:      []string{"stderr", "providerSdkv2.log"}, // Logs to both stderr and the file
 	ErrorOutputPaths: []string{"stderr"},
 }
 
@@ -60,7 +60,7 @@ func Provider() *schema.Provider {
 			"api_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The api key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
+				Description: "The API key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
 			},
 			"client_id": &schema.Schema{
 				Type:        schema.TypeString,
@@ -70,7 +70,7 @@ func Provider() *schema.Provider {
 			"client_secret": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: " API OAuth Client Secret.",
+				Description: "API OAuth Client Secret.",
 			},
 			"url": &schema.Schema{
 				Type:        schema.TypeString,
@@ -86,7 +86,7 @@ func Provider() *schema.Provider {
 			"api_account_name": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The user name for the api request to the Password Safe instance. For use when authenticating with an api key.",
+				Description: "The user name for the API request to the Password Safe instance. For use when authenticating with an API key.",
 			},
 			"verify_ca": &schema.Schema{
 				Type:        schema.TypeBool,
@@ -98,19 +98,19 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "The path to the Client Certificate associated with the Password Safe instance for use when authenticating with an api key using a Client Certificate.",
+				Description: "The path to the Client Certificate associated with the Password Safe instance for use when authenticating with an API key using a Client Certificate.",
 			},
 			"client_certificate_name": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "The name of the Client Certificate for use when authenticating with an api key using a Client Certificate.",
+				Description: "The name of the Client Certificate for use when authenticating with an API key using a Client Certificate.",
 			},
 			"client_certificate_password": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				Description: "The password associated with the Client Certificate. For use when authenticating with an api key using a Client Certificate",
+				Description: "The password associated with the Client Certificate. For use when authenticating with an API key using a Client Certificate",
 			},
 		},
 		ConfigureContextFunc: providerConfigure,
