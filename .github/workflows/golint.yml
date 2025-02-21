@@ -33,3 +33,8 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: latest
+
+      - name: Check code cognitive complexity
+        run: |
+          go install github.com/uudashr/gocognit/cmd/gocognit@latest
+          gocognit -ignore "_test|testdata" -over 10 .
