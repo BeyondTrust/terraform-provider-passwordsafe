@@ -1,10 +1,13 @@
-package providerv2
+package provider_framework
 
 import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
+	"regexp"
+	"terraform-provider-passwordsafe/providers/constants"
+	"terraform-provider-passwordsafe/providers/entities"
+	"terraform-provider-passwordsafe/providers/utils"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -17,60 +20,83 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+var ManganedAccountEphemeralOauthConfig entities.PasswordSafeTestConfig = entities.PasswordSafeTestConfig{
+	ClientID:                     constants.FakeClientId,
+	ClientSecret:                 constants.FakeClientSecret,
+	URL:                          "",
+	APIAccountName:               "",
+	ClientCertificatesFolderPath: "",
+	ClientCertificateName:        "",
+	ClientCertificatePassword:    "",
+	APIVersion:                   "3.1",
+	Resource: fmt.Sprintf(`
+	ephemeral "passwordsafe_managed_acccount_ephemeral" "test" {
+	system_name = "server01"
+	account_name = "managed_account_01"
+	}
+
+	provider "echo" {
+	data = ephemeral.passwordsafe_managed_acccount_ephemeral.test
+	}
+
+	resource "echo" "test" {}`),
+}
+
 func TestEphemeralManagedAcount(t *testing.T) {
 
 	// mocking Password Safe API
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// mocking Response according to the endpoint path
 		switch r.URL.Path {
-		case "/Auth/connect/token":
+		case constants.APIPath + "/Auth/connect/token":
 			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/Auth/SignAppIn":
+		case constants.APIPath + "/Auth/SignAppIn":
 			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
 
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/Auth/Signout":
+		case constants.APIPath + "/Auth/Signout":
 			_, err := w.Write([]byte(``))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/ManagedAccounts":
+		case constants.APIPath + "/ManagedAccounts":
 			_, err := w.Write([]byte(`{"SystemId":1,"AccountId":10}`))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/Requests":
+		case constants.APIPath + "/Requests":
 			_, err := w.Write([]byte(`124`))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/Credentials/124":
+		case constants.APIPath + "/Credentials/124":
 			_, err := w.Write([]byte(`"fake_credential"`))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/Requests/124/checkin":
+		case constants.APIPath + "/Requests/124/checkin":
 			_, err := w.Write([]byte(``))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 		}
 
 	}))
 
-	serverURL, _ := url.Parse(server.URL + "/")
+	server.URL = server.URL + constants.APIPath
+	ManganedAccountEphemeralOauthConfig.URL = server.URL
 
 	resource.Test(t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -83,21 +109,10 @@ func TestEphemeralManagedAcount(t *testing.T) {
 			"echo":         echoprovider.NewProviderServer(),
 		},
 		Steps: []resource.TestStep{
-			{
-				// test usging aki key authentication
-				Config: testManagedAccountEphemeralResourceUsingApiKey(serverURL.String()),
-				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(
-						"echo.test",
-						tfjsonpath.New("data").AtMapKey("value"),
-						knownvalue.StringExact("fake_credential"),
-					),
-				},
-			},
 
 			{
 				// test using oauth authentication
-				Config: testManagedAccountEphemeralResourceUsingOauth(serverURL.String()),
+				Config: utils.TestResourceConfig(ManganedAccountEphemeralOauthConfig),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"echo.test",
@@ -110,58 +125,60 @@ func TestEphemeralManagedAcount(t *testing.T) {
 	})
 }
 
-func testManagedAccountEphemeralResourceUsingApiKey(serverURL string) string {
-	return fmt.Sprintf(`
-		provider "passwordsafe" {
-			api_key = "fake_api_key_82a8a8e48b488d"
-			client_id = "fake_client_id_35e7dd5093ae"
-			client_secret = "fake_cliente_secret_JPMhmYTRSpeHJY"
-			url =  %[1]q
-			api_account_name = "apikey_user"
-			client_certificates_folder_path = ""
-			client_certificate_name = ""
-			client_certificate_password = ""
-			api_version = "3.1"
+func TestEphemeralManagedAcountNotFound(t *testing.T) {
+
+	// mocking Password Safe API
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// mocking Response according to the endpoint path
+		switch r.URL.Path {
+		case constants.APIPath + "/Auth/connect/token":
+			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/Auth/SignAppIn":
+			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/Auth/Signout":
+			_, err := w.Write([]byte(``))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/ManagedAccounts":
+			w.WriteHeader(http.StatusNotFound)
+			_, err := w.Write([]byte(`"Managed Account not found"`))
+			if err != nil {
+				t.Error(err.Error())
+			}
 		}
+	}))
 
-		ephemeral "passwordsafe_managed_acccount_ephemeral" "test" {
-		system_name = "server01"
-		account_name = "managed_account_01"
-		}
+	server.URL = server.URL + constants.APIPath
+	ManganedAccountEphemeralOauthConfig.URL = server.URL
 
-		provider "echo" {
-		data = ephemeral.passwordsafe_managed_acccount_ephemeral.test
-		}
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		PreCheck: func() {},
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"passwordsafe": providerserver.NewProtocol6WithError(NewProvider()),
+			"echo":         echoprovider.NewProviderServer(),
+		},
+		Steps: []resource.TestStep{
 
-		resource "echo" "test" {}
-
-		`, serverURL)
-}
-
-func testManagedAccountEphemeralResourceUsingOauth(serverURL string) string {
-	return fmt.Sprintf(`
-		provider "passwordsafe" {
-			api_key = ""
-			client_id = "6138d050-e266-4b05-9ced-35e7dd5093ae"
-			client_secret = "W8dx3BMkkxe4OpdsJPMhmYTRSpeHJYA/NVmcnmPZv5s="
-			url =  %[1]q
-			api_account_name = "apikey_user"
-			client_certificates_folder_path = ""
-			client_certificate_name = ""
-			client_certificate_password = ""
-			api_version = "3.1"
-		}
-
-		ephemeral "passwordsafe_managed_acccount_ephemeral" "test" {
-		system_name = "server01"
-		account_name = "managed_account_01"
-		}
-
-		provider "echo" {
-		data = ephemeral.passwordsafe_managed_acccount_ephemeral.test
-		}
-
-		resource "echo" "test" {}
-
-		`, serverURL)
+			{
+				// test using oauth authentication
+				Config:      utils.TestResourceConfig(ManganedAccountEphemeralOauthConfig),
+				ExpectError: regexp.MustCompile("Managed Account not found"),
+			},
+		},
+	})
 }

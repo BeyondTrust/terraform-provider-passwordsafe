@@ -1,7 +1,7 @@
 dario.cat/mergo v1.0.0 h1:AGCNq9Evsj31mOgNPcLyXc+4PNABt905YmuqPYYpBWk=
 dario.cat/mergo v1.0.0/go.mod h1:uNxQE+84aUszobStD9th8a29P2fMDhsBdgRYvZOxGmk=
-github.com/BeyondTrust/go-client-library-passwordsafe v0.14.3 h1:KtmaJisSvfbtvogoaeq2JF+rj5IW0Qck2evEgL56G/M=
-github.com/BeyondTrust/go-client-library-passwordsafe v0.14.3/go.mod h1:72FMrpiz1fUSiIIIAXiCzQ55Y83spsu2jl5n/Stzfks=
+github.com/BeyondTrust/go-client-library-passwordsafe v0.15.0 h1:em9Ksqa+pZgdKyHQ1BlTMqYmQBXnE32u156X5HSELtc=
+github.com/BeyondTrust/go-client-library-passwordsafe v0.15.0/go.mod h1:on49hOdisiIBZ00S7SBszG1r8CHvr2jkv/qEwDJbHIM=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/ProtonMail/go-crypto v1.1.0-alpha.2 h1:bkyFVUP+ROOARdgCiJzNQo2V2kiB97LyUpzH9P6Hrlg=

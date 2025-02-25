@@ -22,7 +22,7 @@ import (
 
 var signInCount uint64
 var mu sync.Mutex
-var mu_out sync.Mutex
+var muOut sync.Mutex
 
 var signApinResponse entities.SignApinResponse
 
@@ -121,11 +121,11 @@ func Provider() *schema.Provider {
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 
 	apikey := d.Get("api_key").(string)
-	client_id := d.Get("client_id").(string)
-	client_secret := d.Get("client_secret").(string)
+	clientId := d.Get("client_id").(string)
+	clientSecret := d.Get("client_secret").(string)
 	url := d.Get("url").(string)
 	apiVersion := d.Get("api_version").(string)
-	accountname := d.Get("api_account_name").(string)
+	accountName := d.Get("api_account_name").(string)
 	verifyca := d.Get("verify_ca").(bool)
 	clientCertificatePath := d.Get("client_certificates_folder_path").(string)
 	clientCertificateName := d.Get("client_certificate_name").(string)
@@ -133,11 +133,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	apikey = strings.TrimSpace(apikey)
 	url = strings.TrimSpace(url)
-	accountname = strings.TrimSpace(accountname)
+	accountName = strings.TrimSpace(accountName)
 
 	var diags diag.Diagnostics
 
-	if apikey == "" && client_id == "" && client_secret == "" {
+	if apikey == "" && clientId == "" && clientSecret == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Invalid Authentication method",
@@ -155,7 +155,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diags
 	}
 
-	if apikey != "" && accountname == "" {
+	if apikey != "" && accountName == "" {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Invalid Account Name",
@@ -165,6 +165,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	}
 
 	retryMaxElapsedTimeMinutes := 2
+	clientTimeOutInSeconds := 30
 
 	backoffDefinition := backoff.NewExponentialBackOff()
 	backoffDefinition.InitialInterval = 1 * time.Second
@@ -182,6 +183,27 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		}
 	}
 
+	// Create an instance of ValidationParams
+	params := utils.ValidationParams{
+		ClientID:                   clientId,
+		ClientSecret:               clientSecret,
+		ApiUrl:                     &url,
+		ApiVersion:                 apiVersion,
+		ClientTimeOutInSeconds:     clientTimeOutInSeconds,
+		VerifyCa:                   verifyca,
+		Logger:                     zapLogger,
+		Certificate:                certificate,
+		CertificateKey:             certificateKey,
+		RetryMaxElapsedTimeMinutes: &retryMaxElapsedTimeMinutes,
+	}
+
+	// validate inputs
+	errorsInInputs := utils.ValidateInputs(params)
+
+	if errorsInInputs != nil {
+		return nil, diag.FromErr(err)
+	}
+
 	httpClientObj, err := utils.GetHttpClient(45, verifyca, certificate, certificateKey, zapLogger)
 	if err != nil {
 		return nil, diag.FromErr(err)
@@ -197,7 +219,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 			APIVersion:                 apiVersion,
 			ClientID:                   "",
 			ClientSecret:               "",
-			ApiKey:                     fmt.Sprintf("%v;runas=%v;", apikey, accountname),
+			ApiKey:                     fmt.Sprintf("%v;runas=%v;", apikey, accountName),
 			Logger:                     zapLogger,
 			RetryMaxElapsedTimeSeconds: retryMaxElapsedTimeMinutes,
 		}
@@ -213,8 +235,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		BackoffDefinition:          backoffDefinition,
 		EndpointURL:                url,
 		APIVersion:                 apiVersion,
-		ClientID:                   client_id,
-		ClientSecret:               client_secret,
+		ClientID:                   clientId,
+		ClientSecret:               clientSecret,
 		ApiKey:                     "",
 		Logger:                     zapLogger,
 		RetryMaxElapsedTimeSeconds: retryMaxElapsedTimeMinutes,

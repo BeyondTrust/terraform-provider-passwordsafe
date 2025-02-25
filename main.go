@@ -17,7 +17,6 @@ import (
 func main() {
 	ctx := context.Background()
 	providers := []func() tfprotov5.ProviderServer{
-
 		// terraform-plugin-framework provider (ephemeral resoruces), new provider
 		providerserver.NewProtocol5(
 			providerFramework.NewProvider(),
