@@ -1,9 +1,12 @@
-package providerv2
+// Copyright 2025 BeyondTrust. All rights reserved.
+// Package provider_framework implements a terraform provider that can talk with Beyondtrust Secret Safe API.
+package provider_framework
 
 import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
@@ -29,6 +32,10 @@ var (
 	separator                  = "/"
 	retryMaxElapsedTimeMinutes = 15
 )
+
+var signInCount uint64
+var mu sync.Mutex
+var muOut sync.Mutex
 
 type PasswordSafeProvider struct {
 }
@@ -157,6 +164,7 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 
 	if providerData.apiKey == "" && providerData.clientId == "" && providerData.clientSecret == "" {
 		resp.Diagnostics.AddError("Invalid Authentication method", "Please add a valid credential (API Key / Client Credentials)")
+		return
 
 	}
 
@@ -185,6 +193,28 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 		if err != nil {
 			resp.Diagnostics.AddError("Error in certificate", err.Error())
 		}
+	}
+
+	// Create an instance of ValidationParams
+	params := utils.ValidationParams{
+		ClientID:                   providerData.clientId,
+		ClientSecret:               providerData.clientSecret,
+		ApiUrl:                     &providerData.url,
+		ApiVersion:                 providerData.apiVersion,
+		ClientTimeOutInSeconds:     clientTimeOutInSeconds,
+		VerifyCa:                   providerData.verifyca,
+		Logger:                     zapLogger,
+		Certificate:                certificate,
+		CertificateKey:             certificateKey,
+		RetryMaxElapsedTimeMinutes: &retryMaxElapsedTimeMinutes,
+	}
+
+	// validate inputs
+	errorsInInputs := utils.ValidateInputs(params)
+
+	if errorsInInputs != nil {
+		resp.Diagnostics.AddError("Error in inputs validation", errorsInInputs.Error())
+		return
 	}
 
 	// creating a http client
@@ -242,6 +272,8 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 
 	// pass data to ephemeral resources
 	resp.EphemeralResourceData = providerData
+	// pass data to ephemeral resources
+	resp.ResourceData = providerData
 
 }
 
@@ -254,7 +286,9 @@ func (p *PasswordSafeProvider) DataSources(ctx context.Context) []func() datasou
 }
 
 func (p *PasswordSafeProvider) Resources(_ context.Context) []func() resource.Resource {
-	return nil
+	return []func() resource.Resource{
+		NewWorkGroupResource,
+	}
 }
 
 func (p *PasswordSafeProvider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {

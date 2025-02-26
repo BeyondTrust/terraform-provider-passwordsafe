@@ -1,10 +1,12 @@
-package providerv2
+package provider_framework
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
+	"regexp"
+	"terraform-provider-passwordsafe/providers/constants"
+	"terraform-provider-passwordsafe/providers/entities"
+	"terraform-provider-passwordsafe/providers/utils"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -17,42 +19,93 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
+var SecretEphemeralOauthConfig entities.PasswordSafeTestConfig = entities.PasswordSafeTestConfig{
+	ClientID:                     constants.FakeClientId,
+	ClientSecret:                 constants.FakeClientSecret,
+	URL:                          "",
+	APIAccountName:               "",
+	ClientCertificatesFolderPath: "",
+	ClientCertificateName:        "",
+	ClientCertificatePassword:    "",
+	APIVersion:                   "3.1",
+	Resource: `
+	ephemeral "passwordsafe_secret_ephemeral" "test" {
+	title = "secret_title"
+	path = "secret_path"
+	separator = "/"
+	}
+
+	provider "echo" {
+	data = ephemeral.passwordsafe_secret_ephemeral.test
+	}
+
+	resource "echo" "test" {}`,
+}
+
 func TestEphemeralSecret(t *testing.T) {
 
 	// mocking Password Safe API
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// mocking Response according to the endpoint path
 		switch r.URL.Path {
-		case "/Auth/connect/token":
+		case constants.APIPath + "/Auth/connect/token":
 			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/Auth/SignAppIn":
+		case constants.APIPath + "/Auth/SignAppIn":
 			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
 
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/secrets-safe/secrets":
+		case constants.APIPath + "/secrets-safe/secrets":
 			_, err := w.Write([]byte(`[{"SecretType": "SECRET", "Password": "fake_password_a#$%!","Id": "9152f5b6-07d6-4955-175a-08db047219ce","Title": "credential_in_sub_3"}]`))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 
-		case "/Auth/Signout":
+		case constants.APIPath + "/Auth/Signout":
 			_, err := w.Write([]byte(``))
 			if err != nil {
-				t.Error("Test case Failed")
+				t.Error(err.Error())
 			}
 		}
 
 	}))
 
-	serverURL, _ := url.Parse(server.URL + "/")
+	server.URL = server.URL + constants.APIPath
+
+	APIKeyConfig := entities.PasswordSafeTestConfig{
+		APIKey:                       "fake_api_key_82a8a8e48b488d",
+		ClientID:                     "",
+		ClientSecret:                 "",
+		URL:                          "",
+		APIAccountName:               "api_key_username",
+		ClientCertificatesFolderPath: "",
+		ClientCertificateName:        "",
+		ClientCertificatePassword:    "",
+		APIVersion:                   "3.1",
+		Resource: `
+		ephemeral "passwordsafe_secret_ephemeral" "test" {
+		title = "secret_title"
+		path = "secret_path"
+		separator = "/"
+		}
+
+		provider "echo" {
+		data = ephemeral.passwordsafe_secret_ephemeral.test
+		}
+
+		resource "echo" "test" {}`,
+	}
+
+	APIKeyConfig.URL = server.URL
+
+	SecretEphemeralOauthConfig.URL = server.URL
 
 	resource.Test(t, resource.TestCase{
 
@@ -68,7 +121,7 @@ func TestEphemeralSecret(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test using aki key authentication
-				Config: testSecretEphemeralResourceUsingApiKey(serverURL.String()),
+				Config: utils.TestResourceConfig(APIKeyConfig),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"echo.test",
@@ -79,7 +132,7 @@ func TestEphemeralSecret(t *testing.T) {
 			},
 			{
 				// test using oauth authentication
-				Config: testSecretEphemeralResourceUsingOauth(serverURL.String()),
+				Config: utils.TestResourceConfig(SecretEphemeralOauthConfig),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
 						"echo.test",
@@ -92,60 +145,61 @@ func TestEphemeralSecret(t *testing.T) {
 	})
 }
 
-func testSecretEphemeralResourceUsingApiKey(serverURL string) string {
-	return fmt.Sprintf(`
-		provider "passwordsafe" {
-			api_key = "fake_api_key_82a8a8e48b488d"
-			client_id = ""
-			client_secret = ""
-			url =  %[1]q
-			api_account_name = "apikey_user"
-			client_certificates_folder_path = ""
-			client_certificate_name = ""
-			client_certificate_password = ""
-			api_version = "3.1"
+func TestEphemeralSecretNotFound(t *testing.T) {
+
+	// mocking Password Safe API
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// mocking Response according to the endpoint path
+		switch r.URL.Path {
+		case constants.APIPath + "/Auth/connect/token":
+			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/Auth/SignAppIn":
+			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/secrets-safe/secrets":
+			_, err := w.Write([]byte(`[]`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/Auth/Signout":
+			_, err := w.Write([]byte(``))
+			if err != nil {
+				t.Error(err.Error())
+			}
 		}
 
-		ephemeral "passwordsafe_secret_ephemeral" "test" {
-		title = "secret_title"
-		path = "secret_path"
-		separator = "/"
-		}
+	}))
 
-		provider "echo" {
-		data = ephemeral.passwordsafe_secret_ephemeral.test
-		}
+	server.URL = server.URL + constants.APIPath
 
-		resource "echo" "test" {}
+	SecretEphemeralOauthConfig.URL = server.URL
 
-		`, serverURL)
-}
+	resource.Test(t, resource.TestCase{
 
-func testSecretEphemeralResourceUsingOauth(serverURL string) string {
-	return fmt.Sprintf(`
-		provider "passwordsafe" {
-			api_key = ""
-			client_id = "fake_client_id_35e7dd5093ae"
-			client_secret = "fake_cliente_secret_JPMhmYTRSpeHJY"
-			url =  %[1]q
-			api_account_name = ""
-			client_certificates_folder_path = ""
-			client_certificate_name = ""
-			client_certificate_password = ""
-			api_version = "3.1"
-		}
-
-		ephemeral "passwordsafe_secret_ephemeral" "test" {
-		title = "secret_title"
-		path = "secret_path"
-		separator = "/"
-		}
-
-		provider "echo" {
-		data = ephemeral.passwordsafe_secret_ephemeral.test
-		}
-
-		resource "echo" "test" {}
-
-	`, serverURL)
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		PreCheck: func() {},
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"passwordsafe": providerserver.NewProtocol6WithError(NewProvider()),
+			"echo":         echoprovider.NewProviderServer(),
+		},
+		Steps: []resource.TestStep{
+			{
+				// test using oauth authentication
+				Config:      utils.TestResourceConfig(SecretEphemeralOauthConfig),
+				ExpectError: regexp.MustCompile("error SecretGetSecretByPath, Secret was not found: StatusCode: 404"),
+			},
+		},
+	})
 }

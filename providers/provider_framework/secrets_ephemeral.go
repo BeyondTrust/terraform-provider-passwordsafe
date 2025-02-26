@@ -1,7 +1,10 @@
-package providerv2
+// Copyright 2025 BeyondTrust. All rights reserved.
+// Package provider_framework implements a terraform provider that can talk with Beyondtrust Secret Safe API.
+package provider_framework
 
 import (
 	"context"
+	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -29,8 +32,9 @@ type EphemeralSecretModel struct {
 	Value     types.String `tfsdk:"value"`
 }
 
-func (e *EphemeralSecret) Metadata(ctx context.Context, _ ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "passwordsafe_secret_ephemeral"
+func (e *EphemeralSecret) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_secret_ephemeral"
+
 }
 
 func (e *EphemeralSecret) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
@@ -88,6 +92,12 @@ func (e *EphemeralSecret) Open(ctx context.Context, request ephemeral.OpenReques
 		return
 	}
 
+	_, err := utils.Autenticate(*e.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		response.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
 	// instantiating secret obj
 	secretObj, err := secrets.NewSecretObj(*e.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes)
 
@@ -110,6 +120,12 @@ func (e *EphemeralSecret) Open(ctx context.Context, request ephemeral.OpenReques
 
 	// setting secret to value attribute
 	data.Value = types.StringValue(secret)
+
+	err = utils.SignOut(*e.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		response.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 

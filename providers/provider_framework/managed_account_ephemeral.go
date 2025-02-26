@@ -1,7 +1,10 @@
-package providerv2
+// Copyright 2025 BeyondTrust. All rights reserved.
+// Package provider_framework implements a terraform provider that can talk with Beyondtrust Secret Safe API.
+package provider_framework
 
 import (
 	"context"
+	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -27,8 +30,8 @@ type EphemeralManagedAccountModel struct {
 	Value       types.String `tfsdk:"value"`
 }
 
-func (e *EphemeralManagedAccount) Metadata(ctx context.Context, _ ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	response.TypeName = "passwordsafe_managed_acccount_ephemeral"
+func (e *EphemeralManagedAccount) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_managed_acccount_ephemeral"
 }
 
 func (e *EphemeralManagedAccount) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
@@ -82,6 +85,12 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 		return
 	}
 
+	_, err := utils.Autenticate(*e.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		response.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
 	// instantiating managed account obj
 	manageAccountObj, err := managed_accounts.NewManagedAccountObj(*e.providerInfo.authenticationObj, zapLogger)
 
@@ -100,6 +109,12 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 
 	// setting secret to value attribute
 	data.Value = types.StringValue(gotManagedAccount)
+
+	err = utils.SignOut(*e.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		response.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 

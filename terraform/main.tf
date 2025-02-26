@@ -195,3 +195,7 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
   path = "oauthgrp"
   title = "ephemeral_secret_title1"
 }
+
+resource "passwordsafe_workgroup" "workgroup" {
+  name = "workgroup name"
+}
