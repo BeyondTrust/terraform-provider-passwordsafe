@@ -1,7 +1,6 @@
 package provider_framework
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -29,7 +28,7 @@ var ManganedAccountEphemeralOauthConfig entities.PasswordSafeTestConfig = entiti
 	ClientCertificateName:        "",
 	ClientCertificatePassword:    "",
 	APIVersion:                   "3.1",
-	Resource: fmt.Sprintf(`
+	Resource: `
 	ephemeral "passwordsafe_managed_acccount_ephemeral" "test" {
 	system_name = "server01"
 	account_name = "managed_account_01"
@@ -39,7 +38,7 @@ var ManganedAccountEphemeralOauthConfig entities.PasswordSafeTestConfig = entiti
 	data = ephemeral.passwordsafe_managed_acccount_ephemeral.test
 	}
 
-	resource "echo" "test" {}`),
+	resource "echo" "test" {}`,
 }
 
 func TestEphemeralManagedAcount(t *testing.T) {

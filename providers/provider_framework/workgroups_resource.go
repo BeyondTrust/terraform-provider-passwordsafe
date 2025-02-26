@@ -88,10 +88,13 @@ func (r *WorkGroupResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	workgroups.NewWorkGroupObj(*r.providerInfo.authenticationObj, nil)
-
 	// instantiating workgroup obj
-	workGroupObj, _ := workgroups.NewWorkGroupObj(*r.providerInfo.authenticationObj, zapLogger)
+	workGroupObj, err := workgroups.NewWorkGroupObj(*r.providerInfo.authenticationObj, zapLogger)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
+		return
+	}
 
 	workGroupDetails := entities.WorkGroupDetails{
 		Name:           data.Name.ValueString(),

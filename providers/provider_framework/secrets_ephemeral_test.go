@@ -1,7 +1,6 @@
 package provider_framework
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -29,7 +28,7 @@ var SecretEphemeralOauthConfig entities.PasswordSafeTestConfig = entities.Passwo
 	ClientCertificateName:        "",
 	ClientCertificatePassword:    "",
 	APIVersion:                   "3.1",
-	Resource: fmt.Sprintf(`
+	Resource: `
 	ephemeral "passwordsafe_secret_ephemeral" "test" {
 	title = "secret_title"
 	path = "secret_path"
@@ -40,7 +39,7 @@ var SecretEphemeralOauthConfig entities.PasswordSafeTestConfig = entities.Passwo
 	data = ephemeral.passwordsafe_secret_ephemeral.test
 	}
 
-	resource "echo" "test" {}`),
+	resource "echo" "test" {}`,
 }
 
 func TestEphemeralSecret(t *testing.T) {
@@ -90,7 +89,7 @@ func TestEphemeralSecret(t *testing.T) {
 		ClientCertificateName:        "",
 		ClientCertificatePassword:    "",
 		APIVersion:                   "3.1",
-		Resource: fmt.Sprintf(`
+		Resource: `
 		ephemeral "passwordsafe_secret_ephemeral" "test" {
 		title = "secret_title"
 		path = "secret_path"
@@ -101,7 +100,7 @@ func TestEphemeralSecret(t *testing.T) {
 		data = ephemeral.passwordsafe_secret_ephemeral.test
 		}
 
-		resource "echo" "test" {}`),
+		resource "echo" "test" {}`,
 	}
 
 	APIKeyConfig.URL = server.URL

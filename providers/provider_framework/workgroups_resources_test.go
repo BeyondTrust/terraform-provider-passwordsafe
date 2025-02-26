@@ -1,7 +1,6 @@
 package provider_framework
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -64,10 +63,10 @@ func TestCreateWorkgroup(t *testing.T) {
 		ClientCertificateName:        "",
 		ClientCertificatePassword:    "",
 		APIVersion:                   "3.1",
-		Resource: fmt.Sprintf(`
+		Resource: `
 		resource "passwordsafe_workgroup" "workgroup" {
  			name = "test"
-		}`),
+		}`,
 	}
 
 	server.URL = server.URL + constants.APIPath
@@ -113,10 +112,10 @@ func TestCreateWorkgroupBadAPIVersion(t *testing.T) {
 		ClientCertificateName:        "",
 		ClientCertificatePassword:    "",
 		APIVersion:                   "3.111",
-		Resource: fmt.Sprintf(`
+		Resource: `
 		resource "passwordsafe_workgroup" "workgroup" {
  			name = "test"
-		}`),
+		}`,
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -150,10 +149,10 @@ func TestCreateWorkgroupBadCredentials(t *testing.T) {
 		ClientCertificateName:        "",
 		ClientCertificatePassword:    "",
 		APIVersion:                   "3.1",
-		Resource: fmt.Sprintf(`
+		Resource: `
 		resource "passwordsafe_workgroup" "workgroup" {
  			name = "test"
-		}`),
+		}`,
 	}
 
 	resource.Test(t, resource.TestCase{

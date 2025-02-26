@@ -28,9 +28,8 @@ func autenticate(d *schema.ResourceData, m interface{}) (entities.SignApinRespon
 // signOut sign Password Safe out
 func signOut(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
-	var err error
 
-	err = utils.SignOut(*authenticationObj, &muOut, &signInCount, zapLogger)
+	err := utils.SignOut(*authenticationObj, &muOut, &signInCount, zapLogger)
 	if err != nil {
 		zapLogger.Error(err.Error())
 		return err
