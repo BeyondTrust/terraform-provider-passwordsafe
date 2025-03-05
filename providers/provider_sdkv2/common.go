@@ -11,18 +11,18 @@ import (
 )
 
 // autenticate get Password Safe authentication.
-func autenticate(d *schema.ResourceData, m interface{}) (entities.SignApinResponse, error) {
+func autenticate(d *schema.ResourceData, m interface{}) (entities.SignAppinResponse, error) {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	var err error
-	var signApinResponse entities.SignApinResponse
+	var signAppinResponse entities.SignAppinResponse
 
-	signApinResponse, err = utils.Autenticate(*authenticationObj, &mu, &signInCount, zapLogger)
+	signAppinResponse, err = utils.Autenticate(*authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		zapLogger.Error(err.Error())
-		return signApinResponse, err
+		return signAppinResponse, err
 	}
 
-	return signApinResponse, nil
+	return signAppinResponse, nil
 }
 
 // signOut sign Password Safe out

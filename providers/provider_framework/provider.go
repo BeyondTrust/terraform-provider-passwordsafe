@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+
 	"time"
 
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
@@ -288,6 +289,8 @@ func (p *PasswordSafeProvider) DataSources(ctx context.Context) []func() datasou
 func (p *PasswordSafeProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewWorkGroupResource,
+		NewAssetByWorkgGroypIdResource,
+		NewAssetByWorkGroupNameResource,
 	}
 }
 

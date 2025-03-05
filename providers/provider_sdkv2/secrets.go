@@ -201,7 +201,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signApinResponse, err := autenticate(d, m)
+	signAppinResponse, err := autenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -222,9 +222,9 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
 			GroupId: groupId,
-			OwnerId: signApinResponse.UserId,
-			Owner:   signApinResponse.UserName,
-			Email:   signApinResponse.EmailAddress,
+			OwnerId: signAppinResponse.UserId,
+			Owner:   signAppinResponse.UserName,
+			Email:   signAppinResponse.EmailAddress,
 		}
 		owners = append(owners, mainOwner)
 	}
@@ -291,7 +291,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signApinResponse, err := autenticate(d, m)
+	signAppinResponse, err := autenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -311,9 +311,9 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
 			GroupId: groupId,
-			OwnerId: signApinResponse.UserId,
-			Owner:   signApinResponse.UserName,
-			Email:   signApinResponse.EmailAddress,
+			OwnerId: signAppinResponse.UserId,
+			Owner:   signAppinResponse.UserName,
+			Email:   signAppinResponse.EmailAddress,
 		}
 		owners = append(owners, mainOwner)
 	}
@@ -380,7 +380,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signApinResponse, err := autenticate(d, m)
+	signAppinResponse, err := autenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -401,9 +401,9 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	if ownerType == "User" {
 		mainOwner := entities.OwnerDetails{
 			GroupId: groupId,
-			OwnerId: signApinResponse.UserId,
-			Owner:   signApinResponse.UserName,
-			Email:   signApinResponse.EmailAddress,
+			OwnerId: signAppinResponse.UserId,
+			Owner:   signAppinResponse.UserName,
+			Email:   signAppinResponse.EmailAddress,
 		}
 		owners = append(owners, mainOwner)
 	}

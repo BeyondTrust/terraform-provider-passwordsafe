@@ -44,9 +44,9 @@ func TestResourceConfig(config entities.PasswordSafeTestConfig) string {
 }
 
 // autenticate get Password Safe authentication.
-func Autenticate(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) (libraryEntitites.SignApinResponse, error) {
+func Autenticate(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) (libraryEntitites.SignAppinResponse, error) {
 	var err error
-	var signApinResponse libraryEntitites.SignApinResponse
+	var signAppinResponse libraryEntitites.SignAppinResponse
 
 	mu.Lock()
 	if atomic.LoadUint64(signInCount) > 0 {
@@ -55,18 +55,18 @@ func Autenticate(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signI
 		mu.Unlock()
 
 	} else {
-		signApinResponse, err = authenticationObj.GetPasswordSafeAuthentication()
+		signAppinResponse, err = authenticationObj.GetPasswordSafeAuthentication()
 		if err != nil {
 			mu.Unlock()
 			zapLogger.Error(err.Error())
-			return libraryEntitites.SignApinResponse{}, err
+			return libraryEntitites.SignAppinResponse{}, err
 		}
 		atomic.AddUint64(signInCount, 1)
 		zapLogger.Debug(fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(signInCount)))
 		mu.Unlock()
 	}
 
-	return signApinResponse, nil
+	return signAppinResponse, nil
 }
 
 // signOut sign Password Safe out
