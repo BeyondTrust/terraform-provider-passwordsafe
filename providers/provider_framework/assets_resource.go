@@ -102,7 +102,8 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 			},
 			"asset_id": schema.Int32Attribute{
 				MarkdownDescription: "Asset Id",
-				Optional:            true,
+				Required:            false,
+				Optional:            false,
 				Computed:            true,
 			},
 			"asset_name": schema.StringAttribute{
@@ -230,7 +231,8 @@ func NewAssetByWorkGroupNameResource() resource.Resource {
 			},
 			"asset_id": schema.Int32Attribute{
 				MarkdownDescription: "Asset Id",
-				Optional:            true,
+				Required:            false,
+				Optional:            false,
 				Computed:            true,
 			},
 			"asset_name": schema.StringAttribute{
