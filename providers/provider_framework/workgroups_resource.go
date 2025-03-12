@@ -52,7 +52,8 @@ func (r *WorkGroupResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"id": schema.Int32Attribute{
 				MarkdownDescription: "Workgroup Id",
-				Optional:            true,
+				Required:            false,
+				Optional:            false,
 				Computed:            true,
 			},
 		},

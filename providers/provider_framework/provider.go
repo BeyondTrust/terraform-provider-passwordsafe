@@ -291,6 +291,7 @@ func (p *PasswordSafeProvider) Resources(_ context.Context) []func() resource.Re
 		NewWorkGroupResource,
 		NewAssetByWorkgGroypIdResource,
 		NewAssetByWorkGroupNameResource,
+		NewDatabaseResource,
 	}
 }
 
