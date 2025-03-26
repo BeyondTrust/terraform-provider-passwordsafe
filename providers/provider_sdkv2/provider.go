@@ -114,6 +114,38 @@ func Provider() *schema.Provider {
 	}
 }
 
+// ValidateCredentialsAndConfig make basic validations in credential and config data.
+func ValidateCredentialsAndConfig(apikey string, clientId string, clientSecret string, url string, accountName string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if apikey == "" && clientId == "" && clientSecret == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Authentication method",
+			Detail:   "Please add a valid credential (API Key / Client Credentials)",
+		})
+		return diags
+	}
+
+	if url == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid URL",
+			Detail:   "Please add a proper URL",
+		})
+		return diags
+	}
+
+	if apikey != "" && accountName == "" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid Account Name",
+			Detail:   "Please add a proper Account Name",
+		})
+		return diags
+	}
+	return nil
+}
+
 // Provider Init Config.
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 
@@ -134,30 +166,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	var diags diag.Diagnostics
 
-	if apikey == "" && clientId == "" && clientSecret == "" {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid Authentication method",
-			Detail:   "Please add a valid credential (API Key / Client Credentials)",
-		})
-		return nil, diags
-	}
-
-	if url == "" {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid URL",
-			Detail:   "Please add a proper URL",
-		})
-		return nil, diags
-	}
-
-	if apikey != "" && accountName == "" {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Invalid Account Name",
-			Detail:   "Please add a proper Account Name",
-		})
+	// Make basic validations.
+	diags = ValidateCredentialsAndConfig(apikey, clientId, clientSecret, url, accountName)
+	if diags != nil {
 		return nil, diags
 	}
 

@@ -117,7 +117,7 @@ func (r *databaseResource) Create(ctx context.Context, req resource.CreateReques
 	databaseObj, err := databases.NewDatabaseObj(*r.providerInfo.authenticationObj, zapLogger)
 
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
+		resp.Diagnostics.AddError("Error creating database object", err.Error())
 		return
 	}
 
