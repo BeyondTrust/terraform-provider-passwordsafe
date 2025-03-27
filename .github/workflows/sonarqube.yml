@@ -30,7 +30,7 @@ jobs:
 
       - name: SonarQube Scan on PR
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@aa494459d7c39c106cc77b166de8b4250a32bb97 # v5.1.0
         with:
           projectBaseDir: .
           args: >
@@ -45,7 +45,7 @@ jobs:
           
       - name: SonarQube Scan on branch
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@aa494459d7c39c106cc77b166de8b4250a32bb97 # v5.1.0
         with:
           projectBaseDir: .
           args: >
@@ -57,7 +57,7 @@ jobs:
 
       - name: SonarQube Quality Gate check
         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
-        uses: sonarsource/sonarqube-quality-gate-action@master
+        uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}

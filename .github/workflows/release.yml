@@ -38,7 +38,7 @@ jobs:
           go tool cover -func="coverage.out"
       
       - name: Save unit tests coverage
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage
           path: providers/coverage.out
@@ -55,13 +55,13 @@ jobs:
           fetch-depth: 0
         
       - name: Download coverage
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           name: coverage
 
       - name: SonarQube Scan on PR
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@aa494459d7c39c106cc77b166de8b4250a32bb97 # v5.1.0
         with:
           projectBaseDir: .
           args: >
@@ -76,7 +76,7 @@ jobs:
           
       - name: SonarQube Scan on branch
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@aa494459d7c39c106cc77b166de8b4250a32bb97 # v5.1.0
         with:
           projectBaseDir: .
           args: >
@@ -88,7 +88,7 @@ jobs:
 
       - name: SonarQube Quality Gate check
         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
-        uses: sonarsource/sonarqube-quality-gate-action@master
+        uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
@@ -138,7 +138,7 @@ jobs:
 
       - name: Jfrog setup
         continue-on-error: true
-        uses: jfrog/setup-jfrog-cli@v4
+        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
         env:
           JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
 
