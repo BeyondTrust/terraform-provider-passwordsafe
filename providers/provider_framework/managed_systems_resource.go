@@ -219,7 +219,7 @@ func (r *managedSystemResource) Create(ctx context.Context, req resource.CreateR
 		ContactEmail:                      data.ContactEmail.ValueString(),
 		Description:                       data.Description.ValueString(),
 		Port:                              int(data.Port.ValueInt32()),
-		Timeout:                           int16(data.Timeout.ValueInt32()),
+		Timeout:                           int(data.Timeout.ValueInt32()),
 		SshKeyEnforcementMode:             int(data.SshKeyEnforcementMode.ValueInt32()),
 		PasswordRuleID:                    int(data.PasswordRuleID.ValueInt32()),
 		DSSKeyRuleID:                      int(data.DSSKeyRuleID.ValueInt32()),
