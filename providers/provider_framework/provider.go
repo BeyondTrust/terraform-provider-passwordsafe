@@ -4,10 +4,10 @@ package provider_framework
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
-
 	"time"
 
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
@@ -140,9 +140,47 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 	}
 }
 
+// ValidateCredentialsAndConfig make basic validations in credential and config data.
+func (p *PasswordSafeProvider) ValidateCredentialsAndConfig(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse, data ProviderData) error {
+	var errorSummary string
+
+	if data.apiKey == "" && data.clientId == "" && data.clientSecret == "" {
+		errorSummary = "Invalid Authentication method"
+		resp.Diagnostics.AddError("Invalid Authentication method", "Please add a valid credential (API Key / Client Credentials)")
+		return errors.New(errorSummary)
+	}
+
+	if data.url == "" {
+		errorSummary = "Invalid URL"
+		resp.Diagnostics.AddError(errorSummary, "Please add a proper URL")
+		return errors.New(errorSummary)
+	}
+
+	if data.apiKey != "" && data.accountname == "" {
+		errorSummary = "Invalid Account Name"
+		resp.Diagnostics.AddError(errorSummary, "Please add a proper Account Name")
+		return errors.New(errorSummary)
+	}
+	return nil
+}
+
+// GetCertificateData decrypt pfx file to get certificate and certificate key data.
+func (p *PasswordSafeProvider) GetCertificateData(resp *provider.ConfigureResponse, data ProviderData) (string, string) {
+	if data.clientCertificateName != "" {
+		certificate, certificateKey, err := utils.GetPFXContent(data.clientCertificatePath, data.clientCertificateName, data.clientCertificatePassword, zapLogger)
+		if err != nil {
+			resp.Diagnostics.AddError("Error in certificate", err.Error())
+		}
+		return certificate, certificateKey
+	}
+	return "", ""
+}
+
 func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 
 	var data ProviderModel
+
+	var err error
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 
@@ -163,38 +201,14 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 		clientCertificatePassword: data.ClientCertificatePassword.ValueString(),
 	}
 
-	if providerData.apiKey == "" && providerData.clientId == "" && providerData.clientSecret == "" {
-		resp.Diagnostics.AddError("Invalid Authentication method", "Please add a valid credential (API Key / Client Credentials)")
-		return
-
-	}
-
-	if providerData.url == "" {
-		resp.Diagnostics.AddError("Invalid URL", "Please add a proper URL")
+	// Make basic validations.
+	err = p.ValidateCredentialsAndConfig(ctx, req, resp, providerData)
+	if err != nil {
 		return
 	}
 
-	if providerData.apiKey != "" && providerData.accountname == "" {
-		resp.Diagnostics.AddError("Invalid Account Name", "Please add a proper Account Name")
-		return
-	}
-
-	backoffDefinition := backoff.NewExponentialBackOff()
-	backoffDefinition.InitialInterval = 1 * time.Second
-	backoffDefinition.MaxElapsedTime = time.Duration(retryMaxElapsedTimeMinutes) * time.Second
-	backoffDefinition.RandomizationFactor = 0.5
-
-	certificate := ""
-	certificateKey := ""
-	var err error
-
-	// decrypting certificate
-	if providerData.clientCertificateName != "" {
-		certificate, certificateKey, err = utils.GetPFXContent(providerData.clientCertificatePath, providerData.clientCertificateName, providerData.clientCertificatePassword, zapLogger)
-		if err != nil {
-			resp.Diagnostics.AddError("Error in certificate", err.Error())
-		}
-	}
+	// Get Cerificate and certificate key.
+	certificate, certificateKey := p.GetCertificateData(resp, providerData)
 
 	// Create an instance of ValidationParams
 	params := utils.ValidationParams{
@@ -217,6 +231,11 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 		resp.Diagnostics.AddError("Error in inputs validation", errorsInInputs.Error())
 		return
 	}
+
+	backoffDefinition := backoff.NewExponentialBackOff()
+	backoffDefinition.InitialInterval = 1 * time.Second
+	backoffDefinition.MaxElapsedTime = time.Duration(retryMaxElapsedTimeMinutes) * time.Second
+	backoffDefinition.RandomizationFactor = 0.5
 
 	// creating a http client
 	httpClientObj, _ := utils.GetHttpClient(clientTimeOutInSeconds, providerData.verifyca, certificate, certificateKey, zapLogger)
@@ -292,6 +311,7 @@ func (p *PasswordSafeProvider) Resources(_ context.Context) []func() resource.Re
 		NewAssetByWorkgGroypIdResource,
 		NewAssetByWorkGroupNameResource,
 		NewDatabaseResource,
+		NewManagedSytemResource,
 	}
 }
 
