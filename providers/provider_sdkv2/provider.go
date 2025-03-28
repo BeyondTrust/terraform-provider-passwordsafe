@@ -164,10 +164,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	url = strings.TrimSpace(url)
 	accountName = strings.TrimSpace(accountName)
 
-	var diags diag.Diagnostics
-
 	// Make basic validations.
-	diags = ValidateCredentialsAndConfig(apikey, clientId, clientSecret, url, accountName)
+	diags := ValidateCredentialsAndConfig(apikey, clientId, clientSecret, url, accountName)
 	if diags != nil {
 		return nil, diags
 	}
