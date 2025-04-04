@@ -18,7 +18,7 @@ import (
 var _ resource.Resource = &managedSystemResource{}
 var _ resource.ResourceWithImportState = &managedSystemResource{}
 
-func NewManagedSytemResource() resource.Resource {
+func NewManagedSytemByAssetResource() resource.Resource {
 	return &managedSystemResource{}
 }
 
@@ -56,7 +56,7 @@ type ManagedSystemResourceModel struct {
 }
 
 func (r *managedSystemResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_managed_system"
+	resp.TypeName = req.ProviderTypeName + "_managed_system_by_asset"
 }
 
 func (r *managedSystemResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -239,18 +239,18 @@ func (r *managedSystemResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	// API Version 3.0 input object
-	ManagedSystemsByAssetIdDetailsConfig30 := entities.ManagedSystemsByAssetIdDetailsConfig3_0{
+	ManagedSystemsByAssetIdDetailsConfig30 := entities.ManagedSystemsByAssetIdDetailsConfig30{
 		ManagedSystemsByAssetIdDetailsBaseConfig: databaseDetailsBase,
 	}
 
 	// API Version 3.1 input object
-	ManagedSystemsByAssetIdDetailsConfig31 := entities.ManagedSystemsByAssetIdDetailsConfig3_1{
+	ManagedSystemsByAssetIdDetailsConfig31 := entities.ManagedSystemsByAssetIdDetailsConfig31{
 		ManagedSystemsByAssetIdDetailsBaseConfig: databaseDetailsBase,
 		RemoteClientType:                         data.RemoteClientType.ValueString(),
 	}
 
 	// API Version 3.2 input object
-	ManagedSystemsByAssetIdDetailsConfig32 := entities.ManagedSystemsByAssetIdDetailsConfig3_2{
+	ManagedSystemsByAssetIdDetailsConfig32 := entities.ManagedSystemsByAssetIdDetailsConfig32{
 		ManagedSystemsByAssetIdDetailsBaseConfig: databaseDetailsBase,
 		RemoteClientType:                         data.RemoteClientType.ValueString(),
 		ApplicationHostID:                        int(data.ApplicationHostID.ValueInt32()),
@@ -272,10 +272,10 @@ func (r *managedSystemResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	// creating a managed system.
-	createdDataBase, err := managedSystemObj.CreateManagedSystemFlow(data.AssetId.ValueString(), databaseDetails)
+	createdDataBase, err := managedSystemObj.CreateManagedSystemByAssetIdFlow(data.AssetId.ValueString(), databaseDetails)
 
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating managed system", err.Error())
+		resp.Diagnostics.AddError("Error creating managed system by Asset Id", err.Error())
 		return
 	}
 
