@@ -99,7 +99,7 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 
 			"ip_address": schema.StringAttribute{
 				MarkdownDescription: "IP Address (max 46 characters, must be valid IP)",
-				Required:            true,
+				Optional:            true,
 			},
 
 			"dns_name": schema.StringAttribute{
@@ -259,7 +259,7 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 
 			"access_url": schema.StringAttribute{
 				MarkdownDescription: "Access URL (required, must be a valid URL)",
-				Required:            true,
+				Optional:            true,
 			},
 			"remote_client_type": schema.StringAttribute{
 				MarkdownDescription: "Remote Client Type (one of: None, EPM)",
