@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 )
 
-func TestCreateManagedAccount(t *testing.T) {
+func TestCreateManagedSystemByAsset(t *testing.T) {
 
 	// mocking Password Safe API
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +63,7 @@ func TestCreateManagedAccount(t *testing.T) {
 		ClientCertificatePassword:    "",
 		APIVersion:                   "3.0",
 		Resource: `
-		resource "passwordsafe_managed_system" "managed_system" {
+		resource "passwordsafe_managed_system_by_asset" "managed_system_by_asset" {
  			asset_id                               = "5"
 			platform_id                            = 2
 			contact_email                          = "admin@example.com"
@@ -112,7 +112,7 @@ func TestCreateManagedAccount(t *testing.T) {
 				Config: utils.TestResourceConfig(config),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(
-						"passwordsafe_managed_system.managed_system",
+						"passwordsafe_managed_system_by_asset.managed_system_by_asset",
 						tfjsonpath.New("managed_system_id"),
 						knownvalue.Int32Exact(13),
 					),
@@ -123,7 +123,7 @@ func TestCreateManagedAccount(t *testing.T) {
 }
 
 // Error in field ReleaseDuration : min / 1
-func TestCreateManagedAccountBadData(t *testing.T) {
+func TestCreateManagedSystemByAssetBadData(t *testing.T) {
 
 	// mocking Password Safe API
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +168,7 @@ func TestCreateManagedAccountBadData(t *testing.T) {
 		ClientCertificatePassword:    "",
 		APIVersion:                   "3.1",
 		Resource: `
-		resource "passwordsafe_managed_system" "managed_system" {
+		resource "passwordsafe_managed_system_by_asset" "managed_system_by_asset" {
  			asset_id                               = "5"
 			platform_id                            = 2
 			contact_email                          = "admin@example.com"
