@@ -75,7 +75,7 @@ func (r *managedSystemByWorkGroupResource) Metadata(ctx context.Context, req res
 
 func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Custom Resource Schema",
+		MarkdownDescription: "Managed System by Workgroup Id Resource Schema",
 		Attributes: map[string]schema.Attribute{
 			"workgroup_id": schema.StringAttribute{
 				MarkdownDescription: "Workgroup Id",
