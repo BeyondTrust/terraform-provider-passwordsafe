@@ -28,6 +28,7 @@ type managedSystemByDatabaseResource struct {
 type ManagedSystemByDataBaseResourceModel struct {
 	DatabaseId                        types.String `tfsdk:"database_id"`
 	ManagedSystemID                   types.Int32  `tfsdk:"managed_system_id"`
+	ManagedSystemName                 types.String `tfsdk:"managed_system_name"`
 	ContactEmail                      types.String `tfsdk:"contact_email"`
 	Description                       types.String `tfsdk:"description"`
 	Timeout                           types.Int32  `tfsdk:"timeout"`
@@ -59,6 +60,12 @@ func (r *managedSystemByDatabaseResource) Schema(ctx context.Context, req resour
 			},
 			"managed_system_id": schema.Int32Attribute{
 				MarkdownDescription: "Managed System Id",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+			},
+			"managed_system_name": schema.StringAttribute{
+				MarkdownDescription: "Managed System Name",
 				Required:            false,
 				Optional:            false,
 				Computed:            true,
@@ -192,6 +199,7 @@ func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resour
 	}
 
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
+	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
 	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
 	if err != nil {

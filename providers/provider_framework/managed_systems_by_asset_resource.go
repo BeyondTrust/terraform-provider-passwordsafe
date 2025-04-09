@@ -29,6 +29,7 @@ type managedSystemResource struct {
 type ManagedSystemResourceModel struct {
 	AssetId                           types.String `tfsdk:"asset_id"`
 	ManagedSystemID                   types.Int32  `tfsdk:"managed_system_id"`
+	ManagedSystemName                 types.String `tfsdk:"managed_system_name"`
 	PlatformID                        types.Int32  `tfsdk:"platform_id"`
 	ContactEmail                      types.String `tfsdk:"contact_email"`
 	Description                       types.String `tfsdk:"description"`
@@ -70,6 +71,12 @@ func (r *managedSystemResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"managed_system_id": schema.Int32Attribute{
 				MarkdownDescription: "Managed System Id",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+			},
+			"managed_system_name": schema.StringAttribute{
+				MarkdownDescription: "Managed System Name",
 				Required:            false,
 				Optional:            false,
 				Computed:            true,
@@ -280,6 +287,7 @@ func (r *managedSystemResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
+	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
 	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
 	if err != nil {

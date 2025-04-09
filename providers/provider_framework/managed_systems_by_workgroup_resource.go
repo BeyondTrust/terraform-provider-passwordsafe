@@ -29,6 +29,7 @@ type managedSystemByWorkGroupResource struct {
 type ManagedSystemByWorkGroupResourceModel struct {
 	WorkgroupId                        types.String `tfsdk:"workgroup_id"`
 	ManagedSystemID                    types.Int32  `tfsdk:"managed_system_id"`
+	ManagedSystemName                  types.String `tfsdk:"managed_system_name"`
 	EntityTypeID                       types.Int32  `tfsdk:"entity_type_id"`
 	HostName                           types.String `tfsdk:"host_name"`
 	IPAddress                          types.String `tfsdk:"ip_address"`
@@ -83,6 +84,12 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 			},
 			"managed_system_id": schema.Int32Attribute{
 				MarkdownDescription: "Managed System Id",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+			},
+			"managed_system_name": schema.StringAttribute{
+				MarkdownDescription: "Managed System Name",
 				Required:            false,
 				Optional:            false,
 				Computed:            true,
@@ -404,6 +411,7 @@ func (r *managedSystemByWorkGroupResource) Create(ctx context.Context, req resou
 	}
 
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
+	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
 	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
 	if err != nil {
