@@ -21,118 +21,36 @@ provider "passwordsafe" {
   client_certificate_password     = var.client_certificate_password
 }
 
+//  Generate uuid to generate unique resoruces names to avoid duplicity errors from API.
+resource "random_uuid" "generated" {}
+
+output "random_uuid" {
+  value = "Look for objects in BeyondInsight using: ${random_uuid.generated.result}"
+}
 
 // providerSdkv2
 
 data "passwordsafe_managed_account" "manage_account_01" {
-  system_name  = "server01"
-  account_name = "managed_account_01"
+  system_name  = "system01"
+  account_name = "managed_account01"
 }
 
 output "manage_account_01" {
   value = data.passwordsafe_managed_account.manage_account_01.value
 }
 
-data "passwordsafe_managed_account" "manage_account_02" {
-  system_name  = "server01"
-  account_name = "managed_account_02"
-}
-
-output "manage_account_02" {
-  value = data.passwordsafe_managed_account.manage_account_02.value
-}
-
-data "passwordsafe_managed_account" "manage_account_03" {
-  system_name  = "server01"
-  account_name = "managed_account_03"
-}
-
-output "manage_account_03" {
-  value = data.passwordsafe_managed_account.manage_account_03.value
-}
-
-
-data "passwordsafe_managed_account" "manage_account_04" {
-  system_name  = "server01"
-  account_name = "managed_account_04"
-}
-
-output "manage_account_04" {
-  value = data.passwordsafe_managed_account.manage_account_04.value
-}
-
-
-data "passwordsafe_managed_account" "manage_account_05" {
-  system_name  = "server01"
-  account_name = "managed_account_05"
-}
-
-output "manage_account_05" {
-  value = data.passwordsafe_managed_account.manage_account_05.value
-}
-
-
-data "passwordsafe_managed_account" "manage_account_06" {
-  system_name  = "server01"
-  account_name = "managed_account_06"
-}
-
-output "manage_account_06" {
-  value = data.passwordsafe_managed_account.manage_account_06.value
-}
-
-
-data "passwordsafe_managed_account" "manage_account_07" {
-  system_name  = "server01"
-  account_name = "managed_account_07"
-}
-
-output "manage_account_07" {
-  value = data.passwordsafe_managed_account.manage_account_07.value
-}
-
-data "passwordsafe_managed_account" "manage_account_08" {
-  system_name  = "server01"
-  account_name = "managed_account_08"
-}
-
-output "manage_account_08" {
-  value = data.passwordsafe_managed_account.manage_account_08.value
-}
-
-
-data "passwordsafe_managed_account" "manage_account_09" {
-  system_name  = "server01"
-  account_name = "managed_account_09"
-}
-
-output "manage_account_09" {
-  value = data.passwordsafe_managed_account.manage_account_09.value
-}
-
-data "passwordsafe_managed_account" "managed_account_10" {
-  system_name  = "server01"
-  account_name = "managed_account_10"
-}
-
-output "managed_account_10" {
-  value = data.passwordsafe_managed_account.managed_account_10.value
-}
-
-
 data "passwordsafe_secret" "secret_text" {
-  path  = "local/folder"
-  title = "my_credential"
+  path  = "oauthgrp"
+  title = "credential8"
 }
 
 output "secret_text" {
   value = data.passwordsafe_secret.secret_text.value
 }
 
-
 resource "passwordsafe_managed_account" "my_managed_account" {
   system_name  = "system_integration_test"
-  account_name = "managed_account_Test"
+  account_name = "managed_account_${random_uuid.generated.result}"
   password     = "MyTest101*!"
   api_enabled  = true
 }
@@ -140,7 +58,7 @@ resource "passwordsafe_managed_account" "my_managed_account" {
 
 resource "passwordsafe_credential_secret" "my_credenial_secret" {
   folder_name = "folder1"
-  title       = "Credential_Secret_from_Terraform"
+  title       = "Credential_Secret_${random_uuid.generated.result}"
   description = "my credential secret description"
   username    = "my_user_name"
   password    = "password_content"
@@ -152,7 +70,7 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
 
 resource "passwordsafe_text_secret" "my_text_secret" {
   folder_name = "folder1"
-  title       = "Text_Secret_from_Terraform"
+  title       = "Text_Secret_${random_uuid.generated.result}"
   description = "my text secret description"
   owner_type  = "User"
   text        = "password_text"
@@ -163,7 +81,7 @@ resource "passwordsafe_text_secret" "my_text_secret" {
 
 resource "passwordsafe_file_secret" "my_file_secret" {
   folder_name  = "folder1"
-  title        = "File_Secret_from_Terraform"
+  title        = "File_Secret_${random_uuid.generated.result}"
   description  = "my file secret description"
   owner_type   = "User"
   file_content = file("test_secret.txt")
@@ -174,11 +92,11 @@ resource "passwordsafe_file_secret" "my_file_secret" {
 
 resource "passwordsafe_folder" "my_folder" {
   parent_folder_name = "folder1"
-  name               = "my_new_folder_mame"
+  name               = "my_new_folder_mame_${random_uuid.generated.result}"
 }
 
 resource "passwordsafe_safe" "my_safe" {
-  name        = "my_new_safe_mame"
+  name        = "my_new_safe_mame_${random_uuid.generated.result}"
   description = "my_safe_description"
 }
 
@@ -197,11 +115,11 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
 }
 
 resource "passwordsafe_workgroup" "workgroup" {
-  name = "workgroup name"
+  name = "workgroup_name_${random_uuid.generated.result}"
 }
 
 resource "passwordsafe_asset_by_workgroup_name" "asset_by_workgroup_name" {
-  work_group_name  = "Wrokgroup Name"
+  work_group_name  = passwordsafe_workgroup.workgroup.name
   ip_address       = "10.20.30.40"
   asset_name       = "Prod_Server_03"
   dns_name         = "server01.company.com"
@@ -215,7 +133,7 @@ resource "passwordsafe_asset_by_workgroup_name" "asset_by_workgroup_name" {
 resource "passwordsafe_asset_by_workgroup_id" "asset_by_workgroup_id" {
   work_group_id    = "28"
   ip_address       = "10.20.30.40"
-  asset_name       = "Prod_Server_03"
+  asset_name       = "Prod_Server_03_${random_uuid.generated.result}"
   dns_name         = "server01.company.com"
   domain_name      = "company.com"
   mac_address      = "00:1A:2B:3C:4D:5E"
@@ -228,7 +146,7 @@ resource "passwordsafe_asset_by_workgroup_id" "asset_by_workgroup_id" {
 resource "passwordsafe_database" "database" {
   asset_id            = "1"
   platform_id         = 10
-  instance_name       = "primary-db-instance"
+  instance_name       = "primary-db-instance-${random_uuid.generated.result}"
   is_default_instance = false
   port                = 5432
   version             = "13.3"
@@ -239,7 +157,7 @@ resource "passwordsafe_managed_system_by_asset" "managed_system_by_asset" {
   asset_id                               = "48"
   platform_id                            = 2
   contact_email                          = "admin@example.com"
-  description                            = "managed_system_by_asset Description"
+  description                            = "managed_system_by_asset ${random_uuid.generated.result}"
   port                                   = 5432
   timeout                                = 30
   ssh_key_enforcement_mode               = 1
@@ -278,7 +196,7 @@ resource "passwordsafe_managed_system_by_workgroup" "managed_system_by_workgroup
   platform_id                            = 2
   netbios_name                           = "EXAMPLE"
   contact_email                          = "admin@example.com"
-  description                            = "managed_system_by_workgroup Description"
+  description                            = "managed_system_by_workgroup ${random_uuid.generated.result}"
   port                                   = 5432
   timeout                                = 30
   ssh_key_enforcement_mode               = 0
@@ -304,4 +222,24 @@ resource "passwordsafe_managed_system_by_workgroup" "managed_system_by_workgroup
   remote_client_type                     = "ssh"
   application_host_id                    = 5001
   is_application_host                    = false
+}
+
+
+resource "passwordsafe_managed_system_by_database" "managed_system_by_database" {
+  database_id                            = "2"
+  contact_email                          = "admin@example.com"
+  description                            = "Managed system for example DB ${random_uuid.generated.result}"
+  timeout                                = 30
+  password_rule_id                       = 0
+  release_duration                       = 60
+  max_release_duration                   = 120
+  isa_release_duration                   = 45
+  auto_management_flag                   = false
+  functional_account_id                  = 0
+  check_password_flag                    = true
+  change_password_after_any_release_flag = false
+  reset_password_on_mismatch_flag        = true
+  change_frequency_type                  = "xdays"
+  change_frequency_days                  = 15
+  change_time                            = "03:00"
 }
