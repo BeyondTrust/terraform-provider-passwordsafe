@@ -313,6 +313,7 @@ func (p *PasswordSafeProvider) Resources(_ context.Context) []func() resource.Re
 		NewDatabaseResource,
 		NewManagedSytemByAssetResource,
 		NewManagedSytemByWorkGroupResource,
+		NewManagedSytemByDatabaseResource,
 	}
 }
 
