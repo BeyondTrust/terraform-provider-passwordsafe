@@ -140,7 +140,9 @@ jobs:
         continue-on-error: true
         uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
         env:
-          JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+          JF_URL: https://beyondtrust.jfrog.io
+        with:
+          oidc-provider-name: nonprod-go-client-library-passwordsafe
 
       - name: Configure JFrog CLI build number
         run: |
