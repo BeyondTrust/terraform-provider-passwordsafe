@@ -5,11 +5,11 @@ updates:
     schedule:
       interval: daily
     groups:
-      minor-gh-actions:
+      minor-gomod:
         update-types:
           - minor
           - patch
-      major-gh-actions:
+      major-gomod:
         update-types:
           - major
   - package-ecosystem: github-actions
