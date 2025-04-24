@@ -4,6 +4,14 @@ updates:
     directory: '/'
     schedule:
       interval: daily
+    groups:
+      minor-gh-actions:
+        update-types:
+          - minor
+          - patch
+      major-gh-actions:
+        update-types:
+          - major
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
