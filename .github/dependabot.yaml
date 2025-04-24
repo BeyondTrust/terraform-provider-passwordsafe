@@ -5,7 +5,14 @@ updates:
     schedule:
       interval: daily
   - package-ecosystem: github-actions
-    directory: '/'
+    directory: "/"
     schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
+      interval: "weekly"
+    groups:
+      minor-gh-actions:
+        update-types:
+          - minor
+          - patch
+      major-gh-actions:
+        update-types:
+          - major
