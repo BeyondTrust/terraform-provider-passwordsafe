@@ -294,6 +294,8 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 	resp.EphemeralResourceData = providerData
 	// pass data to ephemeral resources
 	resp.ResourceData = providerData
+	// pass data to ephemeral resources
+	resp.DataSourceData = providerData
 
 }
 
@@ -302,7 +304,17 @@ func (p *PasswordSafeProvider) Functions(_ context.Context) []func() function.Fu
 }
 
 func (p *PasswordSafeProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewFunctionalAccountDataResource,
+		NewFolderDataSource,
+		NewSafesDataSource,
+		NewDatabaseDataSource,
+		NewWorkgroupDataSource,
+		NewPlatformDataSource,
+		NewManagedAccountDataSource,
+		NewManagedSystemDataSource,
+		NewAssetDataSource,
+	}
 }
 
 func (p *PasswordSafeProvider) Resources(_ context.Context) []func() resource.Resource {
@@ -314,6 +326,7 @@ func (p *PasswordSafeProvider) Resources(_ context.Context) []func() resource.Re
 		NewManagedSytemByAssetResource,
 		NewManagedSytemByWorkGroupResource,
 		NewManagedSytemByDatabaseResource,
+		NewFunctionalAccountResource,
 	}
 }
 
