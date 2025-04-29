@@ -249,7 +249,7 @@ resource "passwordsafe_functional_account" "functional_account" {
   platform_id           = 1
   domain_name           = "test.example.com"
   account_name          = "FUNCTIONAL_ACCOUNT_${random_uuid.generated.result}"
-  display_name          = "FUNCTIONAL_ACCOUNT"
+  display_name          = "FUNCTIONAL_ACCOUNT_${random_uuid.generated.result}"
   password              = "pass-value"
   private_key           = "private key value"
   passphrase            = "my-passphrase"

@@ -25,7 +25,7 @@ type FunctionalAccountResource struct {
 	providerInfo *ProviderData
 }
 
-type FunctionalResourceResorceModel struct {
+type FunctionalResourceResourceModel struct {
 	FunctionalAccountID types.Int32  `tfsdk:"functional_account_id"`
 	PlatformID          types.Int32  `tfsdk:"platform_id"`
 	DomainName          types.String `tfsdk:"domain_name"`
@@ -138,7 +138,7 @@ func (r *FunctionalAccountResource) Configure(ctx context.Context, req resource.
 
 func (r *FunctionalAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
-	var data FunctionalResourceResorceModel
+	var data FunctionalResourceResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 

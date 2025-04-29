@@ -41,7 +41,7 @@ func (d *WorkgroupDataSource) Schema(ctx context.Context, req datasource.SchemaR
 		Description: "Workgroup Datasource",
 		Blocks: map[string]schema.Block{
 			"workgroups": schema.ListNestedBlock{
-				Description: "Workgroup Datasource Attibutes",
+				Description: "Workgroup Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"organization_id": schema.StringAttribute{
