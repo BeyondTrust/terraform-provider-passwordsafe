@@ -73,7 +73,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
