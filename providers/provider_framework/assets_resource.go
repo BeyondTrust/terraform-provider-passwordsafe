@@ -27,7 +27,6 @@ type AssetResorceModel struct {
 	AssetName       types.String `tfsdk:"asset_name"`
 	DnsName         types.String `tfsdk:"dns_name"`
 	DomainName      types.String `tfsdk:"domain_name"`
-	MacAddress      types.String `tfsdk:"mac_address"`
 	AssetType       types.String `tfsdk:"asset_type"`
 	Description     types.String `tfsdk:"description"`
 	OperatingSystem types.String `tfsdk:"operating_system"`
@@ -109,37 +108,26 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 			"asset_name": schema.StringAttribute{
 				MarkdownDescription: "Asset Name",
 				Optional:            true,
-				Computed:            false,
 			},
 			"dns_name": schema.StringAttribute{
 				MarkdownDescription: "DNS Name",
 				Optional:            true,
-				Computed:            true,
 			},
 			"domain_name": schema.StringAttribute{
 				MarkdownDescription: "Domain Name",
 				Optional:            true,
-				Computed:            true,
-			},
-			"mac_address": schema.StringAttribute{
-				MarkdownDescription: "Mac Address",
-				Optional:            true,
-				Computed:            true,
 			},
 			"asset_type": schema.StringAttribute{
 				MarkdownDescription: "Asset Type",
 				Optional:            true,
-				Computed:            true,
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description",
 				Optional:            true,
-				Computed:            true,
 			},
 			"operating_system": schema.StringAttribute{
 				MarkdownDescription: "Operating System",
 				Optional:            true,
-				Computed:            true,
 			},
 		},
 	}
@@ -176,7 +164,6 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 		AssetName:       data.AssetName.ValueString(),
 		DnsName:         data.DnsName.ValueString(),
 		DomainName:      data.DomainName.ValueString(),
-		MacAddress:      data.MacAddress.ValueString(),
 		AssetType:       data.AssetType.ValueString(),
 		Description:     data.Description.ValueString(),
 		OperatingSystem: data.OperatingSystem.ValueString(),
@@ -243,32 +230,22 @@ func NewAssetByWorkGroupNameResource() resource.Resource {
 			"dns_name": schema.StringAttribute{
 				MarkdownDescription: "Dns Name",
 				Optional:            true,
-				Computed:            true,
 			},
 			"domain_name": schema.StringAttribute{
 				MarkdownDescription: "Domain Name",
 				Optional:            true,
-				Computed:            true,
-			},
-			"mac_address": schema.StringAttribute{
-				MarkdownDescription: "Mac Address",
-				Optional:            true,
-				Computed:            true,
 			},
 			"asset_type": schema.StringAttribute{
 				MarkdownDescription: "Asset Type",
 				Optional:            true,
-				Computed:            true,
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description",
 				Optional:            true,
-				Computed:            true,
 			},
 			"operating_system": schema.StringAttribute{
 				MarkdownDescription: "Operating System",
 				Optional:            true,
-				Computed:            true,
 			},
 		},
 	}
@@ -305,7 +282,6 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 		AssetName:       data.AssetName.ValueString(),
 		DnsName:         data.DnsName.ValueString(),
 		DomainName:      data.DomainName.ValueString(),
-		MacAddress:      data.MacAddress.ValueString(),
 		AssetType:       data.AssetType.ValueString(),
 		Description:     data.Description.ValueString(),
 		OperatingSystem: data.OperatingSystem.ValueString(),
