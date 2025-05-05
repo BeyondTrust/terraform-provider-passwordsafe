@@ -58,7 +58,7 @@ func (d *ManagedAccountDataSource) Schema(ctx context.Context, req datasource.Sc
 		Description: "Managed Account Datasource, get managed accounts list.",
 		Blocks: map[string]schema.Block{
 			"managed_accounts": schema.ListNestedBlock{
-				Description: "Managed Account Datasource Attibutes",
+				Description: "Managed Account Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"platform_id": schema.Int32Attribute{

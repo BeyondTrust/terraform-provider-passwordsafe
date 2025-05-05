@@ -26,7 +26,7 @@ output "managed_system_list" {
 
 ### Read-Only
 
-- `managed_systems` (Block List) Managed System Datasource Attibutes (see [below for nested schema](#nestedblock--managed_systems))
+- `managed_systems` (Block List) Managed System Datasource Attributes (see [below for nested schema](#nestedblock--managed_systems))
 
 <a id="nestedblock--managed_systems"></a>
 ### Nested Schema for `managed_systems`

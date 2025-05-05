@@ -26,7 +26,7 @@ output "database_list" {
 
 ### Read-Only
 
-- `databases` (Block List) Database Datasource Attibutes (see [below for nested schema](#nestedblock--databases))
+- `databases` (Block List) Database Datasource Attributes (see [below for nested schema](#nestedblock--databases))
 
 <a id="nestedblock--databases"></a>
 ### Nested Schema for `databases`

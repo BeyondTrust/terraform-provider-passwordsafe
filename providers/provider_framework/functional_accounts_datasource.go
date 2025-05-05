@@ -44,7 +44,7 @@ func (d *FunctionalAccountDataResource) Schema(ctx context.Context, req datasour
 		Description: "Functional Account Datasource, get functional accounts list.",
 		Blocks: map[string]schema.Block{
 			"accounts": schema.ListNestedBlock{
-				Description: "Functional Account Datasource Attibutes",
+				Description: "Functional Account Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"functional_account_id": schema.Int32Attribute{

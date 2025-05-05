@@ -26,7 +26,7 @@ output "plarforms_list" {
 
 ### Optional
 
-- `platforms` (Block List) Platform Datasource Attibutes (see [below for nested schema](#nestedblock--platforms))
+- `platforms` (Block List) Platform Datasource Attributes (see [below for nested schema](#nestedblock--platforms))
 
 <a id="nestedblock--platforms"></a>
 ### Nested Schema for `platforms`

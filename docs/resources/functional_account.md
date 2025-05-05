@@ -56,4 +56,4 @@ resource "passwordsafe_functional_account" "functional_account" {
 
 ### Read-Only
 
-- `functional_account_id` (Number) Platform ID
+- `functional_account_id` (Number) Functional Account ID

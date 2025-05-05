@@ -47,7 +47,7 @@ func (d *DatabaseDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 		Description: "Database Datasource, get databases list.",
 		Blocks: map[string]schema.Block{
 			"databases": schema.ListNestedBlock{
-				Description: "Database Datasource Attibutes",
+				Description: "Database Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"asset_id": schema.Int32Attribute{

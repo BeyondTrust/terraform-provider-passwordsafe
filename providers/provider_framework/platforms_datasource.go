@@ -58,7 +58,7 @@ func (d *PlatformDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 		Description: "Platform Datasource, gets platforms list",
 		Blocks: map[string]schema.Block{
 			"platforms": schema.ListNestedBlock{
-				Description: "Platform Datasource Attibutes",
+				Description: "Platform Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"platform_id": schema.Int32Attribute{

@@ -26,7 +26,7 @@ output "folders_list" {
 
 ### Optional
 
-- `folders` (Block List) Folder Datasource Attibutes (see [below for nested schema](#nestedblock--folders))
+- `folders` (Block List) Folder Datasource Attributes (see [below for nested schema](#nestedblock--folders))
 
 <a id="nestedblock--folders"></a>
 ### Nested Schema for `folders`

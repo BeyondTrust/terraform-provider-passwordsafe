@@ -26,7 +26,7 @@ output "managed_accounts_list" {
 
 ### Read-Only
 
-- `managed_accounts` (Block List) Managed Account Datasource Attibutes (see [below for nested schema](#nestedblock--managed_accounts))
+- `managed_accounts` (Block List) Managed Account Datasource Attributes (see [below for nested schema](#nestedblock--managed_accounts))
 
 <a id="nestedblock--managed_accounts"></a>
 ### Nested Schema for `managed_accounts`

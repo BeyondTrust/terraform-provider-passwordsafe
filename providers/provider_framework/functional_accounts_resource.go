@@ -54,7 +54,7 @@ func (r *FunctionalAccountResource) Schema(ctx context.Context, req resource.Sch
 
 		Attributes: map[string]schema.Attribute{
 			"functional_account_id": schema.Int32Attribute{
-				MarkdownDescription: "Platform ID",
+				MarkdownDescription: "Functional Account ID",
 				Required:            false,
 				Optional:            false,
 				Computed:            true,

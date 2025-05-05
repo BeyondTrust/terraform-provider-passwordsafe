@@ -84,7 +84,7 @@ func (d *ManagedSystemDataSource) Schema(ctx context.Context, req datasource.Sch
 		Description: "Managed System Datasource, get managed systems list.",
 		Blocks: map[string]schema.Block{
 			"managed_systems": schema.ListNestedBlock{
-				Description: "Managed System Datasource Attibutes",
+				Description: "Managed System Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"workgroup_id": schema.Int32Attribute{

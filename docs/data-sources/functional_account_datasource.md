@@ -29,7 +29,7 @@ output "functional_account_list" {
 
 ### Read-Only
 
-- `accounts` (Block List) Functional Account Datasource Attibutes (see [below for nested schema](#nestedblock--accounts))
+- `accounts` (Block List) Functional Account Datasource Attributes (see [below for nested schema](#nestedblock--accounts))
 
 <a id="nestedblock--accounts"></a>
 ### Nested Schema for `accounts`
