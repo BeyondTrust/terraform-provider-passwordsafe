@@ -55,7 +55,7 @@ type PlatformDataSourceModel struct {
 
 func (d *PlatformDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Platform Datasource",
+		Description: "Platform Datasource, gets platforms list",
 		Blocks: map[string]schema.Block{
 			"platforms": schema.ListNestedBlock{
 				Description: "Platform Datasource Attibutes",

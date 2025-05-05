@@ -41,7 +41,7 @@ type FunctionalDataSourceModel struct {
 
 func (d *FunctionalAccountDataResource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Functional Account Datasource",
+		Description: "Functional Account Datasource, get functional accounts list.",
 		Blocks: map[string]schema.Block{
 			"accounts": schema.ListNestedBlock{
 				Description: "Functional Account Datasource Attibutes",

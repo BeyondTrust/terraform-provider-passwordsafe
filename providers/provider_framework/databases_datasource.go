@@ -44,7 +44,7 @@ type DatabaseDataSourceModel struct {
 
 func (d *DatabaseDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Database Datasource",
+		Description: "Database Datasource, get databases list.",
 		Blocks: map[string]schema.Block{
 			"databases": schema.ListNestedBlock{
 				Description: "Database Datasource Attibutes",

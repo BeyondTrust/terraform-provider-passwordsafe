@@ -88,8 +88,7 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 
 	assetResource.resourceName = "_asset_by_workgroup_id"
 	assetResource.resurceSchema = schema.Schema{
-		MarkdownDescription: "Asset resource",
-
+		MarkdownDescription: "Asset resource, creates asset by workgroup id.",
 		Attributes: map[string]schema.Attribute{
 			"work_group_id": schema.StringAttribute{
 				MarkdownDescription: "Workgroup Id",
@@ -205,8 +204,7 @@ func NewAssetByWorkGroupNameResource() resource.Resource {
 
 	assetResource.resourceName = "_asset_by_workgroup_name"
 	assetResource.resurceSchema = schema.Schema{
-		MarkdownDescription: "Asset resource",
-
+		MarkdownDescription: "Asset resource, creates asset by workgroup name.",
 		Attributes: map[string]schema.Attribute{
 			"work_group_name": schema.StringAttribute{
 				MarkdownDescription: "Workgroup Name",

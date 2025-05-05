@@ -40,7 +40,7 @@ func (e *EphemeralSecret) Metadata(ctx context.Context, request ephemeral.Metada
 func (e *EphemeralSecret) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 
-		MarkdownDescription: "Schema of Secret Retrieval",
+		MarkdownDescription: "Secret Ephemeral Resource, gets secret",
 
 		Attributes: map[string]schema.Attribute{
 			"path": schema.StringAttribute{

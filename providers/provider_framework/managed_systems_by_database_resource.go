@@ -52,7 +52,7 @@ func (r *managedSystemByDatabaseResource) Metadata(ctx context.Context, req reso
 
 func (r *managedSystemByDatabaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Managed System by Database Id Resource Schema",
+		MarkdownDescription: "Managed System by Database Id Resource, creates managed system by database id.",
 		Attributes: map[string]schema.Attribute{
 			"database_id": schema.StringAttribute{
 				MarkdownDescription: "Database Id",

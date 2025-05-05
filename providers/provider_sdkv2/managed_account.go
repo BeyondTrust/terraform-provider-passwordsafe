@@ -17,6 +17,7 @@ import (
 // getManagedAccount DataSource.
 func getManagedAccount() *schema.Resource {
 	return &schema.Resource{
+		Description: "Managed Account Datasource, gets managed account.",
 		ReadContext: getManagedAccountReadContext,
 		Schema: map[string]*schema.Schema{
 			"system_name": &schema.Schema{
@@ -38,10 +39,11 @@ func getManagedAccount() *schema.Resource {
 // resourceManagedAccount Resource.
 func resourceManagedAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceManagedAccountCreate,
-		Read:   resourceManagedAccountRead,
-		Update: resourceManagedAccountUpdate,
-		Delete: resourceManagedAccountDelete,
+		Description: "Managed Account Resource, creates managed account.",
+		Create:      resourceManagedAccountCreate,
+		Read:        resourceManagedAccountRead,
+		Update:      resourceManagedAccountUpdate,
+		Delete:      resourceManagedAccountDelete,
 
 		Schema: getManagedAccountSchema(),
 	}

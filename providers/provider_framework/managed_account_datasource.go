@@ -55,7 +55,7 @@ type ManagedAccountDataSourceModel struct {
 
 func (d *ManagedAccountDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Managed Account Datasource",
+		Description: "Managed Account Datasource, get managed accounts list.",
 		Blocks: map[string]schema.Block{
 			"managed_accounts": schema.ListNestedBlock{
 				Description: "Managed Account Datasource Attibutes",

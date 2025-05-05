@@ -17,6 +17,7 @@ import (
 // getSecretByPath DataSource.
 func getSecretByPath() *schema.Resource {
 	return &schema.Resource{
+		Description: "Secret Datasource, get secret.",
 		ReadContext: getSecretByPathReadContext,
 		Schema: map[string]*schema.Schema{
 			"path": &schema.Schema{
@@ -43,10 +44,11 @@ func getSecretByPath() *schema.Resource {
 // resourceCredentialSecret Resource.
 func resourceCredentialSecret() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCredentialSecretCreate,
-		Read:   resourceSecretRead,
-		Update: resourceSecretUpdate,
-		Delete: resourceSecretDelete,
+		Description: "Credential secret Resource, creates credential secret.",
+		Create:      resourceCredentialSecretCreate,
+		Read:        resourceSecretRead,
+		Update:      resourceSecretUpdate,
+		Delete:      resourceSecretDelete,
 
 		Schema: map[string]*schema.Schema{
 			"folder_name": &schema.Schema{
@@ -99,10 +101,11 @@ func resourceCredentialSecret() *schema.Resource {
 // resourceTextSecret Resource.
 func resourceTextSecret() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTextSecretCreate,
-		Read:   resourceSecretRead,
-		Update: resourceSecretUpdate,
-		Delete: resourceSecretDelete,
+		Description: "Text secret Resource, creates text secret.",
+		Create:      resourceTextSecretCreate,
+		Read:        resourceSecretRead,
+		Update:      resourceSecretUpdate,
+		Delete:      resourceSecretDelete,
 
 		Schema: map[string]*schema.Schema{
 			"folder_name": &schema.Schema{
@@ -147,10 +150,11 @@ func resourceTextSecret() *schema.Resource {
 // resourceFileSecret Resource.
 func resourceFileSecret() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFileSecretCreate,
-		Read:   resourceSecretRead,
-		Update: resourceSecretUpdate,
-		Delete: resourceSecretDelete,
+		Description: "File secret Resource, creates file secret.",
+		Create:      resourceFileSecretCreate,
+		Read:        resourceSecretRead,
+		Update:      resourceSecretUpdate,
+		Delete:      resourceSecretDelete,
 
 		Schema: map[string]*schema.Schema{
 			"folder_name": &schema.Schema{

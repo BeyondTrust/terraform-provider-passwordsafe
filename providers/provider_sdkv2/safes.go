@@ -13,6 +13,8 @@ import (
 // resourceSafe Resource.
 func resourceSafe() *schema.Resource {
 	return &schema.Resource{
+		Description: "Safes Resource, creates safe",
+
 		Create: resourceSafeCreate,
 		Read:   resourceSafeRead,
 		Update: resourceSafeUpdate,

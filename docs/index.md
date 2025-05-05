@@ -20,17 +20,18 @@ Permissions for access to secrets in Password Safe can be granted to specific ac
 
 ### Required
 
-- `api_account_name` (String) The user name for the api request to the Password Safe instance. For use when authenticating with an api key.
-- `api_key` (String) The api key for making requests to the Password Safe instance. For use when authenticating to Password Safe, if API key is not set, then client credentials method would be used instead:
-- `client_id` (String) API OAuth Client ID.
-- `client_secret` (String) API OAuth Client Secret.
+- `api_account_name` (String) The user name for the API request to the Password Safe instance. For use when authenticating with an API key.
 - `url` (String) The URL for the Password Safe instance from which to request a secret.
+- `api_key` (String) The API key for making requests to the Password Safe instance. For use when authenticating to Password Safe, if API key is not set, then client credentials (client Id and client Secret) method would be useds instead
 
 ### Optional
 
-- `client_certificate_name` (String) The name of the Client Certificate for use when authenticating with an api key using a Client Certificate.
-- `client_certificate_password` (String) The password associated with the Client Certificate. For use when authenticating with an api key using a Client Certificate
-- `client_certificates_folder_path` (String) The path to the Client Certificate associated with the Password Safe instance for use when authenticating with an api key using a Client Certificate.
+- `api_version` (String) The recommended version is 3.1. If no version is specified, the default API version 3.0 will be used
+- `client_certificate_name` (String) The name of the Client Certificate for use when authenticating with an API key using a Client Certificate.
+- `client_certificate_password` (String) The password associated with the Client Certificate. For use when authenticating with an API key using a Client Certificate
+- `client_certificates_folder_path` (String) The path to the Client Certificate associated with the Password Safe instance for use when authenticating with an API key using a Client Certificate.
+- `client_id` (String) API OAuth Client ID.
+- `client_secret` (String) API OAuth Client Secret.
 - `verify_ca` (Boolean) Indicates whether to verify the certificate authority on the Password Safe instance. For use when authenticating to Password Safe.
 - `api_version` (String) The recommended version is 3.1. If no version is specified, the default API version 3.0 will be use.
 
