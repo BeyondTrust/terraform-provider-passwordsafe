@@ -40,10 +40,10 @@ type SafesDataSourceModel struct {
 
 func (d *SafesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Safe Datasource",
+		Description: "Safe Datasource, gets safes list.",
 		Blocks: map[string]schema.Block{
 			"safes": schema.ListNestedBlock{
-				Description: "Safe Datasource Attibutes",
+				Description: "Safe Datasource, gets safes list.",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{

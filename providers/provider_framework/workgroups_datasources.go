@@ -38,7 +38,7 @@ type WorkgroupDataSourceModel struct {
 
 func (d *WorkgroupDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Workgroup Datasource",
+		Description: "Workgroup Datasource, gets workgroups list",
 		Blocks: map[string]schema.Block{
 			"workgroups": schema.ListNestedBlock{
 				Description: "Workgroup Datasource Attributes",

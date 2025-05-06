@@ -50,7 +50,7 @@ type AssetModel struct {
 
 func (d *AssetDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Asset Datasource",
+		Description: "Asset Datasource, get assets list.",
 		Attributes: map[string]schema.Attribute{
 			"parameter": schema.StringAttribute{
 				MarkdownDescription: "Parameter",

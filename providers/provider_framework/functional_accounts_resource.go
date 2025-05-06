@@ -50,11 +50,11 @@ func (r *FunctionalAccountResource) Metadata(ctx context.Context, req resource.M
 
 func (r *FunctionalAccountResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Functional Account Resource",
+		MarkdownDescription: "Functional Account Resource, creates functional account",
 
 		Attributes: map[string]schema.Attribute{
 			"functional_account_id": schema.Int32Attribute{
-				MarkdownDescription: "Platform ID",
+				MarkdownDescription: "Functional Account ID",
 				Required:            false,
 				Optional:            false,
 				Computed:            true,

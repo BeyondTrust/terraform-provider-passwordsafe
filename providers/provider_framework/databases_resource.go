@@ -43,7 +43,7 @@ func (r *databaseResource) Metadata(ctx context.Context, req resource.MetadataRe
 
 func (r *databaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Database Resource",
+		MarkdownDescription: "Database Resource, creates database.",
 
 		Attributes: map[string]schema.Attribute{
 			"asset_id": schema.StringAttribute{

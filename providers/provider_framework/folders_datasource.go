@@ -41,10 +41,10 @@ type FolderDataSourceModel struct {
 
 func (d *FolderDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Folder Datasource",
+		Description: "Folder Datasource, gets folders list.",
 		Blocks: map[string]schema.Block{
 			"folders": schema.ListNestedBlock{
-				Description: "Folder Datasource Attibutes",
+				Description: "Folder Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{

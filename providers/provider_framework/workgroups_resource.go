@@ -38,7 +38,7 @@ func (r *WorkGroupResource) Metadata(ctx context.Context, req resource.MetadataR
 
 func (r *WorkGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Workgroup resource",
+		MarkdownDescription: "Workgroup Resource, creates workgroup.",
 
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{

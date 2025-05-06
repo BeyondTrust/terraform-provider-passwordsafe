@@ -37,7 +37,7 @@ func (e *EphemeralManagedAccount) Metadata(ctx context.Context, request ephemera
 func (e *EphemeralManagedAccount) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 
-		MarkdownDescription: "Schema of Managed Account Retrieval",
+		MarkdownDescription: "Managed Account Ephemeral Resource, gets managed account.",
 
 		Attributes: map[string]schema.Attribute{
 			"system_name": schema.StringAttribute{

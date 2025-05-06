@@ -62,7 +62,7 @@ func (r *managedSystemResource) Metadata(ctx context.Context, req resource.Metad
 
 func (r *managedSystemResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Managed System by Asset Id Resource Schema",
+		MarkdownDescription: "Managed System by Asset Id Resource, creates managed system by asset id.",
 
 		Attributes: map[string]schema.Attribute{
 			"asset_id": schema.StringAttribute{

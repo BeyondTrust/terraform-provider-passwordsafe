@@ -13,10 +13,11 @@ import (
 // resourceFolder Resource.
 func resourceFolder() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFolderCreate,
-		Read:   resourceFolderRead,
-		Update: resourceFolderUpdate,
-		Delete: resourceFolderDelete,
+		Description: "Folder Resource, creates folder",
+		Create:      resourceFolderCreate,
+		Read:        resourceFolderRead,
+		Update:      resourceFolderUpdate,
+		Delete:      resourceFolderDelete,
 
 		Schema: map[string]*schema.Schema{
 			"parent_folder_name": &schema.Schema{
