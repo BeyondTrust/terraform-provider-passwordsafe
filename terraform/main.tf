@@ -243,7 +243,6 @@ resource "passwordsafe_managed_system_by_database" "managed_system_by_database" 
 }
 
 
-
 resource "passwordsafe_functional_account" "functional_account" {
   platform_id           = 1
   domain_name           = "test.example.com"
