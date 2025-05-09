@@ -3,6 +3,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -91,5 +92,15 @@ func SignOut(authenticationObj auth.AuthenticationObj, muOut *sync.Mutex, signIn
 
 	}
 
+	return nil
+}
+
+// ValidateChangeFrequencyDays validate Change Frequency Days field
+func ValidateChangeFrequencyDays(changeFrequencyType string, changeFrequencyDays int) error {
+	if changeFrequencyType == "xdays" {
+		if changeFrequencyDays < 1 || changeFrequencyDays > 999 {
+			return errors.New("error in change Frequency field, (min=1, max=999)")
+		}
+	}
 	return nil
 }
