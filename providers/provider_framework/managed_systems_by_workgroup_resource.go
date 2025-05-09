@@ -265,8 +265,6 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 			"change_frequency_days": schema.Int32Attribute{
 				MarkdownDescription: "Change Frequency Days (required if ChangeFrequencyType is xdays)",
 				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(1),
 			},
 
 			"change_time": schema.StringAttribute{
@@ -319,7 +317,7 @@ func (r *managedSystemByWorkGroupResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	err := utils.ChangeFrequencyDaysValidate(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
+	err := utils.ValidateChangeFrequencyDays(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error in inputs", err.Error())

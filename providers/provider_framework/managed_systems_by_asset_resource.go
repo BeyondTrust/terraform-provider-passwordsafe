@@ -218,7 +218,7 @@ func (r *managedSystemResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	err := utils.ChangeFrequencyDaysValidate(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
+	err := utils.ValidateChangeFrequencyDays(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error in inputs", err.Error())
