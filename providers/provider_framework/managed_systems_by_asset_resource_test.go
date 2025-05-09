@@ -166,13 +166,14 @@ func TestCreateManagedSystemByAssetBadData(t *testing.T) {
 		ClientCertificatesFolderPath: "",
 		ClientCertificateName:        "",
 		ClientCertificatePassword:    "",
-		APIVersion:                   "3.1",
+		APIVersion:                   "3.0",
 		Resource: `
 		resource "passwordsafe_managed_system_by_asset" "managed_system_by_asset" {
  			asset_id                               = "5"
 			platform_id                            = 2
 			contact_email                          = "admin@example.com"
 			description                            = "Primary database system from terraform"
+			release_duration 					   = 0
 		}`,
 	}
 

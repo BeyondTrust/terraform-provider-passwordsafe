@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -207,16 +209,20 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 			"release_duration": schema.Int32Attribute{
 				MarkdownDescription: "Release Duration (min: 1, max: 525600)",
 				Optional:            true,
+				Computed:            true,
+				Default:             int32default.StaticInt32(120),
 			},
-
 			"max_release_duration": schema.Int32Attribute{
 				MarkdownDescription: "Max Release Duration (min: 1, max: 525600)",
 				Optional:            true,
+				Computed:            true,
+				Default:             int32default.StaticInt32(525600),
 			},
-
 			"isa_release_duration": schema.Int32Attribute{
 				MarkdownDescription: "ISA Release Duration (min: 1, max: 525600)",
 				Optional:            true,
+				Computed:            true,
+				Default:             int32default.StaticInt32(120),
 			},
 
 			"auto_management_flag": schema.BoolAttribute{
@@ -252,16 +258,22 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 			"change_frequency_type": schema.StringAttribute{
 				MarkdownDescription: "Change Frequency Type (one of: first, last, xdays)",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("first"),
 			},
 
 			"change_frequency_days": schema.Int32Attribute{
 				MarkdownDescription: "Change Frequency Days (required if ChangeFrequencyType is xdays)",
 				Optional:            true,
+				Computed:            true,
+				Default:             int32default.StaticInt32(1),
 			},
 
 			"change_time": schema.StringAttribute{
 				MarkdownDescription: "Change Time (format: HH:MM)",
 				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("23:30"),
 			},
 
 			"access_url": schema.StringAttribute{
@@ -307,7 +319,14 @@ func (r *managedSystemByWorkGroupResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	err := utils.ChangeFrequencyDaysValidate(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error in inputs", err.Error())
+		return
+	}
+
+	_, err = utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
