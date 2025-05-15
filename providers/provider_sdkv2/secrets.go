@@ -4,6 +4,7 @@ package provider
 
 import (
 	"context"
+	"maps"
 
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
@@ -43,6 +44,21 @@ func getSecretByPath() *schema.Resource {
 
 // resourceCredentialSecret Resource.
 func resourceCredentialSecret() *schema.Resource {
+
+	commonAttributes := getCreateSecretSchema()
+	credentialSecretAttributes := map[string]*schema.Schema{
+		"username": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"password": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+
+	maps.Copy(credentialSecretAttributes, commonAttributes)
+
 	return &schema.Resource{
 		Description: "Credential secret Resource, creates credential secret.",
 		Create:      resourceCredentialSecretCreate,
@@ -50,152 +66,59 @@ func resourceCredentialSecret() *schema.Resource {
 		Update:      resourceSecretUpdate,
 		Delete:      resourceSecretDelete,
 
-		Schema: map[string]*schema.Schema{
-			"folder_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"title": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"username": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"password": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"owner_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"group_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"owner_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"owners": getOwnersSchema(),
-			"password_rule_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"notes": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"urls": getUrlsSchema(),
-		},
+		Schema: credentialSecretAttributes,
 	}
 
 }
 
 // resourceTextSecret Resource.
 func resourceTextSecret() *schema.Resource {
+
+	commonAttributes := getCreateSecretSchema()
+	textSecretAttributes := map[string]*schema.Schema{
+		"text": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+
+	maps.Copy(textSecretAttributes, commonAttributes)
+
 	return &schema.Resource{
 		Description: "Text secret Resource, creates text secret.",
 		Create:      resourceTextSecretCreate,
 		Read:        resourceSecretRead,
 		Update:      resourceSecretUpdate,
 		Delete:      resourceSecretDelete,
-
-		Schema: map[string]*schema.Schema{
-			"folder_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"title": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"text": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"owner_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"group_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"owner_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"owners": getOwnersSchema(),
-			"notes": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"urls": getUrlsSchema(),
-		},
+		Schema:      textSecretAttributes,
 	}
 
 }
 
 // resourceFileSecret Resource.
 func resourceFileSecret() *schema.Resource {
+
+	commonAttributes := getCreateSecretSchema()
+	fileSecretAttributes := map[string]*schema.Schema{
+		"file_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"file_content": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+	}
+
+	maps.Copy(fileSecretAttributes, commonAttributes)
+
 	return &schema.Resource{
 		Description: "File secret Resource, creates file secret.",
 		Create:      resourceFileSecretCreate,
 		Read:        resourceSecretRead,
 		Update:      resourceSecretUpdate,
 		Delete:      resourceSecretDelete,
-
-		Schema: map[string]*schema.Schema{
-			"folder_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"title": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"description": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"file_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"file_content": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"owner_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"group_id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"owner_type": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"owners": getOwnersSchema(),
-			"notes": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"urls": getUrlsSchema(),
-		},
+		Schema:      fileSecretAttributes,
 	}
 
 }
@@ -212,56 +135,14 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 
 	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
 
-	title := d.Get("title").(string)
-	description := d.Get("description").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
+	title := d.Get("title").(string)
+	description := d.Get("description").(string)
 	ownerId := d.Get("owner_id").(int)
 	groupId := d.Get("group_id").(int)
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
-
-	var owners []entities.OwnerDetails
-
-	if ownerType == "User" {
-		mainOwner := entities.OwnerDetails{
-			GroupId: groupId,
-			OwnerId: signAppinResponse.UserId,
-			Owner:   signAppinResponse.UserName,
-			Email:   signAppinResponse.EmailAddress,
-		}
-		owners = append(owners, mainOwner)
-	}
-
-	ownersRaw, _ := d.GetOk("owners")
-	if ownersRaw != nil {
-		for _, ownerRaw := range ownersRaw.([]interface{}) {
-			ownerMap := ownerRaw.(map[string]interface{})
-			owner := entities.OwnerDetails{
-				OwnerId: ownerMap["owner_id"].(int),
-				Owner:   ownerMap["owner"].(string),
-				Email:   ownerMap["email"].(string),
-			}
-			owners = append(owners, owner)
-		}
-	}
-
-	urlsRaw, _ := d.GetOk("urls")
-	var urls []entities.UrlDetails
-	if urlsRaw != nil {
-		for _, urlRaw := range urlsRaw.([]interface{}) {
-			urlMap := urlRaw.(map[string]interface{})
-			id, _ := uuid.Parse(urlMap["id"].(string))
-			credentialId, _ := uuid.Parse(urlMap["credential_id"].(string))
-
-			url := entities.UrlDetails{
-				Id:           id,
-				CredentialId: credentialId,
-				Url:          urlMap["url"].(string),
-			}
-			urls = append(urls, url)
-		}
-	}
 
 	secret := entities.SecretCredentialDetails{
 		Title:       title,
@@ -270,9 +151,9 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 		Password:    password,
 		OwnerId:     ownerId,
 		OwnerType:   ownerType,
-		Owners:      owners,
+		Owners:      getOwnerDetails(d, ownerType, groupId, signAppinResponse),
 		Notes:       notes,
-		Urls:        urls,
+		Urls:        getUrlDetails(d, ownerType, groupId, signAppinResponse),
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
@@ -302,56 +183,13 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
 
+	text := d.Get("text").(string)
 	title := d.Get("title").(string)
 	description := d.Get("description").(string)
-	text := d.Get("text").(string)
 	ownerId := d.Get("owner_id").(int)
 	groupId := d.Get("group_id").(int)
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
-
-	var owners []entities.OwnerDetails
-
-	if ownerType == "User" {
-		mainOwner := entities.OwnerDetails{
-			GroupId: groupId,
-			OwnerId: signAppinResponse.UserId,
-			Owner:   signAppinResponse.UserName,
-			Email:   signAppinResponse.EmailAddress,
-		}
-		owners = append(owners, mainOwner)
-	}
-
-	ownersRaw, _ := d.GetOk("owners")
-	if ownersRaw != nil {
-		for _, ownerRaw := range ownersRaw.([]interface{}) {
-			ownerMap := ownerRaw.(map[string]interface{})
-			owner := entities.OwnerDetails{
-				OwnerId: ownerMap["owner_id"].(int),
-				Owner:   ownerMap["owner"].(string),
-				Email:   ownerMap["email"].(string),
-			}
-			owners = append(owners, owner)
-		}
-	}
-
-	urlsRaw, _ := d.GetOk("urls")
-	var urls []entities.UrlDetails
-	if urlsRaw != nil {
-		for _, urlRaw := range urlsRaw.([]interface{}) {
-			urlMap := urlRaw.(map[string]interface{})
-			id, _ := uuid.Parse(urlMap["id"].(string))
-			credentialId, _ := uuid.Parse(urlMap["credential_id"].(string))
-
-			url := entities.UrlDetails{
-				Id:           id,
-				CredentialId: credentialId,
-				Url:          urlMap["url"].(string),
-			}
-
-			urls = append(urls, url)
-		}
-	}
 
 	secret := entities.SecretTextDetails{
 		Title:       title,
@@ -359,9 +197,9 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 		Text:        text,
 		OwnerId:     ownerId,
 		OwnerType:   ownerType,
-		Owners:      owners,
+		Owners:      getOwnerDetails(d, ownerType, groupId, signAppinResponse),
 		Notes:       notes,
-		Urls:        urls,
+		Urls:        getUrlDetails(d, ownerType, groupId, signAppinResponse),
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
@@ -391,68 +229,25 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
 
+	fileName := d.Get("file_name").(string)
+	fileContent := d.Get("file_content").(string)
 	title := d.Get("title").(string)
 	description := d.Get("description").(string)
-	fileContent := d.Get("file_content").(string)
 	ownerId := d.Get("owner_id").(int)
 	groupId := d.Get("group_id").(int)
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
-	file_name := d.Get("file_name").(string)
-
-	var owners []entities.OwnerDetails
-
-	if ownerType == "User" {
-		mainOwner := entities.OwnerDetails{
-			GroupId: groupId,
-			OwnerId: signAppinResponse.UserId,
-			Owner:   signAppinResponse.UserName,
-			Email:   signAppinResponse.EmailAddress,
-		}
-		owners = append(owners, mainOwner)
-	}
-
-	ownersRaw, _ := d.GetOk("owners")
-	if ownersRaw != nil {
-		for _, ownerRaw := range ownersRaw.([]interface{}) {
-			ownerMap := ownerRaw.(map[string]interface{})
-			owner := entities.OwnerDetails{
-				OwnerId: ownerMap["owner_id"].(int),
-				Owner:   ownerMap["owner"].(string),
-				Email:   ownerMap["email"].(string),
-			}
-			owners = append(owners, owner)
-		}
-	}
-
-	urlsRaw, _ := d.GetOk("urls")
-	var urls []entities.UrlDetails
-	if urlsRaw != nil {
-		for _, urlRaw := range urlsRaw.([]interface{}) {
-			urlMap := urlRaw.(map[string]interface{})
-
-			id, _ := uuid.Parse(urlMap["id"].(string))
-			credentialId, _ := uuid.Parse(urlMap["credential_id"].(string))
-
-			url := entities.UrlDetails{
-				Id:           id,
-				CredentialId: credentialId,
-				Url:          urlMap["url"].(string),
-			}
-			urls = append(urls, url)
-		}
-	}
 
 	secret := entities.SecretFileDetails{
 		Title:       title,
 		Description: description,
 		OwnerId:     ownerId,
 		OwnerType:   ownerType,
-		Owners:      owners,
+		Owners:      getOwnerDetails(d, ownerType, groupId, signAppinResponse),
 		Notes:       notes,
-		Urls:        urls,
+		Urls:        getUrlDetails(d, ownerType, groupId, signAppinResponse),
 		FileContent: fileContent,
-		FileName:    file_name,
+		FileName:    fileName,
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
@@ -522,4 +317,109 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	d.SetId(hash(secret))
 
 	return diags
+}
+
+func getOwnerDetails(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetails {
+	var owners []entities.OwnerDetails
+
+	if ownerType == "User" {
+		mainOwner := entities.OwnerDetails{
+			GroupId: groupId,
+			OwnerId: signAppinResponse.UserId,
+			Owner:   signAppinResponse.UserName,
+			Email:   signAppinResponse.EmailAddress,
+		}
+		owners = append(owners, mainOwner)
+	}
+
+	ownersRaw, _ := d.GetOk("owners")
+	if ownersRaw != nil {
+		for _, ownerRaw := range ownersRaw.([]interface{}) {
+			ownerMap := ownerRaw.(map[string]interface{})
+			owner := entities.OwnerDetails{
+				OwnerId: ownerMap["owner_id"].(int),
+				Owner:   ownerMap["owner"].(string),
+				Email:   ownerMap["email"].(string),
+			}
+			owners = append(owners, owner)
+		}
+	}
+
+	urlsRaw, _ := d.GetOk("urls")
+	var urls []entities.UrlDetails
+	if urlsRaw != nil {
+		for _, urlRaw := range urlsRaw.([]interface{}) {
+			urlMap := urlRaw.(map[string]interface{})
+
+			id, _ := uuid.Parse(urlMap["id"].(string))
+			credentialId, _ := uuid.Parse(urlMap["credential_id"].(string))
+
+			url := entities.UrlDetails{
+				Id:           id,
+				CredentialId: credentialId,
+				Url:          urlMap["url"].(string),
+			}
+			urls = append(urls, url)
+		}
+	}
+
+	return owners
+}
+
+func getUrlDetails(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.UrlDetails {
+
+	urlsRaw, _ := d.GetOk("urls")
+	var urls []entities.UrlDetails
+	if urlsRaw != nil {
+		for _, urlRaw := range urlsRaw.([]interface{}) {
+			urlMap := urlRaw.(map[string]interface{})
+
+			id, _ := uuid.Parse(urlMap["id"].(string))
+			credentialId, _ := uuid.Parse(urlMap["credential_id"].(string))
+
+			url := entities.UrlDetails{
+				Id:           id,
+				CredentialId: credentialId,
+				Url:          urlMap["url"].(string),
+			}
+			urls = append(urls, url)
+		}
+	}
+
+	return urls
+}
+
+func getCreateSecretSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"folder_name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"title": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"owner_id": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"group_id": {
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"owner_type": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"owners": getOwnersSchema(),
+		"notes": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"urls": getUrlsSchema(),
+	}
 }

@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"terraform-provider-passwordsafe/providers/utils"
 
+	"maps"
+
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	managed_systems "github.com/BeyondTrust/go-client-library-passwordsafe/api/managed_systems"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -63,134 +63,57 @@ func (r *managedSystemResource) Metadata(ctx context.Context, req resource.Metad
 }
 
 func (r *managedSystemResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+
+	commonAttributes := utils.GetCreateManagaedAccountCommonAttributes()
+
+	assetAttributes := map[string]schema.Attribute{
+		"asset_id": schema.StringAttribute{
+			MarkdownDescription: "Asset Id",
+			Required:            true,
+		},
+		"platform_id": schema.Int32Attribute{
+			MarkdownDescription: "Platform ID",
+			Required:            true,
+		},
+		"port": schema.Int32Attribute{
+			MarkdownDescription: "Port number",
+			Optional:            true,
+		},
+		"ssh_key_enforcement_mode": schema.Int32Attribute{
+			MarkdownDescription: "SSH Key Enforcement Mode (one of: 0, 1, 2)",
+			Optional:            true,
+		},
+		"dss_key_rule_id": schema.Int32Attribute{
+			MarkdownDescription: "DSS Key Rule ID",
+			Optional:            true,
+		},
+		"login_account_id": schema.Int32Attribute{
+			MarkdownDescription: "Login Account ID",
+			Optional:            true,
+		},
+		"elevation_command": schema.StringAttribute{
+			MarkdownDescription: "Elevation Command",
+			Optional:            true,
+		},
+		"remote_client_type": schema.StringAttribute{
+			MarkdownDescription: "Remote Client Type (one of: None, EPM)",
+			Optional:            true,
+		},
+		"application_host_id": schema.Int32Attribute{
+			MarkdownDescription: "Application Host ID",
+			Optional:            true,
+		},
+		"is_application_host": schema.BoolAttribute{
+			MarkdownDescription: "Is Application Host",
+			Optional:            true,
+		},
+	}
+
+	maps.Copy(assetAttributes, commonAttributes)
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Managed System by Asset Id Resource, creates managed system by asset id.",
-
-		Attributes: map[string]schema.Attribute{
-			"asset_id": schema.StringAttribute{
-				MarkdownDescription: "Asset Id",
-				Required:            true,
-			},
-			"managed_system_id": schema.Int32Attribute{
-				MarkdownDescription: "Managed System Id",
-				Required:            false,
-				Optional:            false,
-				Computed:            true,
-			},
-			"managed_system_name": schema.StringAttribute{
-				MarkdownDescription: "Managed System Name",
-				Required:            false,
-				Optional:            false,
-				Computed:            true,
-			},
-			"platform_id": schema.Int32Attribute{
-				MarkdownDescription: "Platform ID",
-				Required:            true,
-			},
-			"contact_email": schema.StringAttribute{
-				MarkdownDescription: "Contact Email (max 1000 characters)",
-				Optional:            true,
-			},
-			"description": schema.StringAttribute{
-				MarkdownDescription: "Description (max 255 characters)",
-				Optional:            true,
-			},
-			"port": schema.Int32Attribute{
-				MarkdownDescription: "Port number",
-				Optional:            true,
-			},
-
-			"timeout": schema.Int32Attribute{
-				MarkdownDescription: "Timeout",
-				Optional:            true,
-			},
-			"ssh_key_enforcement_mode": schema.Int32Attribute{
-				MarkdownDescription: "SSH Key Enforcement Mode (one of: 0, 1, 2)",
-				Optional:            true,
-			},
-			"password_rule_id": schema.Int32Attribute{
-				MarkdownDescription: "Password Rule ID",
-				Optional:            true,
-			},
-			"dss_key_rule_id": schema.Int32Attribute{
-				MarkdownDescription: "DSS Key Rule ID",
-				Optional:            true,
-			},
-			"login_account_id": schema.Int32Attribute{
-				MarkdownDescription: "Login Account ID",
-				Optional:            true,
-			},
-			"release_duration": schema.Int32Attribute{
-				MarkdownDescription: "Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(120),
-			},
-			"max_release_duration": schema.Int32Attribute{
-				MarkdownDescription: "Max Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(525600),
-			},
-			"isa_release_duration": schema.Int32Attribute{
-				MarkdownDescription: "ISA Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(120),
-			},
-			"auto_management_flag": schema.BoolAttribute{
-				MarkdownDescription: "Auto Management Flag",
-				Optional:            true,
-			},
-			"functional_account_id": schema.Int32Attribute{
-				MarkdownDescription: "Functional Account ID (required if AutoManagementFlag is true)",
-				Optional:            true,
-			},
-			"elevation_command": schema.StringAttribute{
-				MarkdownDescription: "Elevation Command",
-				Optional:            true,
-			},
-			"check_password_flag": schema.BoolAttribute{
-				MarkdownDescription: "Check Password Flag",
-				Optional:            true,
-			},
-			"change_password_after_any_release_flag": schema.BoolAttribute{
-				MarkdownDescription: "Change Password After Any Release Flag",
-				Optional:            true,
-			},
-			"reset_password_on_mismatch_flag": schema.BoolAttribute{
-				MarkdownDescription: "Reset Password On Mismatch Flag",
-				Optional:            true,
-			},
-			"change_frequency_type": schema.StringAttribute{
-				MarkdownDescription: "Change Frequency Type (one of: first, last, xdays)",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("first"),
-			},
-			"change_frequency_days": schema.Int32Attribute{
-				MarkdownDescription: "Change Frequency Days (required if ChangeFrequencyType is xdays)",
-				Optional:            true,
-			},
-			"change_time": schema.StringAttribute{
-				MarkdownDescription: "Change Time (format: HH:MM)",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("23:30"),
-			},
-			"remote_client_type": schema.StringAttribute{
-				MarkdownDescription: "Remote Client Type (one of: None, EPM)",
-				Optional:            true,
-			},
-			"application_host_id": schema.Int32Attribute{
-				MarkdownDescription: "Application Host ID",
-				Optional:            true,
-			},
-			"is_application_host": schema.BoolAttribute{
-				MarkdownDescription: "Is Application Host",
-				Optional:            true,
-			},
-		},
+		Attributes:          assetAttributes,
 	}
 
 }

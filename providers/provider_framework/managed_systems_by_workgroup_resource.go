@@ -5,6 +5,7 @@ package provider_framework
 import (
 	"context"
 	"fmt"
+	"maps"
 	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
@@ -12,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -77,220 +76,112 @@ func (r *managedSystemByWorkGroupResource) Metadata(ctx context.Context, req res
 }
 
 func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+
+	commonAttributes := utils.GetCreateManagaedAccountCommonAttributes()
+	workgroupAttributes := map[string]schema.Attribute{
+		"workgroup_id": schema.StringAttribute{
+			MarkdownDescription: "Workgroup Id",
+			Required:            true,
+		},
+		"entity_type_id": schema.Int32Attribute{
+			MarkdownDescription: "Entity Type ID (required)",
+			Required:            true,
+		},
+		"host_name": schema.StringAttribute{
+			MarkdownDescription: "Host Name (max 128 characters)",
+			Required:            true,
+		},
+		"ip_address": schema.StringAttribute{
+			MarkdownDescription: "IP Address (max 46 characters, must be valid IP)",
+			Optional:            true,
+		},
+		"dns_name": schema.StringAttribute{
+			MarkdownDescription: "DNS Name (max 225 characters)",
+			Optional:            true,
+		},
+		"instance_name": schema.StringAttribute{
+			MarkdownDescription: "Instance Name (max 100 characters, required if IsDefaultInstance is true)",
+			Optional:            true,
+		},
+		"is_default_instance": schema.BoolAttribute{
+			MarkdownDescription: "Is Default Instance",
+			Optional:            true,
+		},
+		"template": schema.StringAttribute{
+			MarkdownDescription: "Template",
+			Optional:            true,
+		},
+		"forest_name": schema.StringAttribute{
+			MarkdownDescription: "Forest Name (max 64 characters)",
+			Optional:            true,
+		},
+		"use_ssl": schema.BoolAttribute{
+			MarkdownDescription: "Use SSL",
+			Optional:            true,
+		},
+		"platform_id": schema.Int32Attribute{
+			MarkdownDescription: "Platform ID (required)",
+			Required:            true,
+		},
+		"netbios_name": schema.StringAttribute{
+			MarkdownDescription: "NetBIOS Name (max 15 characters)",
+			Optional:            true,
+		},
+		"port": schema.Int32Attribute{
+			MarkdownDescription: "Port number",
+			Optional:            true,
+		},
+		"ssh_key_enforcement_mode": schema.Int32Attribute{
+			MarkdownDescription: "SSH Key Enforcement Mode (one of: 0, 1, 2)",
+			Optional:            true,
+		},
+		"dss_key_rule_id": schema.Int32Attribute{
+			MarkdownDescription: "DSS Key Rule ID",
+			Optional:            true,
+		},
+		"login_account_id": schema.Int32Attribute{
+			MarkdownDescription: "Login Account ID",
+			Optional:            true,
+		},
+		"account_name_format": schema.Int32Attribute{
+			MarkdownDescription: "Account Name Format (one of: 0, 1, 2)",
+			Optional:            true,
+		},
+		"oracle_internet_directory_id": schema.StringAttribute{
+			MarkdownDescription: "Oracle Internet Directory ID (UUID)",
+			Optional:            true,
+		},
+		"oracle_internet_directory_service_name": schema.StringAttribute{
+			MarkdownDescription: "Oracle Internet Directory Service Name (max 200 characters)",
+			Optional:            true,
+		},
+		"elevation_command": schema.StringAttribute{
+			MarkdownDescription: "Elevation Command",
+			Optional:            true,
+		},
+		"access_url": schema.StringAttribute{
+			MarkdownDescription: "Access URL (required, must be a valid URL)",
+			Optional:            true,
+		},
+		"remote_client_type": schema.StringAttribute{
+			MarkdownDescription: "Remote Client Type (one of: None, EPM)",
+			Optional:            true,
+		},
+		"application_host_id": schema.Int32Attribute{
+			MarkdownDescription: "Application Host ID",
+			Optional:            true,
+		},
+		"is_application_host": schema.BoolAttribute{
+			MarkdownDescription: "Is Application Host",
+			Optional:            true,
+		},
+	}
+
+	maps.Copy(workgroupAttributes, commonAttributes)
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Managed System by Workgroup Id Resource, creates managed system by workgroup id.",
-		Attributes: map[string]schema.Attribute{
-			"workgroup_id": schema.StringAttribute{
-				MarkdownDescription: "Workgroup Id",
-				Required:            true,
-			},
-			"managed_system_id": schema.Int32Attribute{
-				MarkdownDescription: "Managed System Id",
-				Required:            false,
-				Optional:            false,
-				Computed:            true,
-			},
-			"managed_system_name": schema.StringAttribute{
-				MarkdownDescription: "Managed System Name",
-				Required:            false,
-				Optional:            false,
-				Computed:            true,
-			},
-			"entity_type_id": schema.Int32Attribute{
-				MarkdownDescription: "Entity Type ID (required)",
-				Required:            true,
-			},
-
-			"host_name": schema.StringAttribute{
-				MarkdownDescription: "Host Name (max 128 characters)",
-				Required:            true,
-			},
-
-			"ip_address": schema.StringAttribute{
-				MarkdownDescription: "IP Address (max 46 characters, must be valid IP)",
-				Optional:            true,
-			},
-
-			"dns_name": schema.StringAttribute{
-				MarkdownDescription: "DNS Name (max 225 characters)",
-				Optional:            true,
-			},
-
-			"instance_name": schema.StringAttribute{
-				MarkdownDescription: "Instance Name (max 100 characters, required if IsDefaultInstance is true)",
-				Optional:            true,
-			},
-
-			"is_default_instance": schema.BoolAttribute{
-				MarkdownDescription: "Is Default Instance",
-				Optional:            true,
-			},
-
-			"template": schema.StringAttribute{
-				MarkdownDescription: "Template",
-				Optional:            true,
-			},
-
-			"forest_name": schema.StringAttribute{
-				MarkdownDescription: "Forest Name (max 64 characters)",
-				Optional:            true,
-			},
-
-			"use_ssl": schema.BoolAttribute{
-				MarkdownDescription: "Use SSL",
-				Optional:            true,
-			},
-
-			"platform_id": schema.Int32Attribute{
-				MarkdownDescription: "Platform ID (required)",
-				Required:            true,
-			},
-
-			"netbios_name": schema.StringAttribute{
-				MarkdownDescription: "NetBIOS Name (max 15 characters)",
-				Optional:            true,
-			},
-
-			"contact_email": schema.StringAttribute{
-				MarkdownDescription: "Contact Email (max 1000 characters, must be a valid email)",
-				Optional:            true,
-			},
-
-			"description": schema.StringAttribute{
-				MarkdownDescription: "Description (max 255 characters)",
-				Optional:            true,
-			},
-
-			"port": schema.Int32Attribute{
-				MarkdownDescription: "Port number",
-				Optional:            true,
-			},
-
-			"timeout": schema.Int32Attribute{
-				MarkdownDescription: "Timeout",
-				Optional:            true,
-			},
-
-			"ssh_key_enforcement_mode": schema.Int32Attribute{
-				MarkdownDescription: "SSH Key Enforcement Mode (one of: 0, 1, 2)",
-				Optional:            true,
-			},
-
-			"password_rule_id": schema.Int32Attribute{
-				MarkdownDescription: "Password Rule ID",
-				Optional:            true,
-			},
-
-			"dss_key_rule_id": schema.Int32Attribute{
-				MarkdownDescription: "DSS Key Rule ID",
-				Optional:            true,
-			},
-
-			"login_account_id": schema.Int32Attribute{
-				MarkdownDescription: "Login Account ID",
-				Optional:            true,
-			},
-
-			"account_name_format": schema.Int32Attribute{
-				MarkdownDescription: "Account Name Format (one of: 0, 1, 2)",
-				Optional:            true,
-			},
-
-			"oracle_internet_directory_id": schema.StringAttribute{
-				MarkdownDescription: "Oracle Internet Directory ID (UUID)",
-				Optional:            true,
-			},
-
-			"oracle_internet_directory_service_name": schema.StringAttribute{
-				MarkdownDescription: "Oracle Internet Directory Service Name (max 200 characters)",
-				Optional:            true,
-			},
-
-			"release_duration": schema.Int32Attribute{
-				MarkdownDescription: "Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(120),
-			},
-			"max_release_duration": schema.Int32Attribute{
-				MarkdownDescription: "Max Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(525600),
-			},
-			"isa_release_duration": schema.Int32Attribute{
-				MarkdownDescription: "ISA Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(120),
-			},
-
-			"auto_management_flag": schema.BoolAttribute{
-				MarkdownDescription: "Auto Management Flag",
-				Optional:            true,
-			},
-
-			"functional_account_id": schema.Int32Attribute{
-				MarkdownDescription: "Functional Account ID (required if AutoManagementFlag is true)",
-				Optional:            true,
-			},
-
-			"elevation_command": schema.StringAttribute{
-				MarkdownDescription: "Elevation Command",
-				Optional:            true,
-			},
-
-			"check_password_flag": schema.BoolAttribute{
-				MarkdownDescription: "Check Password Flag",
-				Optional:            true,
-			},
-
-			"change_password_after_any_release_flag": schema.BoolAttribute{
-				MarkdownDescription: "Change Password After Any Release Flag",
-				Optional:            true,
-			},
-
-			"reset_password_on_mismatch_flag": schema.BoolAttribute{
-				MarkdownDescription: "Reset Password On Mismatch Flag",
-				Optional:            true,
-			},
-
-			"change_frequency_type": schema.StringAttribute{
-				MarkdownDescription: "Change Frequency Type (one of: first, last, xdays)",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("first"),
-			},
-
-			"change_frequency_days": schema.Int32Attribute{
-				MarkdownDescription: "Change Frequency Days (required if ChangeFrequencyType is xdays)",
-				Optional:            true,
-			},
-
-			"change_time": schema.StringAttribute{
-				MarkdownDescription: "Change Time (format: HH:MM)",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("23:30"),
-			},
-
-			"access_url": schema.StringAttribute{
-				MarkdownDescription: "Access URL (required, must be a valid URL)",
-				Optional:            true,
-			},
-			"remote_client_type": schema.StringAttribute{
-				MarkdownDescription: "Remote Client Type (one of: None, EPM)",
-				Optional:            true,
-			},
-			"application_host_id": schema.Int32Attribute{
-				MarkdownDescription: "Application Host ID",
-				Optional:            true,
-			},
-			"is_application_host": schema.BoolAttribute{
-				MarkdownDescription: "Is Application Host",
-				Optional:            true,
-			},
-		},
+		Attributes:          workgroupAttributes,
 	}
 }
 
