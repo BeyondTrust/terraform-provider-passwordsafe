@@ -94,3 +94,30 @@ func GetCreateManagaedAccountCommonAttributes() map[string]schema.Attribute {
 
 	return commonAttributes
 }
+
+func GetInt32Attribute(description string, required, optional, computed bool) schema.Attribute {
+	return schema.Int64Attribute{
+		MarkdownDescription: description,
+		Required:            required,
+		Optional:            optional,
+		Computed:            computed,
+	}
+}
+
+func GetStringAttribute(description string, required, optional, computed bool) schema.Attribute {
+	return schema.StringAttribute{
+		MarkdownDescription: description,
+		Required:            required,
+		Optional:            optional,
+		Computed:            computed,
+	}
+}
+
+func GetBoolAttribute(description string, required, optional, computed bool) schema.Attribute {
+	return schema.BoolAttribute{
+		MarkdownDescription: description,
+		Required:            required,
+		Optional:            optional,
+		Computed:            computed,
+	}
+}

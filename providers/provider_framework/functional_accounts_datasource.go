@@ -47,30 +47,10 @@ func (d *FunctionalAccountDataResource) Schema(ctx context.Context, req datasour
 				Description: "Functional Account Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"functional_account_id": schema.Int32Attribute{
-							MarkdownDescription: "Functional Account ID",
-							Required:            false,
-							Optional:            false,
-							Computed:            true,
-						},
-						"platform_id": schema.Int32Attribute{
-							MarkdownDescription: "Platform ID",
-							Required:            false,
-							Optional:            false,
-							Computed:            true,
-						},
-						"domain_name": schema.StringAttribute{
-							MarkdownDescription: "Domain Name",
-							Required:            false,
-							Optional:            false,
-							Computed:            true,
-						},
-						"account_name": schema.StringAttribute{
-							MarkdownDescription: "Account Name",
-							Required:            false,
-							Optional:            false,
-							Computed:            true,
-						},
+						"functional_account_id": utils.GetInt32Attribute("Functional Account ID", false, false, true),
+						"platform_id":           utils.GetInt32Attribute("Platform ID", false, false, true),
+						"domain_name":           utils.GetStringAttribute("Domain Name", false, false, true),
+						"account_name":          utils.GetStringAttribute("Account Name", false, false, true),
 					},
 				},
 			},
