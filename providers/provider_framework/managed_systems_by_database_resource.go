@@ -83,31 +83,6 @@ func (r *managedSystemByDatabaseResource) Configure(ctx context.Context, req res
 
 }
 
-// getManagedSystemObj get managedSystemObj for create manage system by asset, workgroup, database.
-func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) (*managed_systems.ManagedSystemObj, error) {
-	err := utils.ValidateChangeFrequencyDays(changeFrequencyType, changeFrequencyDays)
-
-	if err != nil {
-		resp.Diagnostics.AddError("Error in inputs", err.Error())
-		return nil, err
-	}
-
-	_, err = utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return nil, err
-	}
-
-	// Instantiating managed system obj
-	managedSystemObj, err := managed_systems.NewManagedSystem(authenticationObj, zapLogger)
-
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
-		return nil, err
-	}
-	return managedSystemObj, nil
-}
-
 func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
 	var data ManagedSystemByDataBaseResourceModel
@@ -155,11 +130,7 @@ func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resour
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
 	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
+	APISignOut(resp, *r.providerInfo.authenticationObj)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -178,4 +149,38 @@ func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resour
 
 func (r *managedSystemByDatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// getManagedSystemObj get managedSystemObj for create manage system by asset, workgroup, database.
+func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) (*managed_systems.ManagedSystemObj, error) {
+	err := utils.ValidateChangeFrequencyDays(changeFrequencyType, changeFrequencyDays)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error in inputs", err.Error())
+		return nil, err
+	}
+
+	_, err = utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return nil, err
+	}
+
+	// Instantiating managed system obj
+	managedSystemObj, err := managed_systems.NewManagedSystem(authenticationObj, zapLogger)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
+		return nil, err
+	}
+	return managedSystemObj, nil
+}
+
+// APISignOut close connection with Password Safe API.
+func APISignOut(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) {
+	err := utils.SignOut(authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
