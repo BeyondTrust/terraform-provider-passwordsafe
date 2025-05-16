@@ -77,7 +77,7 @@ func (r *managedSystemByWorkGroupResource) Metadata(ctx context.Context, req res
 
 func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
-	commonAttributes := utils.GetCreateManagaedAccountCommonAttributes()
+	commonAttributes := utils.GetCreateManagedSystemCommonAttributes()
 	workgroupAttributes := map[string]schema.Attribute{
 		"workgroup_id": schema.StringAttribute{
 			MarkdownDescription: "Workgroup Id",

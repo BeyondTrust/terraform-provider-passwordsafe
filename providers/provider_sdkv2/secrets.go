@@ -45,7 +45,7 @@ func getSecretByPath() *schema.Resource {
 // resourceCredentialSecret Resource.
 func resourceCredentialSecret() *schema.Resource {
 
-	commonAttributes := getCreateSecretSchema()
+	commonAttributes := getCreateSecretCommonSchema()
 	credentialSecretAttributes := map[string]*schema.Schema{
 		"username": &schema.Schema{
 			Type:     schema.TypeString,
@@ -74,7 +74,7 @@ func resourceCredentialSecret() *schema.Resource {
 // resourceTextSecret Resource.
 func resourceTextSecret() *schema.Resource {
 
-	commonAttributes := getCreateSecretSchema()
+	commonAttributes := getCreateSecretCommonSchema()
 	textSecretAttributes := map[string]*schema.Schema{
 		"text": &schema.Schema{
 			Type:     schema.TypeString,
@@ -98,7 +98,7 @@ func resourceTextSecret() *schema.Resource {
 // resourceFileSecret Resource.
 func resourceFileSecret() *schema.Resource {
 
-	commonAttributes := getCreateSecretSchema()
+	commonAttributes := getCreateSecretCommonSchema()
 	fileSecretAttributes := map[string]*schema.Schema{
 		"file_name": &schema.Schema{
 			Type:     schema.TypeString,
@@ -151,9 +151,9 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 		Password:    password,
 		OwnerId:     ownerId,
 		OwnerType:   ownerType,
-		Owners:      getOwnerDetails(d, ownerType, groupId, signAppinResponse),
+		Owners:      getOwnersDetailsList(d, ownerType, groupId, signAppinResponse),
 		Notes:       notes,
-		Urls:        getUrlDetails(d, ownerType, groupId, signAppinResponse),
+		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
@@ -197,9 +197,9 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 		Text:        text,
 		OwnerId:     ownerId,
 		OwnerType:   ownerType,
-		Owners:      getOwnerDetails(d, ownerType, groupId, signAppinResponse),
+		Owners:      getOwnersDetailsList(d, ownerType, groupId, signAppinResponse),
 		Notes:       notes,
-		Urls:        getUrlDetails(d, ownerType, groupId, signAppinResponse),
+		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
@@ -243,9 +243,9 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 		Description: description,
 		OwnerId:     ownerId,
 		OwnerType:   ownerType,
-		Owners:      getOwnerDetails(d, ownerType, groupId, signAppinResponse),
+		Owners:      getOwnersDetailsList(d, ownerType, groupId, signAppinResponse),
 		Notes:       notes,
-		Urls:        getUrlDetails(d, ownerType, groupId, signAppinResponse),
+		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
 		FileContent: fileContent,
 		FileName:    fileName,
 	}
@@ -319,7 +319,8 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	return diags
 }
 
-func getOwnerDetails(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetails {
+// getOwnersDetailsList get Owners details list.
+func getOwnersDetailsList(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetails {
 	var owners []entities.OwnerDetails
 
 	if ownerType == "User" {
@@ -345,28 +346,11 @@ func getOwnerDetails(d *schema.ResourceData, ownerType string, groupId int, sign
 		}
 	}
 
-	urlsRaw, _ := d.GetOk("urls")
-	var urls []entities.UrlDetails
-	if urlsRaw != nil {
-		for _, urlRaw := range urlsRaw.([]interface{}) {
-			urlMap := urlRaw.(map[string]interface{})
-
-			id, _ := uuid.Parse(urlMap["id"].(string))
-			credentialId, _ := uuid.Parse(urlMap["credential_id"].(string))
-
-			url := entities.UrlDetails{
-				Id:           id,
-				CredentialId: credentialId,
-				Url:          urlMap["url"].(string),
-			}
-			urls = append(urls, url)
-		}
-	}
-
 	return owners
 }
 
-func getUrlDetails(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.UrlDetails {
+// getUrlsDetailsList get urls details list.
+func getUrlsDetailsList(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.UrlDetails {
 
 	urlsRaw, _ := d.GetOk("urls")
 	var urls []entities.UrlDetails
@@ -389,7 +373,8 @@ func getUrlDetails(d *schema.ResourceData, ownerType string, groupId int, signAp
 	return urls
 }
 
-func getCreateSecretSchema() map[string]*schema.Schema {
+// getCreateSecretCommonSchema get common attributes to create credential, file and text secrets.
+func getCreateSecretCommonSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"folder_name": {
 			Type:     schema.TypeString,

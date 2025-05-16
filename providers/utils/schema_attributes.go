@@ -6,7 +6,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 )
 
-func GetCreateManagaedAccountCommonAttributes() map[string]schema.Attribute {
+// GetCreateManagedSystemCommonAttributes get common attributes to create managed systems by asset, workgroup and database
+func GetCreateManagedSystemCommonAttributes() map[string]schema.Attribute {
 	commonAttributes := map[string]schema.Attribute{
 		"managed_system_id": schema.Int32Attribute{
 			MarkdownDescription: "Managed System Id",
@@ -95,6 +96,7 @@ func GetCreateManagaedAccountCommonAttributes() map[string]schema.Attribute {
 	return commonAttributes
 }
 
+// GetInt32Attribute build and get int32 attribute.
 func GetInt32Attribute(description string, required, optional, computed bool) schema.Attribute {
 	return schema.Int64Attribute{
 		MarkdownDescription: description,
@@ -104,6 +106,7 @@ func GetInt32Attribute(description string, required, optional, computed bool) sc
 	}
 }
 
+// GetStringAttribute build and get string attribute.
 func GetStringAttribute(description string, required, optional, computed bool) schema.Attribute {
 	return schema.StringAttribute{
 		MarkdownDescription: description,
@@ -113,6 +116,7 @@ func GetStringAttribute(description string, required, optional, computed bool) s
 	}
 }
 
+// GetBoolAttribute build and get bool attribute.
 func GetBoolAttribute(description string, required, optional, computed bool) schema.Attribute {
 	return schema.BoolAttribute{
 		MarkdownDescription: description,

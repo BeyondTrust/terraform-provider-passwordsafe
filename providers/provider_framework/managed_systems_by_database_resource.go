@@ -53,7 +53,7 @@ func (r *managedSystemByDatabaseResource) Metadata(ctx context.Context, req reso
 
 func (r *managedSystemByDatabaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
-	commonAttributes := utils.GetCreateManagaedAccountCommonAttributes()
+	commonAttributes := utils.GetCreateManagedSystemCommonAttributes()
 	databaseAttributes := map[string]schema.Attribute{
 		"database_id": schema.StringAttribute{
 			MarkdownDescription: "Database Id",

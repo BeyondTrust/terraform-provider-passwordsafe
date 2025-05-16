@@ -64,7 +64,7 @@ func (r *managedSystemResource) Metadata(ctx context.Context, req resource.Metad
 
 func (r *managedSystemResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
-	commonAttributes := utils.GetCreateManagaedAccountCommonAttributes()
+	commonAttributes := utils.GetCreateManagedSystemCommonAttributes()
 
 	assetAttributes := map[string]schema.Attribute{
 		"asset_id": schema.StringAttribute{
