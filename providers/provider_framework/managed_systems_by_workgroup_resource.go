@@ -306,11 +306,7 @@ func (r *managedSystemByWorkGroupResource) Create(ctx context.Context, req resou
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
 	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
+	APISignOut(resp, *r.providerInfo.authenticationObj)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
