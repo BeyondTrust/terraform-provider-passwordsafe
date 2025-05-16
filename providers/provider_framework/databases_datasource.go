@@ -49,19 +49,24 @@ func (d *DatabaseDataSource) Schema(ctx context.Context, req datasource.SchemaRe
 			"databases": schema.ListNestedBlock{
 				Description: "Database Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"asset_id":            utils.GetInt32Attribute("Asset ID", false, false, true),
-						"database_id":         utils.GetInt32Attribute("Database ID", false, false, true),
-						"platform_id":         utils.GetInt32Attribute("Platform ID", false, false, true),
-						"instance_name":       utils.GetStringAttribute("Instance Name", false, false, true),
-						"is_default_instance": utils.GetBoolAttribute("Is Default Instance", false, false, true),
-						"port":                utils.GetInt32Attribute("Port", false, false, true),
-						"version":             utils.GetStringAttribute("Version", false, false, true),
-						"template":            utils.GetStringAttribute("Template", false, false, true),
-					},
+					Attributes: d.getDatabaseDataSourceSchemaAttributes(),
 				},
 			},
 		},
+	}
+}
+
+// getDatabaseDataSourceSchemaAttributes get schema attributes.
+func (d *DatabaseDataSource) getDatabaseDataSourceSchemaAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"asset_id":            utils.GetInt32Attribute("Asset ID", false, false, true),
+		"database_id":         utils.GetInt32Attribute("Database ID", false, false, true),
+		"platform_id":         utils.GetInt32Attribute("Platform ID", false, false, true),
+		"instance_name":       utils.GetStringAttribute("Instance Name", false, false, true),
+		"is_default_instance": utils.GetBoolAttribute("Is Default Instance", false, false, true),
+		"port":                utils.GetInt32Attribute("Port", false, false, true),
+		"version":             utils.GetStringAttribute("Version", false, false, true),
+		"template":            utils.GetStringAttribute("Template", false, false, true),
 	}
 }
 

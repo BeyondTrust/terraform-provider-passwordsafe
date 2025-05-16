@@ -60,30 +60,35 @@ func (d *ManagedAccountDataSource) Schema(ctx context.Context, req datasource.Sc
 			"managed_accounts": schema.ListNestedBlock{
 				Description: "Managed Account Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"platform_id":              utils.GetInt32Attribute("Platform ID", false, false, true),
-						"system_id":                utils.GetInt32Attribute("System ID", false, false, true),
-						"system_name":              utils.GetStringAttribute("System Name", false, false, true),
-						"domain_name":              utils.GetStringAttribute("Domain Name", false, false, true),
-						"account_id":               utils.GetInt32Attribute("Account ID", false, false, true),
-						"account_name":             utils.GetStringAttribute("Account Name", false, false, true),
-						"instance_name":            utils.GetStringAttribute("Instance Name", false, false, true),
-						"user_principal_name":      utils.GetStringAttribute("User Principal Name", false, false, true),
-						"application_id":           utils.GetInt32Attribute("Application ID", false, false, true),
-						"application_display_name": utils.GetStringAttribute("Application Display Name", false, false, true),
-						"default_release_duration": utils.GetInt32Attribute("Default Release Duration", false, false, true),
-						"maximum_release_duration": utils.GetInt32Attribute("Maximum Release Duration", false, false, true),
-						"last_change_date":         utils.GetStringAttribute("Last Change Date (ISO 8601 format)", false, false, true),
-						"next_change_date":         utils.GetStringAttribute("Next Change Date (ISO 8601 format)", false, false, true),
-						"is_changing":              utils.GetBoolAttribute("Is Changing", false, false, true),
-						"change_state":             utils.GetInt32Attribute("Change State", false, false, true),
-						"is_isa_access":            utils.GetBoolAttribute("ISA Access", false, false, true),
-						"preferred_node_id":        utils.GetStringAttribute("Preferred Node ID", false, false, true),
-						"account_description":      utils.GetStringAttribute("Account Description", false, false, true),
-					},
+					Attributes: d.getManagedAccountDataSourceSchemaAttributes(),
 				},
 			},
 		},
+	}
+}
+
+// getAssetDataSourceSchemaAttributes get schema attributes.
+func (d *ManagedAccountDataSource) getManagedAccountDataSourceSchemaAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"platform_id":              utils.GetInt32Attribute("Platform ID", false, false, true),
+		"system_id":                utils.GetInt32Attribute("System ID", false, false, true),
+		"system_name":              utils.GetStringAttribute("System Name", false, false, true),
+		"domain_name":              utils.GetStringAttribute("Domain Name", false, false, true),
+		"account_id":               utils.GetInt32Attribute("Account ID", false, false, true),
+		"account_name":             utils.GetStringAttribute("Account Name", false, false, true),
+		"instance_name":            utils.GetStringAttribute("Instance Name", false, false, true),
+		"user_principal_name":      utils.GetStringAttribute("User Principal Name", false, false, true),
+		"application_id":           utils.GetInt32Attribute("Application ID", false, false, true),
+		"application_display_name": utils.GetStringAttribute("Application Display Name", false, false, true),
+		"default_release_duration": utils.GetInt32Attribute("Default Release Duration", false, false, true),
+		"maximum_release_duration": utils.GetInt32Attribute("Maximum Release Duration", false, false, true),
+		"last_change_date":         utils.GetStringAttribute("Last Change Date (ISO 8601 format)", false, false, true),
+		"next_change_date":         utils.GetStringAttribute("Next Change Date (ISO 8601 format)", false, false, true),
+		"is_changing":              utils.GetBoolAttribute("Is Changing", false, false, true),
+		"change_state":             utils.GetInt32Attribute("Change State", false, false, true),
+		"is_isa_access":            utils.GetBoolAttribute("ISA Access", false, false, true),
+		"preferred_node_id":        utils.GetStringAttribute("Preferred Node ID", false, false, true),
+		"account_description":      utils.GetStringAttribute("Account Description", false, false, true),
 	}
 }
 

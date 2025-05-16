@@ -61,23 +61,28 @@ func (d *AssetDataSource) Schema(ctx context.Context, req datasource.SchemaReque
 			"assets": schema.ListNestedBlock{
 				Description: "Asset Datasource Attributes",
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"workgroup_id":     utils.GetInt32Attribute("Workgroup ID", false, false, true),
-						"asset_id":         utils.GetInt32Attribute("Asset ID", false, false, true),
-						"asset_name":       utils.GetStringAttribute("Asset Name", false, false, true),
-						"dns_name":         utils.GetStringAttribute("DNS Name", false, false, true),
-						"domain_name":      utils.GetStringAttribute("Domain Name", false, false, true),
-						"ip_address":       utils.GetStringAttribute("IP Address", false, false, true),
-						"mac_address":      utils.GetStringAttribute("MAC Address", false, false, true),
-						"asset_type":       utils.GetStringAttribute("Asset Type", false, false, true),
-						"operating_system": utils.GetStringAttribute("Operating System", false, false, true),
-						"create_date":      utils.GetStringAttribute("Creation Date (ISO 8601 format)", false, false, true),
-						"last_update_date": utils.GetStringAttribute("Last Update Date (ISO 8601 format)", false, false, true),
-						"description":      utils.GetStringAttribute("Description", false, false, true),
-					},
+					Attributes: d.getAssetDataSourceSchemaAttributes(),
 				},
 			},
 		},
+	}
+}
+
+// getAssetDataSourceSchemaAttributes get schema attributes.
+func (d *AssetDataSource) getAssetDataSourceSchemaAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"workgroup_id":     utils.GetInt32Attribute("Workgroup ID", false, false, true),
+		"asset_id":         utils.GetInt32Attribute("Asset ID", false, false, true),
+		"asset_name":       utils.GetStringAttribute("Asset Name", false, false, true),
+		"dns_name":         utils.GetStringAttribute("DNS Name", false, false, true),
+		"domain_name":      utils.GetStringAttribute("Domain Name", false, false, true),
+		"ip_address":       utils.GetStringAttribute("IP Address", false, false, true),
+		"mac_address":      utils.GetStringAttribute("MAC Address", false, false, true),
+		"asset_type":       utils.GetStringAttribute("Asset Type", false, false, true),
+		"operating_system": utils.GetStringAttribute("Operating System", false, false, true),
+		"create_date":      utils.GetStringAttribute("Creation Date (ISO 8601 format)", false, false, true),
+		"last_update_date": utils.GetStringAttribute("Last Update Date (ISO 8601 format)", false, false, true),
+		"description":      utils.GetStringAttribute("Description", false, false, true),
 	}
 }
 
