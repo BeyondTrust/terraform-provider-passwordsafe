@@ -7,6 +7,7 @@ import (
 	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/assets"
+	"github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -134,6 +135,24 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 	return assetResource
 }
 
+func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) *assets.AssetObj {
+
+	_, err := utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return nil
+	}
+
+	assetGroupObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
+		return nil
+	}
+
+	return assetGroupObj
+}
+
 func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
 	var data AssetResorceByWorkGroupIdModel
@@ -144,19 +163,7 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
-	// instantiating asset obj
-	assetGroupObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
-
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
-		return
-	}
+	assetGroupObj := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
 
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
@@ -261,19 +268,7 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
-	// instantiating asset obj
-	assetGroupObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
-
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
-		return
-	}
+	assetGroupObj := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
 
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
