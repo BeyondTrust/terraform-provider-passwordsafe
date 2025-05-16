@@ -10,7 +10,6 @@ import (
 	"maps"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
-	managed_systems "github.com/BeyondTrust/go-client-library-passwordsafe/api/managed_systems"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -141,24 +140,10 @@ func (r *managedSystemResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	err := utils.ValidateChangeFrequencyDays(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
-
-	if err != nil {
-		resp.Diagnostics.AddError("Error in inputs", err.Error())
-		return
-	}
-
-	_, err = utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// Instantiating managed system obj
-	managedSystemObj, err := managed_systems.NewManagedSystem(*r.providerInfo.authenticationObj, zapLogger)
+	managedSystemObj, err := getManagedSystemObj(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()), resp, *r.providerInfo.authenticationObj)
 
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
 		return
 	}
 

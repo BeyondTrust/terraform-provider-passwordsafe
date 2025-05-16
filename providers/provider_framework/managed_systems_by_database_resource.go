@@ -7,6 +7,7 @@ import (
 	"maps"
 	"terraform-provider-passwordsafe/providers/utils"
 
+	"github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	managed_systems "github.com/BeyondTrust/go-client-library-passwordsafe/api/managed_systems"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -82,6 +83,31 @@ func (r *managedSystemByDatabaseResource) Configure(ctx context.Context, req res
 
 }
 
+// getManagedSystemObj get managedSystemObj for create manage system by asset, workgroup, database.
+func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) (*managed_systems.ManagedSystemObj, error) {
+	err := utils.ValidateChangeFrequencyDays(changeFrequencyType, changeFrequencyDays)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error in inputs", err.Error())
+		return nil, err
+	}
+
+	_, err = utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return nil, err
+	}
+
+	// Instantiating managed system obj
+	managedSystemObj, err := managed_systems.NewManagedSystem(authenticationObj, zapLogger)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
+		return nil, err
+	}
+	return managedSystemObj, nil
+}
+
 func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 
 	var data ManagedSystemByDataBaseResourceModel
@@ -92,24 +118,10 @@ func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	err := utils.ValidateChangeFrequencyDays(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
-
-	if err != nil {
-		resp.Diagnostics.AddError("Error in inputs", err.Error())
-		return
-	}
-
-	_, err = utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// Instantiating managed system obj
-	managedSystemObj, err := managed_systems.NewManagedSystem(*r.providerInfo.authenticationObj, zapLogger)
+	managedSystemObj, err := getManagedSystemObj(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()), resp, *r.providerInfo.authenticationObj)
 
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
 		return
 	}
 
