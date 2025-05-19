@@ -171,7 +171,7 @@ func (d *PlatformDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	// instantiating platform obj
-	platformObj, err := platforms.NewPlatformObj(*d.providerInfo.authenticationObj, zapLogger)
+	platformObj, _ := platforms.NewPlatformObj(*d.providerInfo.authenticationObj, zapLogger)
 
 	// get platforms list
 	items, err := platformObj.GetPlatformsListFlow()

@@ -4,15 +4,15 @@ package provider_framework
 
 import (
 	"context"
+	"maps"
 	"terraform-provider-passwordsafe/providers/utils"
 
+	"github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	managed_systems "github.com/BeyondTrust/go-client-library-passwordsafe/api/managed_systems"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -53,96 +53,20 @@ func (r *managedSystemByDatabaseResource) Metadata(ctx context.Context, req reso
 }
 
 func (r *managedSystemByDatabaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+
+	commonAttributes := utils.GetCreateManagedSystemCommonAttributes()
+	databaseAttributes := map[string]schema.Attribute{
+		"database_id": schema.StringAttribute{
+			MarkdownDescription: "Database Id",
+			Required:            true,
+		},
+	}
+
+	maps.Copy(databaseAttributes, commonAttributes)
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Managed System by Database Id Resource, creates managed system by database id.",
-		Attributes: map[string]schema.Attribute{
-			"database_id": schema.StringAttribute{
-				MarkdownDescription: "Database Id",
-				Required:            true,
-			},
-			"managed_system_id": schema.Int32Attribute{
-				MarkdownDescription: "Managed System Id",
-				Required:            false,
-				Optional:            false,
-				Computed:            true,
-			},
-			"managed_system_name": schema.StringAttribute{
-				MarkdownDescription: "Managed System Name",
-				Required:            false,
-				Optional:            false,
-				Computed:            true,
-			},
-			"contact_email": schema.StringAttribute{
-				MarkdownDescription: "Contact Email (max 1000 characters, must be a valid email)",
-				Optional:            true,
-			},
-			"description": schema.StringAttribute{
-				MarkdownDescription: "Description (max 255 characters)",
-				Optional:            true,
-			},
-			"timeout": schema.Int32Attribute{
-				MarkdownDescription: "Timeout (min: 1)",
-				Optional:            true,
-			},
-			"password_rule_id": schema.Int32Attribute{
-				MarkdownDescription: "Password Rule ID",
-				Optional:            true,
-			},
-			"release_duration": schema.Int32Attribute{
-				MarkdownDescription: "Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(120),
-			},
-			"max_release_duration": schema.Int32Attribute{
-				MarkdownDescription: "Max Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(525600),
-			},
-			"isa_release_duration": schema.Int32Attribute{
-				MarkdownDescription: "ISA Release Duration (min: 1, max: 525600)",
-				Optional:            true,
-				Computed:            true,
-				Default:             int32default.StaticInt32(120),
-			},
-			"auto_management_flag": schema.BoolAttribute{
-				MarkdownDescription: "Auto Management Flag",
-				Optional:            true,
-			},
-			"functional_account_id": schema.Int32Attribute{
-				MarkdownDescription: "Functional Account ID (required if AutoManagementFlag is true)",
-				Optional:            true,
-			},
-			"check_password_flag": schema.BoolAttribute{
-				MarkdownDescription: "Check Password Flag",
-				Optional:            true,
-			},
-			"change_password_after_any_release_flag": schema.BoolAttribute{
-				MarkdownDescription: "Change Password After Any Release Flag",
-				Optional:            true,
-			},
-			"reset_password_on_mismatch_flag": schema.BoolAttribute{
-				MarkdownDescription: "Reset Password On Mismatch Flag",
-				Optional:            true,
-			},
-			"change_frequency_type": schema.StringAttribute{
-				MarkdownDescription: "Change Frequency Type (one of: first, last, xdays)",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("first"),
-			},
-			"change_frequency_days": schema.Int32Attribute{
-				MarkdownDescription: "Change Frequency Days (required if ChangeFrequencyType is xdays)",
-				Optional:            true,
-			},
-			"change_time": schema.StringAttribute{
-				MarkdownDescription: "Change Time (format: HH:MM)",
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString("23:30"),
-			},
-		},
+		Attributes:          databaseAttributes,
 	}
 }
 
@@ -169,24 +93,10 @@ func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	err := utils.ValidateChangeFrequencyDays(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()))
-
-	if err != nil {
-		resp.Diagnostics.AddError("Error in inputs", err.Error())
-		return
-	}
-
-	_, err = utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// Instantiating managed system obj
-	managedSystemObj, err := managed_systems.NewManagedSystem(*r.providerInfo.authenticationObj, zapLogger)
+	managedSystemObj, err := getManagedSystemObj(data.ChangeFrequencyType.ValueString(), int(data.ChangeFrequencyDays.ValueInt32()), resp, *r.providerInfo.authenticationObj)
 
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
 		return
 	}
 
@@ -220,11 +130,7 @@ func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resour
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
 	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
+	APISignOut(resp, *r.providerInfo.authenticationObj)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -243,4 +149,38 @@ func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resour
 
 func (r *managedSystemByDatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// getManagedSystemObj get managedSystemObj for create manage system by asset, workgroup, database.
+func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) (*managed_systems.ManagedSystemObj, error) {
+	err := utils.ValidateChangeFrequencyDays(changeFrequencyType, changeFrequencyDays)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error in inputs", err.Error())
+		return nil, err
+	}
+
+	_, err = utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return nil, err
+	}
+
+	// Instantiating managed system obj
+	managedSystemObj, err := managed_systems.NewManagedSystem(authenticationObj, zapLogger)
+
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
+		return nil, err
+	}
+	return managedSystemObj, nil
+}
+
+// APISignOut close connection with Password Safe API.
+func APISignOut(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) {
+	err := utils.SignOut(authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
