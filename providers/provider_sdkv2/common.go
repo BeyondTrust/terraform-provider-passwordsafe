@@ -49,11 +49,23 @@ func getOwnersSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"owner_id": &schema.Schema{
 					Type:     schema.TypeInt,
-					Required: true,
+					Optional: true,
 				},
 				"owner": &schema.Schema{
 					Type:     schema.TypeString,
-					Required: true,
+					Optional: true,
+				},
+				"group_id": &schema.Schema{
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"user_id": &schema.Schema{
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"name": &schema.Schema{
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 				"email": &schema.Schema{
 					Type:     schema.TypeString,

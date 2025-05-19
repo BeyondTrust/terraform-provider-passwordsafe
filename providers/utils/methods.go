@@ -44,10 +44,11 @@ func TestResourceConfig(config entities.PasswordSafeTestConfig) string {
 	)
 }
 
+var signAppinResponse libraryEntitites.SignAppinResponse
+
 // autenticate get Password Safe authentication.
 func Autenticate(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) (libraryEntitites.SignAppinResponse, error) {
 	var err error
-	var signAppinResponse libraryEntitites.SignAppinResponse
 
 	mu.Lock()
 	if atomic.LoadUint64(signInCount) > 0 {

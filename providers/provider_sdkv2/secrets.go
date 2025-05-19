@@ -4,6 +4,8 @@ package provider
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"maps"
 
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
@@ -144,19 +146,42 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
-	secret := entities.SecretCredentialDetails{
+	secretDetailsConfig := entities.SecretDetailsBaseConfig{
 		Title:       title,
 		Description: description,
-		Username:    username,
-		Password:    password,
-		OwnerId:     ownerId,
-		OwnerType:   ownerType,
-		Owners:      getOwnersDetailsList(d, ownerType, groupId, signAppinResponse),
-		Notes:       notes,
 		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+		Notes:       notes,
 	}
 
-	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
+	secretCredentialDetailsConfig30 := entities.SecretCredentialDetailsConfig30{
+		SecretDetailsBaseConfig: secretDetailsConfig,
+		Username:                username,
+		Password:                password,
+		OwnerId:                 ownerId,
+		OwnerType:               ownerType,
+		Owners:                  getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
+	}
+
+	secretCredentialDetailsConfig31 := entities.SecretCredentialDetailsConfig31{
+		SecretDetailsBaseConfig: secretDetailsConfig,
+		Username:                username,
+		Password:                password,
+		Owners:                  getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
+	}
+
+	// Configure input object according to API version.
+	configMap := map[string]interface{}{
+		"3.0": secretCredentialDetailsConfig30,
+		"3.1": secretCredentialDetailsConfig31,
+	}
+
+	credentialSecretDetails, exists := configMap[authenticationObj.ApiVersion]
+
+	if !exists {
+		return errors.New(fmt.Sprintf("Unsupported API version: %s", authenticationObj.ApiVersion))
+	}
+
+	createdSecret, err := secretObj.CreateSecretFlow(folderName, credentialSecretDetails)
 
 	if err != nil {
 		return err
@@ -191,18 +216,40 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
-	secret := entities.SecretTextDetails{
+	secretDetailsConfig := entities.SecretDetailsBaseConfig{
 		Title:       title,
 		Description: description,
-		Text:        text,
-		OwnerId:     ownerId,
-		OwnerType:   ownerType,
-		Owners:      getOwnersDetailsList(d, ownerType, groupId, signAppinResponse),
-		Notes:       notes,
 		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+		Notes:       notes,
 	}
 
-	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
+	secretTextDetailsConfig30 := entities.SecretTextDetailsConfig30{
+		SecretDetailsBaseConfig: secretDetailsConfig,
+		Text:                    text,
+		OwnerId:                 ownerId,
+		OwnerType:               ownerType,
+		Owners:                  getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
+	}
+
+	secretTextDetailsConfig31 := entities.SecretTextDetailsConfig31{
+		SecretDetailsBaseConfig: secretDetailsConfig,
+		Text:                    text,
+		Owners:                  getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
+	}
+
+	// Configure input object according to API version.
+	configMap := map[string]interface{}{
+		"3.0": secretTextDetailsConfig30,
+		"3.1": secretTextDetailsConfig31,
+	}
+
+	textSecretDetails, exists := configMap[authenticationObj.ApiVersion]
+
+	if !exists {
+		return errors.New(fmt.Sprintf("Unsupported API version: %s", authenticationObj.ApiVersion))
+	}
+
+	createdSecret, err := secretObj.CreateSecretFlow(folderName, textSecretDetails)
 
 	if err != nil {
 		return err
@@ -238,19 +285,43 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
-	secret := entities.SecretFileDetails{
+	secretDetailsConfig := entities.SecretDetailsBaseConfig{
 		Title:       title,
 		Description: description,
-		OwnerId:     ownerId,
-		OwnerType:   ownerType,
-		Owners:      getOwnersDetailsList(d, ownerType, groupId, signAppinResponse),
-		Notes:       notes,
 		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
-		FileContent: fileContent,
-		FileName:    fileName,
+		Notes:       notes,
 	}
 
-	createdSecret, err := secretObj.CreateSecretFlow(folderName, secret)
+	secretFileDetailsConfig30 := entities.SecretFileDetailsConfig30{
+		SecretDetailsBaseConfig: secretDetailsConfig,
+		FileContent:             fileContent,
+		FileName:                fileName,
+		OwnerId:                 ownerId,
+		OwnerType:               ownerType,
+		Owners:                  getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
+	}
+
+	secretFileDetailsConfig31 := entities.SecretFileDetailsConfig31{
+		SecretDetailsBaseConfig: secretDetailsConfig,
+		FileContent:             fileContent,
+		FileName:                fileName,
+		OwnerType:               ownerType,
+		Owners:                  getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
+	}
+
+	// Configure input object according to API version.
+	configMap := map[string]interface{}{
+		"3.0": secretFileDetailsConfig30,
+		"3.1": secretFileDetailsConfig31,
+	}
+
+	fileSecretDetails, exists := configMap[authenticationObj.ApiVersion]
+
+	if !exists {
+		return errors.New(fmt.Sprintf("Unsupported API version: %s", authenticationObj.ApiVersion))
+	}
+
+	createdSecret, err := secretObj.CreateSecretFlow(folderName, fileSecretDetails)
 
 	if err != nil {
 		return err
@@ -319,13 +390,12 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	return diags
 }
 
-// getOwnersDetailsList get Owners details list.
-func getOwnersDetailsList(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetails {
-	var owners []entities.OwnerDetails
+// getOwnerDetailsOwnerIdList get Owners details list.
+func getOwnerDetailsOwnerIdList(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetailsOwnerId {
+	var owners []entities.OwnerDetailsOwnerId
 
 	if ownerType == "User" {
-		mainOwner := entities.OwnerDetails{
-			GroupId: groupId,
+		mainOwner := entities.OwnerDetailsOwnerId{
 			OwnerId: signAppinResponse.UserId,
 			Owner:   signAppinResponse.UserName,
 			Email:   signAppinResponse.EmailAddress,
@@ -337,9 +407,40 @@ func getOwnersDetailsList(d *schema.ResourceData, ownerType string, groupId int,
 	if ownersRaw != nil {
 		for _, ownerRaw := range ownersRaw.([]interface{}) {
 			ownerMap := ownerRaw.(map[string]interface{})
-			owner := entities.OwnerDetails{
+			owner := entities.OwnerDetailsOwnerId{
 				OwnerId: ownerMap["owner_id"].(int),
 				Owner:   ownerMap["owner"].(string),
+				Email:   ownerMap["email"].(string),
+			}
+			owners = append(owners, owner)
+		}
+	}
+
+	return owners
+}
+
+// getOwnerDetailsGroupIdList get Owners details list.
+func getOwnerDetailsGroupIdList(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetailsGroupId {
+	var owners []entities.OwnerDetailsGroupId
+
+	if ownerType == "User" {
+		mainOwner := entities.OwnerDetailsGroupId{
+			GroupId: groupId,
+			UserId:  signAppinResponse.UserId,
+			Name:    signAppinResponse.Name,
+			Email:   signAppinResponse.EmailAddress,
+		}
+		owners = append(owners, mainOwner)
+	}
+
+	ownersRaw, _ := d.GetOk("owners")
+	if ownersRaw != nil {
+		for _, ownerRaw := range ownersRaw.([]interface{}) {
+			ownerMap := ownerRaw.(map[string]interface{})
+			owner := entities.OwnerDetailsGroupId{
+				GroupId: groupId,
+				UserId:  ownerMap["user_id"].(int),
+				Name:    ownerMap["name"].(string),
 				Email:   ownerMap["email"].(string),
 			}
 			owners = append(owners, owner)
