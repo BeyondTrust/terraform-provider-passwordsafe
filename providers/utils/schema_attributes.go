@@ -32,6 +32,8 @@ func GetCreateManagedSystemCommonAttributes() map[string]schema.Attribute {
 		"timeout": schema.Int32Attribute{
 			MarkdownDescription: "Timeout",
 			Optional:            true,
+			Computed:            true,
+			Default:             int32default.StaticInt32(30),
 		},
 		"password_rule_id": schema.Int32Attribute{
 			MarkdownDescription: "Password Rule ID",

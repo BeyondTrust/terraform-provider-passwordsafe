@@ -305,7 +305,6 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 		SecretDetailsBaseConfig: secretDetailsConfig,
 		FileContent:             fileContent,
 		FileName:                fileName,
-		OwnerType:               ownerType,
 		Owners:                  getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
 	}
 
@@ -394,14 +393,12 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 func getOwnerDetailsOwnerIdList(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetailsOwnerId {
 	var owners []entities.OwnerDetailsOwnerId
 
-	if ownerType == "User" {
-		mainOwner := entities.OwnerDetailsOwnerId{
-			OwnerId: signAppinResponse.UserId,
-			Owner:   signAppinResponse.UserName,
-			Email:   signAppinResponse.EmailAddress,
-		}
-		owners = append(owners, mainOwner)
+	mainOwner := entities.OwnerDetailsOwnerId{
+		OwnerId: signAppinResponse.UserId,
+		Owner:   signAppinResponse.UserName,
+		Email:   signAppinResponse.EmailAddress,
 	}
+	owners = append(owners, mainOwner)
 
 	ownersRaw, _ := d.GetOk("owners")
 	if ownersRaw != nil {
@@ -423,15 +420,13 @@ func getOwnerDetailsOwnerIdList(d *schema.ResourceData, ownerType string, groupI
 func getOwnerDetailsGroupIdList(d *schema.ResourceData, ownerType string, groupId int, signAppinResponse entities.SignAppinResponse) []entities.OwnerDetailsGroupId {
 	var owners []entities.OwnerDetailsGroupId
 
-	if ownerType == "User" {
-		mainOwner := entities.OwnerDetailsGroupId{
-			GroupId: groupId,
-			UserId:  signAppinResponse.UserId,
-			Name:    signAppinResponse.Name,
-			Email:   signAppinResponse.EmailAddress,
-		}
-		owners = append(owners, mainOwner)
+	mainOwner := entities.OwnerDetailsGroupId{
+		GroupId: groupId,
+		UserId:  signAppinResponse.UserId,
+		Name:    signAppinResponse.Name,
+		Email:   signAppinResponse.EmailAddress,
 	}
+	owners = append(owners, mainOwner)
 
 	ownersRaw, _ := d.GetOk("owners")
 	if ownersRaw != nil {
