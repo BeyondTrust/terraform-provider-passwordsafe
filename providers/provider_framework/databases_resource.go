@@ -125,7 +125,7 @@ func (r *databaseResource) Create(ctx context.Context, req resource.CreateReques
 		PlatformID:        int(data.PlatformID.ValueInt32()),
 		InstanceName:      data.InstanceName.ValueString(),
 		IsDefaultInstance: data.IsDefaultInstance.ValueBool(),
-		Port:              int(data.PlatformID.ValueInt32()),
+		Port:              int(data.Port.ValueInt32()),
 		Version:           data.Version.ValueString(),
 		Template:          data.Template.ValueString(),
 	}
