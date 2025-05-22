@@ -1,7 +1,7 @@
 # Terraform Provider release workflow.
 name: Release
 env:
-  JFROG_SERVER: eng-generic-dev-local
+  JFROG_SERVER: eng-tf-provider-dev-local
   JFROG_CLI_BUILD_NAME: ${{ github.event.repository.name }}
   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
 # This GitHub action creates a release when a tag that matches the pattern
@@ -19,8 +19,8 @@ on:
 permissions: {}
 
 jobs:
-
   unit_test:
+    name: Unit Testing
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -33,10 +33,10 @@ jobs:
       - name: Run unit tests
         run: |
           export TF_ACC=1
-          cd providers
           go mod tidy
           go test ./... -cover -coverprofile=coverage.out -v
           go tool cover -func="coverage.out"
+        working-directory: providers
       
       - name: Save unit tests coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -45,6 +45,7 @@ jobs:
           path: providers/coverage.out
           
   sonarqube:
+    name: Sonarqube Analysis
     continue-on-error: true
   # Sonar scan is not required for dependabot PRs
     runs-on: ubuntu-latest
@@ -143,7 +144,6 @@ jobs:
           fi
 
       - name: Jfrog setup
-        continue-on-error: true
         uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
         env:
           JF_URL: https://beyondtrust.jfrog.io
@@ -186,25 +186,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
       
-      - name: Preparing artifacts
+      - name: Preparing artifacts and Publish to Jfrog
         run: |
-          cd dist
           mkdir -p terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
           mv *.zip terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-      
-      - name: Send artifacts to Jfrog
-        continue-on-error: true
-        run: |
-          cd dist
           jfrog rt u "terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+        working-directory: dist
       
       - name: Publish Build Information
-        continue-on-error: true
         run: |
           jfrog rt build-add-git
           jfrog rt build-collect-env
           jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
 
       - name: Scan Build
-        continue-on-error: true
         run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
