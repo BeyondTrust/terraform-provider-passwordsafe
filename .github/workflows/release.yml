@@ -138,9 +138,11 @@ jobs:
 
       - name: Jfrog setup
         continue-on-error: true
-        uses: jfrog/setup-jfrog-cli@ff5cb544114ffc152db9cea1cd3d5978d5074946 # v4.5.11
+        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
         env:
-          JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+          JF_URL: https://beyondtrust.jfrog.io
+        with:
+          oidc-provider-name: nonprod-terraform-provider-passwordsafe
 
       - name: Configure JFrog CLI build number
         run: |
