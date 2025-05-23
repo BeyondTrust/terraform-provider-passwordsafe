@@ -4,7 +4,6 @@ package provider
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
 
@@ -178,7 +177,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	credentialSecretDetails, exists := configMap[authenticationObj.ApiVersion]
 
 	if !exists {
-		return errors.New(fmt.Sprintf("Unsupported API version: %s", authenticationObj.ApiVersion))
+		return fmt.Errorf("Unsupported API version: %v", authenticationObj.ApiVersion)
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, credentialSecretDetails)
@@ -246,7 +245,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	textSecretDetails, exists := configMap[authenticationObj.ApiVersion]
 
 	if !exists {
-		return errors.New(fmt.Sprintf("Unsupported API version: %s", authenticationObj.ApiVersion))
+		return fmt.Errorf("Unsupported API version: %v", authenticationObj.ApiVersion)
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, textSecretDetails)
@@ -317,7 +316,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	fileSecretDetails, exists := configMap[authenticationObj.ApiVersion]
 
 	if !exists {
-		return errors.New(fmt.Sprintf("Unsupported API version: %s", authenticationObj.ApiVersion))
+		return fmt.Errorf("Unsupported API version: %v", authenticationObj.ApiVersion)
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, fileSecretDetails)
