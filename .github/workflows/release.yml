@@ -188,9 +188,9 @@ jobs:
       
       - name: Preparing artifacts and Publish to Jfrog
         run: |
-          mkdir -p terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          mv *.zip terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          jfrog rt u "terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+          mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
+          mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
+          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
         working-directory: dist
       
       - name: Publish Build Information
