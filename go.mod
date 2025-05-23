@@ -1,6 +1,6 @@
 module terraform-provider-passwordsafe
 
-go 1.24.1
+go 1.24.2
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -43,7 +43,7 @@ require (
 )
 
 require (
-	github.com/BeyondTrust/go-client-library-passwordsafe v0.21.1
+	github.com/BeyondTrust/go-client-library-passwordsafe v0.22.0
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
