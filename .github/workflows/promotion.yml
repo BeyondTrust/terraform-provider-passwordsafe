@@ -6,31 +6,34 @@ on:
 jobs:
   promotion:
     runs-on: ubuntu-latest
+    name: Promote built artifact
     steps:
-        - name: Jfrog setup
-          uses: jfrog/setup-jfrog-cli@ff5cb544114ffc152db9cea1cd3d5978d5074946 # v4.5.11
-          env:
-            JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+    - name: Jfrog setup
+      uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
+      env:
+        JF_URL: https://beyondtrust.jfrog.io
+      with:
+        oidc-provider-name: prod-terraform-provider-passwordsafe
 
-        - name: Extract version
-          uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
-          id: version
-          with:
-            script: |
-              const version = context.ref.match(/[\d][\d*\.]*$/)[0];
-              core.setOutput("version", version);
+    - name: Extract version
+      uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+      id: version
+      with:
+        script: |
+          const version = context.ref.match(/[\d][\d*\.]*$/)[0];
+          core.setOutput("version", version);
 
-        - name: Promote artifact
-          run: |
-            VERSION="${{ steps.version.outputs.version }}"
-            BUILD_NAME="${{ github.event.repository.name }}"  
-            
-            BUILD_NUMBER="$(jfrog rt curl api/build/${BUILD_NAME} -s | jq -e -r '[.buildsNumbers[] | select(.uri | contains("'$VERSION'"))] | sort_by(.started) | reverse | .[0].uri[1:]')"
+    - name: Promote artifact
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        BUILD_NAME="${{ github.event.repository.name }}"  
+        
+        BUILD_NUMBER="$(jfrog rt curl api/build/${BUILD_NAME} -s | jq -e -r '[.buildsNumbers[] | select(.uri | contains("'$VERSION'"))] | sort_by(.started) | reverse | .[0].uri[1:]')"
 
-            if [ -z "$BUILD_NUMBER" ]; then
-              echo "::error::Error retrieving build from Artifactory. No matching name/version. Name: $BUILD_NAME; Version: $VERSION"
-              exit 1
-            fi
+        if [ -z "$BUILD_NUMBER" ]; then
+          echo "::error::Error retrieving build from Artifactory. No matching name/version. Name: $BUILD_NAME; Version: $VERSION"
+          exit 1
+        fi
 
-            echo "Promoting generic"
-            jfrog rt build-promote  "$BUILD_NAME" "$BUILD_NUMBER" eng-generic-prod-local --status released --copy=true
+        echo "Promoting generic"
+        jfrog rt build-promote  "$BUILD_NAME" "$BUILD_NUMBER" eng-generic-prod-local --status released --copy=true
