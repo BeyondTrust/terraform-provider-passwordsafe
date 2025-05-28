@@ -27,7 +27,7 @@ jobs:
         with:
           oidc-provider-name: nonprod-terraform-provider-passwordsafe
 
-      - name: Run XRay scan
+      - name: Run Frogbot scan
         uses: jfrog/frogbot@e99f970ca49cec3c362757d0306350fd229de299 # v2.25.1
         env:
           JF_URL: https://beyondtrust.jfrog.io
