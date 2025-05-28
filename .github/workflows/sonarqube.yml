@@ -12,6 +12,8 @@ permissions:
 
 jobs:
   sonarqube:
+    # Enable when sonar token is added
+    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
