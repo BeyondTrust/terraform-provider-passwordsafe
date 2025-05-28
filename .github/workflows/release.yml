@@ -1,7 +1,7 @@
 # Terraform Provider release workflow.
 name: Release
 env:
-  JFROG_SERVER: eng-generic-dev-local
+  JFROG_SERVER: eng-tf-provider-dev-local
   JFROG_CLI_BUILD_NAME: ${{ github.event.repository.name }}
   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
 # This GitHub action creates a release when a tag that matches the pattern
@@ -16,13 +16,14 @@ on:
 
 # Releases need permissions to read and write the repository contents.
 # GitHub considers creating releases and uploading assets as writing contents.
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
-
   unit_test:
+    name: Unit Testing
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -32,10 +33,10 @@ jobs:
       - name: Run unit tests
         run: |
           export TF_ACC=1
-          cd providers
           go mod tidy
           go test ./... -cover -coverprofile=coverage.out -v
           go tool cover -func="coverage.out"
+        working-directory: providers
       
       - name: Save unit tests coverage
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -44,10 +45,14 @@ jobs:
           path: providers/coverage.out
           
   sonarqube:
-    continue-on-error: true
+    name: Sonarqube Analysis
+    # Delete the if as soon as it is viable to implement sonar
+    if: false 
   # Sonar scan is not required for dependabot PRs
     runs-on: ubuntu-latest
     needs: unit_test
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -94,12 +99,16 @@ jobs:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
 
   goreleaser:
+    name: Release Provider
     runs-on: ubuntu-latest
-    needs: [unit_test, sonarqube]
+    # include sonarqube as soon as sonar is enabled
+    needs: [unit_test]
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          # Allow goreleaser to access older tag information.
           fetch-depth: 0
       
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
@@ -137,10 +146,11 @@ jobs:
           fi
 
       - name: Jfrog setup
-        continue-on-error: true
-        uses: jfrog/setup-jfrog-cli@ff5cb544114ffc152db9cea1cd3d5978d5074946 # v4.5.11
+        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
         env:
-          JF_ENV_1: ${{ secrets.ARTIFACTORY_DEPLOYER }}
+          JF_URL: https://beyondtrust.jfrog.io
+        with:
+          oidc-provider-name: nonprod-terraform-provider-passwordsafe
 
       - name: Configure JFrog CLI build number
         run: |
@@ -162,7 +172,6 @@ jobs:
           version: '~> v2'
           args: release --clean
         env:
-          # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
       # Builds binaries artifacts.
@@ -178,25 +187,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
       
-      - name: Preparing artifacts
+      - name: Preparing artifacts and Publish to Jfrog
         run: |
-          cd dist
-          mkdir -p terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          mv *.zip terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-      
-      - name: Send artifacts to Jfrog
-        continue-on-error: true
-        run: |
-          cd dist
-          jfrog rt u "terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+          mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
+          mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
+          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+        working-directory: dist
       
       - name: Publish Build Information
-        continue-on-error: true
         run: |
           jfrog rt build-add-git
           jfrog rt build-collect-env
           jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
 
       - name: Scan Build
-        continue-on-error: true
         run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
