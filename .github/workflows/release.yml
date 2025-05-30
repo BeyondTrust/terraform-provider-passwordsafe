@@ -34,6 +34,8 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -input=false
+        run: | 
+          terraform version
+          terraform init -input=false
         working-directory: project
 
