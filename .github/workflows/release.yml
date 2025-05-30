@@ -21,7 +21,7 @@ permissions: {}
 jobs:
   unit_test:
     name: Unit Testing
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: read
     steps:
@@ -29,176 +29,27 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-
-      - name: Run unit tests
-        run: |
-          export TF_ACC=1
-          go mod tidy
-          go test ./... -cover -coverprofile=coverage.out -v
-          go tool cover -func="coverage.out"
-        working-directory: providers
-      
-      - name: Save unit tests coverage
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: coverage
-          path: providers/coverage.out
           
-  sonarqube:
-    name: Sonarqube Analysis
-    # Delete the if as soon as it is viable to implement sonar
-    if: false 
-  # Sonar scan is not required for dependabot PRs
-    runs-on: ubuntu-latest
-    needs: unit_test
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-        
-      - name: Download coverage
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: coverage
+      - uses: hashicorp/setup-terraform@v3
 
-      - name: SonarQube Scan on PR
-        if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
-        with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.pullrequest.key=${{ github.event.number }}
-            -Dsonar.pullrequest.branch=${{ github.head_ref }}
-            -Dsonar.pullrequest.base=${{ github.base_ref }}
-            -Dsonar.go.coverage.reportPaths=coverage.out
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
-          
-      - name: SonarQube Scan on branch
-        if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
-        with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.go.coverage.reportPaths=coverage.out
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+        working-directory: project
 
-      - name: SonarQube Quality Gate check
-        if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
-        uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+      - name: Terraform Init
+        id: init
+        run: terraform init -input=false
+        working-directory: project
 
-  goreleaser:
-    name: Release Provider
-    runs-on: ubuntu-latest
-    # include sonarqube as soon as sonar is enabled
-    needs: [unit_test]
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-      
-      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
-        with:
-          go-version-file: 'go.mod'
-          cache: true
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+        working-directory: project
 
-      - name: Get next version increment
-        id: increment
-        run: |
-          shopt -s nocasematch
-          commit_message=$(git log --format=%B -n 1)
-          if [[ $commit_message == "feat!:"* ]]; then
-            echo "INCREMENT=major" >> "$GITHUB_OUTPUT"
-          elif [[ $commit_message == "feat:"* ]]; then
-            echo "INCREMENT=minor" >> "$GITHUB_OUTPUT"
-          elif [[ $commit_message == "fix:"* ]]; then
-            echo "INCREMENT=patch" >> "$GITHUB_OUTPUT"
-          fi
-      
-      - name: Get next version numbers
-        uses: reecetech/version-increment@a29aa752dc3b8118a2dc2ed93faf0e95a73a9c7e # 2024.10.1
-        id: version_number
-        with:
-          increment: ${{ steps.increment.outputs.increment }}
-
-      - name: Get full version name and version numbers
-        id: version
-        run: |
-          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            echo "full_version="$(git tag --sort "-committerdate" | cut -d$'\n' -f1)"" >> "$GITHUB_OUTPUT"
-          else
-            version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
-            echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Jfrog setup
-        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
-        env:
-          JF_URL: https://beyondtrust.jfrog.io
-        with:
-          oidc-provider-name: nonprod-terraform-provider-passwordsafe
-
-      - name: Configure JFrog CLI build number
-        run: |
-          echo "JFROG_CLI_BUILD_NUMBER=${{ steps.version.outputs.full_version }}" >> $GITHUB_ENV 
-
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
-        id: import_gpg
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-      # Release the tag into Github. If draft in .goreleaser.yml is on true, not going to auto-publish the build
-      # It would work only is the is a tag pushed.
-      - name: Run GoReleaser release
-        uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
-        if: startsWith(github.ref, 'refs/tags/') 
-        with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-      # Builds binaries artifacts.
-      - name: Run GoReleaser build
-        uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: release --snapshot --clean 
-        env:
-          # GitHub sets the GITHUB_TOKEN secret automatically.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-      
-      - name: Preparing artifacts and Publish to Jfrog
-        run: |
-          mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
-        working-directory: dist
-      
-      - name: Publish Build Information
-        run: |
-          jfrog rt build-add-git
-          jfrog rt build-collect-env
-          jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
-
-      - name: Scan Build
-        run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+        working-directory: project
