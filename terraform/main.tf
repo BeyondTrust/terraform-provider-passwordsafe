@@ -55,7 +55,6 @@ output "managed_account" {
   sensitive = true
 }
 
-
 resource "passwordsafe_managed_account" "my_managed_account" {
   system_name  = "system_integration_test"
   account_name = "managed_account_${random_uuid.generated.result}"
@@ -248,4 +247,22 @@ resource "passwordsafe_managed_system_by_database" "managed_system_by_database" 
   change_frequency_type                  = "xdays"
   change_frequency_days                  = 15
   change_time                            = "03:00"
+}
+
+
+resource "passwordsafe_functional_account" "functional_account" {
+  platform_id           = 1
+  domain_name           = "test.example.com"
+  account_name          = "FUNCTIONAL_ACCOUNT_${random_uuid.generated.result}"
+  display_name          = "FUNCTIONAL_ACCOUNT_${random_uuid.generated.result}"
+  password              = "pass-value"
+  private_key           = "private key value"
+  passphrase            = "my-passphrase"
+  description           = "functional account description"
+  elevation_command     = "sudo"
+  tenant_id             = ""
+  object_id             = ""
+  secret                = "super-secret-value"
+  service_account_email = "test@test.com"
+  azure_instance        = "AzurePublic"
 }
