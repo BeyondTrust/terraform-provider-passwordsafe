@@ -83,7 +83,7 @@ func Provider() *schema.Provider {
 			"api_account_name": &schema.Schema{
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The user name for the API request to the Password Safe instance. For use when authenticating with an API key.",
+				Description: "The user name for the API request to the Password Safe instance. For use when authenticating with an API key, it gets used within as the “runas user” within authorization header of the request.",
 			},
 			"verify_ca": &schema.Schema{
 				Type:        schema.TypeBool,

@@ -38,6 +38,7 @@ func getSecretByPath() *schema.Resource {
 			"value": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -55,6 +56,7 @@ func resourceCredentialSecret() *schema.Resource {
 		"password": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			Sensitive: true,
 		},
 	}
 
@@ -80,6 +82,7 @@ func resourceTextSecret() *schema.Resource {
 		"text": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			Sensitive: true,
 		},
 	}
 
@@ -108,6 +111,7 @@ func resourceFileSecret() *schema.Resource {
 		"file_content": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			Sensitive: true,
 		},
 	}
 

@@ -118,6 +118,7 @@ func getManagedAccountSchema() map[string]*schema.Schema {
 		"password": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			Sensitive: true,
 		},
 		"domain_name": &schema.Schema{
 			Type:     schema.TypeString,
