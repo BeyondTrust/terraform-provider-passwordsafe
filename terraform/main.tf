@@ -50,11 +50,6 @@ output "secret_text" {
   sensitive = true
 }
 
-output "managed_account" {
-  value = data.passwordsafe_managed_account.manage_account_01.value
-  sensitive = true
-}
-
 resource "passwordsafe_managed_account" "my_managed_account" {
   system_name  = "system_integration_test"
   account_name = "managed_account_${random_uuid.generated.result}"
