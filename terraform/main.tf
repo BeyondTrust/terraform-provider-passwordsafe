@@ -32,11 +32,12 @@ output "random_uuid" {
 
 data "passwordsafe_managed_account" "manage_account_01" {
   system_name  = "system01"
-  account_name = "managed_account02"
+  account_name = "managed_account01"
 }
 
 output "manage_account_01" {
   value = data.passwordsafe_managed_account.manage_account_01.value
+  sensitive = true
 }
 
 data "passwordsafe_secret" "secret_text" {
@@ -46,7 +47,14 @@ data "passwordsafe_secret" "secret_text" {
 
 output "secret_text" {
   value = data.passwordsafe_secret.secret_text.value
+  sensitive = true
 }
+
+output "managed_account" {
+  value = data.passwordsafe_managed_account.manage_account_01.value
+  sensitive = true
+}
+
 
 resource "passwordsafe_managed_account" "my_managed_account" {
   system_name  = "system_integration_test"
@@ -240,22 +248,4 @@ resource "passwordsafe_managed_system_by_database" "managed_system_by_database" 
   change_frequency_type                  = "xdays"
   change_frequency_days                  = 15
   change_time                            = "03:00"
-}
-
-
-resource "passwordsafe_functional_account" "functional_account" {
-  platform_id           = 1
-  domain_name           = "test.example.com"
-  account_name          = "FUNCTIONAL_ACCOUNT_${random_uuid.generated.result}"
-  display_name          = "FUNCTIONAL_ACCOUNT_${random_uuid.generated.result}"
-  password              = "pass-value"
-  private_key           = "private key value"
-  passphrase            = "my-passphrase"
-  description           = "functional account description"
-  elevation_command     = "sudo"
-  tenant_id             = ""
-  object_id             = ""
-  secret                = "super-secret-value"
-  service_account_email = "test@test.com"
-  azure_instance        = "AzurePublic"
 }
