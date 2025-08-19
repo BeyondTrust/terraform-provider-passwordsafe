@@ -66,7 +66,7 @@ jobs:
 
       - name: SonarQube Scan on PR
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
+        uses: sonarsource/sonarqube-scan-action@8c71dc039c2dd71d3821e89a2b58ecc7fee6ced9 # v5.3.0
         with:
           projectBaseDir: .
           args: >
@@ -81,7 +81,7 @@ jobs:
           
       - name: SonarQube Scan on branch
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
+        uses: sonarsource/sonarqube-scan-action@8c71dc039c2dd71d3821e89a2b58ecc7fee6ced9 # v5.3.0
         with:
           projectBaseDir: .
           args: >
@@ -93,7 +93,7 @@ jobs:
 
       - name: SonarQube Quality Gate check
         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
-        uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
+        uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
@@ -146,7 +146,7 @@ jobs:
           fi
 
       - name: Jfrog setup
-        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
+        uses: jfrog/setup-jfrog-cli@2bc6e55719cd37dfb2f655a1e4f16c3440182a9f # v4.5.13
         env:
           JF_URL: https://beyondtrust.jfrog.io
         with:
@@ -165,7 +165,7 @@ jobs:
       # Release the tag into Github. If draft in .goreleaser.yml is on true, not going to auto-publish the build
       # It would work only is the is a tag pushed.
       - name: Run GoReleaser release
-        uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         if: startsWith(github.ref, 'refs/tags/') 
         with:
           distribution: goreleaser
@@ -176,7 +176,7 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
       # Builds binaries artifacts.
       - name: Run GoReleaser build
-        uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           distribution: goreleaser
