@@ -1,65 +1,98 @@
 name: SonarQube
-env:
-  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+# env:
+#   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+
+# on:
+#   pull_request:
+#     types: [opened, synchronize]
+#   workflow_dispatch:
+
+# permissions:
+#   contents: write
+
+# jobs:
+#   sonarqube:
+#     # Enable when sonar token is added
+#     if: false
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+#         with:
+#           fetch-depth: 0
+
+#       - name: Run unit tests
+#         run: |
+#           export TF_ACC=1
+#           cd providers
+#           go mod tidy
+#           go test ./... -cover -coverprofile=coverage.out -v
+#           ls -alt
+#           go tool cover -func="coverage.out"
+
+#       - name: SonarQube Scan on PR
+#         if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
+#         uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
+#         with:
+#           projectBaseDir: .
+#           args: >
+#             -Dsonar.projectKey=${{ github.event.repository.name }}
+#             -Dsonar.pullrequest.key=${{ github.event.number }}
+#             -Dsonar.pullrequest.branch=${{ github.head_ref }}
+#             -Dsonar.pullrequest.base=${{ github.base_ref }}
+#             -Dsonar.go.coverage.reportPaths=api/client/coverage.out
+#         env:
+#           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+#           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
+          
+#       - name: SonarQube Scan on branch
+#         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
+#         uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
+#         with:
+#           projectBaseDir: .
+#           args: >
+#             -Dsonar.projectKey=${{ github.event.repository.name }}
+#             -Dsonar.go.coverage.reportPaths=coverage.out
+#         env:
+#           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+#           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
+
+#       - name: SonarQube Quality Gate check
+#         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
+#         uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
+#         timeout-minutes: 5
+#         env:
+#           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
 
 on:
+  push:
+    branches:
+      - main 
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  sonarqube:
-    # Enable when sonar token is added
-    if: false
-    runs-on: ubuntu-latest
+  automation-test:
+    name: Automation Tests
+    runs-on: ubuntu-latest  # Specify the operating system for the job's virtual machine
     steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
 
-      - name: Run unit tests
-        run: |
-          export TF_ACC=1
-          cd providers
-          go mod tidy
-          go test ./... -cover -coverprofile=coverage.out -v
-          ls -alt
-          go tool cover -func="coverage.out"
-
-      - name: SonarQube Scan on PR
-        if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
+      - name: Trigger existing-instance-trigger.yml
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.pullrequest.key=${{ github.event.number }}
-            -Dsonar.pullrequest.branch=${{ github.head_ref }}
-            -Dsonar.pullrequest.base=${{ github.base_ref }}
-            -Dsonar.go.coverage.reportPaths=api/client/coverage.out
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
-          
-      - name: SonarQube Scan on branch
-        if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
-        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
-        with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.go.coverage.reportPaths=coverage.out
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
-
-      - name: SonarQube Quality Gate check
-        if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
-        uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'BeyondTrust',
+              repo: 'ps-integration-test-automation',
+              workflow_id: 'existing-instance-trigger.yml',
+              ref: 'main',
+              inputs: {
+                customerkey: '${{ github.event.inputs.customerkey }}',
+                integration: 'terraform',
+                allowed_ips: '134.238.247.191,134.238.247.192,10.0.0.0/8',
+                repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/v1.0.5/terraform-provider-passwordsafe_1.0.5_linux_amd64.zip',
+                os_type: 'linux'
+              }
+            })
