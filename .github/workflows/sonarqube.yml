@@ -89,7 +89,7 @@ jobs:
               workflow_id: 'existing-instance-trigger.yml',
               ref: 'main',
               inputs: {
-                customerkey: '${{ github.event.inputs.customerkey }}',
+                customerkey: 'psqaint',
                 integration: 'terraform',
                 allowed_ips: '134.238.247.191,134.238.247.192,10.0.0.0/8',
                 repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/v1.0.5/terraform-provider-passwordsafe_1.0.5_linux_amd64.zip',
