@@ -117,6 +117,8 @@ jobs:
                 + (currentDate.getMinutes()+1) + ":" 
                 + currentDate.getSeconds() + "Z"
 
+            console.log(queryDateTime);
+
             const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
               repo: 'ps-integration-test-automation',
@@ -124,6 +126,8 @@ jobs:
               created: queryDateTime
             });
 
+            console.log(workflow.data.workflow_runs);
+            
             var i = 0;
 
             workflow.data.workflow_runs.forEach(element => {
