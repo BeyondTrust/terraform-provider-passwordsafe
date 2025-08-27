@@ -125,8 +125,6 @@ jobs:
               event: 'workflow_dispatch',
               //created: queryDateTime
             });
-
-            console.log(workflow.data.workflow_runs);
             
             var i = 0;
 
