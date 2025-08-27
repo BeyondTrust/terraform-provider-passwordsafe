@@ -120,10 +120,10 @@ jobs:
             console.log(queryDateTime);
 
             const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
-              owner: context.repo.owner,
+              owner: 'BeyondTrust',
               repo: 'ps-integration-test-automation',
               event: 'workflow_dispatch',
-              created: queryDateTime
+              //created: queryDateTime
             });
 
             console.log(workflow.data.workflow_runs);
