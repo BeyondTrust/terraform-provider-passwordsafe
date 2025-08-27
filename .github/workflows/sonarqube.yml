@@ -126,11 +126,12 @@ jobs:
               //created: queryDateTime
             });
             
+            console.log(workflow.data.workflow_runs);
             var i = 0;
 
-            workflow.data.workflow_runs.forEach(element => {
-              if (element.name === 'existing-instance-trigger.yml'){
-                console.log(workflow.data.workflow_runs[i]);
-              }
-              i++;
-            });
+            //workflow.data.workflow_runs.forEach(element => {
+            //  if (element.name === 'existing-instance-trigger.yml'){
+            //    console.log(workflow.data.workflow_runs[i]);
+            //  }
+            //  i++;
+            //});
