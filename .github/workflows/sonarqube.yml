@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest  # Specify the operating system for the job's virtual machine
     steps:
 
-      - name: Trigger existing-instance-trigger.yml
+      - name: 'Triggering Automation workflow: existing-instance-trigger.yml'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
           github-token: ${{ secrets.AUTOMATION_PAT }}
@@ -96,3 +96,39 @@ jobs:
                 os_type: 'linux'
               }
             })
+
+      - name: Checking Automation tests workflow's status
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
+        with:
+          github-token: ${{ secrets.AUTOMATION_PAT }}
+          script: |
+            var state;
+            var currentDate = new Date();
+            var queryDateTime = currentdate.getFullYear() + "-"
+                + (currentdate.getMonth()+1)  + "-" 
+                + currentdate.getDate() + "T"
+                + currentdate.getHours() + ":"  
+                + currentdate.getMinutes() + ":" 
+                + currentdate.getSeconds() + "Z.."
+                + currentdate.getFullYear() + "-"
+                + (currentdate.getMonth()+1)  + "-" 
+                + currentdate.getDate() + "T"
+                + currentdate.getHours() + ":"  
+                + (currentdate.getMinutes()+1) + ":" 
+                + currentdate.getSeconds() + "Z"
+
+            const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+              owner: context.repo.owner,
+              repo: 'ps-integration-test-automation'
+              event: 'workflow_dispatch',
+              created: 2016-03-21T14:11:00Z..2016-04-07T20:45:00Z  
+            });
+
+            var i = 0;
+
+            workflow.data.workflow_runs.forEach(element => {
+              if (element.name === 'existing-instance-trigger.yml'){
+                console.log(workflow.data.workflow_runs[i]);
+              }
+              i++;
+            });
