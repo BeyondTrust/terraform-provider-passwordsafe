@@ -117,7 +117,7 @@ jobs:
               });
               status = workflow.data.workflow_runs[0].status;
               conclusion = workflow.data.workflow_runs[0].conclusion;
-              url = workflow.data.workflow_runs[0].url;
+              url = workflow.data.workflow_runs[0].html_url;
             }
 
             core.setOutput("conclusion", conclusion);
@@ -196,6 +196,6 @@ jobs:
             var url = '${{ needs.automation-test-run.outputs.url }}';
             var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
             if (conclusion != 'success') {
-              output = "Automation tests fail, please check the Automation tests run [here]("+url+")";
+              output = "Automation tests fail, please check the Automation tests run here: "+url;
               core.setFailed(output);
             }
