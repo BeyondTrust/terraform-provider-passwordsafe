@@ -111,6 +111,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
         with:
           script: |
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
             if (conclusion != 'success') {
               core.setFailed(`Automation tests fail, please refer to PR comment for details`);
             }
