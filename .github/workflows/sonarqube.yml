@@ -1,201 +1,65 @@
 name: SonarQube
-# env:
-#   SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+env:
+  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
 
-# on:
-#   pull_request:
-#     types: [opened, synchronize]
-#   workflow_dispatch:
-
-# permissions:
-#   contents: write
-
-# jobs:
-#   sonarqube:
-#     # Enable when sonar token is added
-#     if: false
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-#         with:
-#           fetch-depth: 0
-
-#       - name: Run unit tests
-#         run: |
-#           export TF_ACC=1
-#           cd providers
-#           go mod tidy
-#           go test ./... -cover -coverprofile=coverage.out -v
-#           ls -alt
-#           go tool cover -func="coverage.out"
-
-#       - name: SonarQube Scan on PR
-#         if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
-#         uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
-#         with:
-#           projectBaseDir: .
-#           args: >
-#             -Dsonar.projectKey=${{ github.event.repository.name }}
-#             -Dsonar.pullrequest.key=${{ github.event.number }}
-#             -Dsonar.pullrequest.branch=${{ github.head_ref }}
-#             -Dsonar.pullrequest.base=${{ github.base_ref }}
-#             -Dsonar.go.coverage.reportPaths=api/client/coverage.out
-#         env:
-#           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-#           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
-          
-#       - name: SonarQube Scan on branch
-#         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
-#         uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
-#         with:
-#           projectBaseDir: .
-#           args: >
-#             -Dsonar.projectKey=${{ github.event.repository.name }}
-#             -Dsonar.go.coverage.reportPaths=coverage.out
-#         env:
-#           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-#           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
-
-#       - name: SonarQube Quality Gate check
-#         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
-#         uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
-#         timeout-minutes: 5
-#         env:
-#           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-
-on: 
+on:
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  automation-test-run:
-    name: Automation Tests
-    runs-on: ubuntu-latest  # Specify the operating system for the job's virtual machine
-    outputs:
-      conclusion: ${{ steps.check_run.outputs.conclusion }}
-      url: ${{ steps.check_run.outputs.url }}
-    steps:
-      - name: 'Triggering Automation workflow: existing-instance-trigger.yml'
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
-        with:
-          github-token: ${{ secrets.AUTOMATION_PAT }}
-          script: |
-            await github.rest.actions.createWorkflowDispatch({
-              owner: 'BeyondTrust',
-              repo: 'ps-integration-test-automation',
-              workflow_id: 'existing-instance-trigger.yml',
-              ref: 'main',
-              inputs: {
-                customerkey: 'psqaint',
-                integration: 'terraform',
-                allowed_ips: '134.238.247.191,134.238.247.192,10.0.0.0/8',
-                repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/v1.0.5/terraform-provider-passwordsafe_1.0.5_linux_amd64.zip',
-                os_type: 'linux'
-              }
-            })
-
-      - name: Wait until workflow information is available
-        run: sleep 10s
-
-      - name: Checking Automation tests workflow's status
-        id: check_run
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
-        with:
-          github-token: ${{ secrets.AUTOMATION_PAT }}
-          script: |
-            var status;
-            var conclusion;
-            var url;
-
-            while(status != 'completed'){
-              const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
-                owner: 'BeyondTrust',
-                repo: 'ps-integration-test-automation',
-                event: 'workflow_dispatch'
-              });
-              status = workflow.data.workflow_runs[0].status;
-              conclusion = workflow.data.workflow_runs[0].conclusion;
-              url = workflow.data.workflow_runs[0].html_url;
-            }
-
-            core.setOutput("conclusion", conclusion);
-            core.setOutput("url", url);
-
-  automation-test-PR:
-    name: Automation test result publish on PR 
-    needs: [automation-test-run]
+  sonarqube:
+    # Enable when sonar token is added
+    if: false
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' }}
-    permissions:
-      contents: read
-      pull-requests: write
-      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-      
-      - name: Make comment
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+
+      - name: Run unit tests
+        run: |
+          export TF_ACC=1
+          cd providers
+          go mod tidy
+          go test ./... -cover -coverprofile=coverage.out -v
+          ls -alt
+          go tool cover -func="coverage.out"
+
+      - name: SonarQube Scan on PR
+        if: ${{ github.actor != 'dependabot[bot]' && github.event_name == 'pull_request' }} 
+        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
         with:
-          script: |
-            var output;
-            var url = '${{ needs.automation-test-run.outputs.url }}';
-            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
-            
-            if (conclusion === 'success') {
-              output = `## Automation tests Checked
-
-              ### Automation tests are **successful**
-              `;
-            } else {
-              output = `## Automation tests Checked
-
-              ### Automation tests are **failure**`;
-              output+="\nPlease check the Automation tests run [here]("+url+")";
-            } 
-
-            const fs = require('fs');
-            fs.writeFile('message.txt', output, (err) => {
-              if (err) throw err;
-            });
-                        
-      #- name: Post Comment
-      #  uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
-      #  with:
-      #    message-path: |
-      #      message.txt
+          projectBaseDir: .
+          args: >
+            -Dsonar.projectKey=${{ github.event.repository.name }}
+            -Dsonar.pullrequest.key=${{ github.event.number }}
+            -Dsonar.pullrequest.branch=${{ github.head_ref }}
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.go.coverage.reportPaths=api/client/coverage.out
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
           
-      - name: Set state for Automation test workflow
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+      - name: SonarQube Scan on branch
+        if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
+        uses: sonarsource/sonarqube-scan-action@2500896589ef8f7247069a56136f8dc177c27ccf # v5.2.0
         with:
-          script: |
-            if (conclusion != 'success') {
-              core.setFailed(`Automation tests fail, please refer to PR comment for details`);
-            }
+          projectBaseDir: .
+          args: >
+            -Dsonar.projectKey=${{ github.event.repository.name }}
+            -Dsonar.go.coverage.reportPaths=coverage.out
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
 
-  automation-test-dispatch:
-    name: Automation test result publish on Workflow Dispatch 
-    needs: [automation-test-run]
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-          
-      - name: Set state for Automation test workflow
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
-        with:
-          script: |
-            var output;
-            var url = '${{ needs.automation-test-run.outputs.url }}';
-            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
-            if (conclusion != 'success') {
-              output = "Automation tests fail, please check the Automation tests run here: "+url;
-              core.setFailed(output);
-            }
+      - name: SonarQube Quality Gate check
+        if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
+        uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
