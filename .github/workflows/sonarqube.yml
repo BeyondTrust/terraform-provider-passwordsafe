@@ -163,11 +163,11 @@ jobs:
               if (err) throw err;
             });
                         
-      - name: Post Comment
-        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
-        with:
-          message-path: |
-            message.txt
+      #- name: Post Comment
+      #  uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
+      #  with:
+      #    message-path: |
+      #      message.txt
           
       - name: Set state for Automation test workflow
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
