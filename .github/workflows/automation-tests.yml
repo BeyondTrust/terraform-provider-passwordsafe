@@ -1,23 +1,22 @@
 name: Automation Tests
 
-on:
-  push:
-    branches:
-      - main 
+on: 
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
 
 jobs:
-  automation-test:
+  automation-test-run:
     name: Automation Tests
     runs-on: ubuntu-latest  # Specify the operating system for the job's virtual machine
+    outputs:
+      conclusion: ${{ steps.check_run.outputs.conclusion }}
+      url: ${{ steps.check_run.outputs.url }}
     steps:
-
-      - name: Trigger existing-instance-trigger.yml
+      - name: 'Triggering Automation workflow: existing-instance-trigger.yml'
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.AUTOMATION_PAT }}
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: 'BeyondTrust',
@@ -25,10 +24,114 @@ jobs:
               workflow_id: 'existing-instance-trigger.yml',
               ref: 'main',
               inputs: {
-                customerkey: '${{ github.event.inputs.customerkey }}',
+                customerkey: 'psqaint',
                 integration: 'terraform',
                 allowed_ips: '134.238.247.191,134.238.247.192,10.0.0.0/8',
                 repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/v1.0.5/terraform-provider-passwordsafe_1.0.5_linux_amd64.zip',
                 os_type: 'linux'
               }
             })
+
+      - name: Wait until workflow information is available
+        run: sleep 10s
+
+      - name: Checking Automation tests workflow's status
+        id: check_run
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
+        with:
+          github-token: ${{ secrets.AUTOMATION_PAT }}
+          script: |
+            var status;
+            var conclusion;
+            var url;
+
+            while(status != 'completed'){
+              const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner: 'BeyondTrust',
+                repo: 'ps-integration-test-automation',
+                event: 'workflow_dispatch'
+              });
+              status = workflow.data.workflow_runs[0].status;
+              conclusion = workflow.data.workflow_runs[0].conclusion;
+              url = workflow.data.workflow_runs[0].html_url;
+            }
+
+            core.setOutput("conclusion", conclusion);
+            core.setOutput("url", url);
+
+  automation-test-PR:
+    name: Automation test result publish on PR 
+    needs: [automation-test-run]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      
+      - name: Make comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            var output;
+            var url = '${{ needs.automation-test-run.outputs.url }}';
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
+            
+            if (conclusion === 'success') {
+              output = `## Automation tests Checked
+
+              ### Automation tests are **successful**
+              `;
+            } else {
+              output = `## Automation tests Checked
+
+              ### Automation tests are **failure**`;
+              output+="\nPlease check the Automation tests run [here]("+url+")";
+            } 
+
+            const fs = require('fs');
+            fs.writeFile('message.txt', output, (err) => {
+              if (err) throw err;
+            });
+                        
+      - name: Post Comment
+        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
+        with:
+          message-path: |
+            message.txt
+          
+      - name: Set state for Automation test workflow
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            if (conclusion != 'success') {
+              core.setFailed(`Automation tests fail, please refer to PR comment for details`);
+            }
+
+  automation-test-dispatch:
+    name: Automation test result publish on Workflow Dispatch 
+    needs: [automation-test-run]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          
+      - name: Set state for Automation test workflow
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            var output;
+            var url = '${{ needs.automation-test-run.outputs.url }}';
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
+            if (conclusion != 'success') {
+              output = "Automation tests fail, please check the Automation tests run here: "+url;
+              core.setFailed(output);
+            }
