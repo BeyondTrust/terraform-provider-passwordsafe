@@ -144,7 +144,7 @@ jobs:
           script: |
             var output;
             var url = '${{ needs.automation-test-run.outputs.url }}';
-            var conclusion = ${{ needs.automation-test-run.outputs.conclusion }};
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
             
             if (conclusion === 'success') {
               output = `## Automation tests Checked
@@ -178,7 +178,7 @@ jobs:
             }
 
   automation-test-dispatch:
-    name: Automation test result publish on PR 
+    name: Automation test result publish on Workflow Dispatch 
     needs: [automation-test-run]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -194,7 +194,7 @@ jobs:
           script: |
             var output;
             var url = '${{ needs.automation-test-run.outputs.url }}';
-            var conclusion = ${{ needs.automation-test-run.outputs.conclusion }};
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
             if (conclusion != 'success') {
               output = "Automation tests fail, please check the Automation tests run [here]("+url+")";
               core.setFailed(output);
