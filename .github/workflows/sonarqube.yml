@@ -97,6 +97,9 @@ jobs:
               }
             })
 
+      - name: wait
+        run: sleep 15s
+
       - name: Checking Automation tests workflow's status
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
@@ -126,7 +129,7 @@ jobs:
               //created: queryDateTime
             });
             
-            console.log(workflow.data.workflow_runs);
+            console.log(workflow.data.workflow_runs[0]);
             var i = 0;
 
             //workflow.data.workflow_runs.forEach(element => {
