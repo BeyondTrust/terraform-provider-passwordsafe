@@ -97,44 +97,25 @@ jobs:
               }
             })
 
-      - name: wait
-        run: sleep 15s
+      - name: Wait until workflow information is available
+        run: sleep 10s
 
       - name: Checking Automation tests workflow's status
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
           github-token: ${{ secrets.AUTOMATION_PAT }}
           script: |
-            var state;
-            var currentDate = new Date();
-            var queryDateTime = currentDate.getFullYear() + "-"
-                + (currentDate.getMonth()+1)  + "-" 
-                + currentDate.getDate() + "T"
-                + currentDate.getHours() + ":"  
-                + currentDate.getMinutes() + ":" 
-                + currentDate.getSeconds() + "Z.."
-                + currentDate.getFullYear() + "-"
-                + (currentDate.getMonth()+1)  + "-" 
-                + currentDate.getDate() + "T"
-                + currentDate.getHours() + ":"  
-                + (currentDate.getMinutes()+1) + ":" 
-                + currentDate.getSeconds() + "Z"
+            var status;
+            var conclusion;
 
-            console.log(queryDateTime);
+            while(status != 'completed'){
+              const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner: 'BeyondTrust',
+                repo: 'ps-integration-test-automation',
+                event: 'workflow_dispatch'
+              });
+              status = workflow.data.workflow_runs[0].status;
+              conclusion = workflow.data.workflow_runs[0].conclusion;
+            }
 
-            const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
-              owner: 'BeyondTrust',
-              repo: 'ps-integration-test-automation',
-              event: 'workflow_dispatch',
-              //created: queryDateTime
-            });
-            
-            console.log(workflow.data.workflow_runs[0]);
-            var i = 0;
-
-            //workflow.data.workflow_runs.forEach(element => {
-            //  if (element.name === 'existing-instance-trigger.yml'){
-            //    console.log(workflow.data.workflow_runs[i]);
-            //  }
-            //  i++;
-            //});
+            console.log(conclusion);
