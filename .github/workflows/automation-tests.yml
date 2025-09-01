@@ -77,14 +77,12 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            full_version="$(git tag --sort "-committerdate" | cut -d$'\n' -f1)"
-            echo "${full_version}" >> "$GITHUB_OUTPUT"
-            export VERSION=${full_version}
+            echo "full_version="$(git tag --sort "-committerdate" | cut -d$'\n' -f1)"" >> "$GITHUB_OUTPUT"
+            export VERSION="$(git tag --sort "-committerdate" | cut -d$'\n' -f1)"
           else
             version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
-            full_version="${version}.${{ github.run_number }}"
-            echo "${full_version}" >> "$GITHUB_OUTPUT"
-            export VERSION=${full_version}
+            echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
+            export VERSION="${version}.${{ github.run_number }}"
           fi
 
       # - name: Setup version on .goreleaser.yml
