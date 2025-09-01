@@ -124,7 +124,7 @@ jobs:
         run: |
           jfrog rt build-add-git
           jfrog rt build-collect-env
-          jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
+          jfrog rt build-publish '${{ env.JFROG_CLI_BUILD_NAME }}' ${{ env.JFROG_CLI_BUILD_NUMBER }}
 
   automation-test-run:
     name: Automation Tests
