@@ -4,6 +4,7 @@ env:
   TESTS_REPO: 'ps-integration-test-automation'
   TESTS_WORKFLOW: 'existing-instance-trigger.yml'
   TESTS_REF: 'main'
+  JFROG_SERVER: eng-tf-provider-dev-local
 
 permissions:
   contents: read
