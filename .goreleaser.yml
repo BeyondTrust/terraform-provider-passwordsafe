@@ -1,8 +1,8 @@
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
 version: 2
-variables:
-  version: 1.0.7.8
+env:
+  - VERSION={{ .Env.VERSION }}
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
