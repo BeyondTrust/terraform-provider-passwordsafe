@@ -2,7 +2,7 @@
 # behavior.
 version: 2
 variables:
-  version: 
+  version: 1.0.7.8
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
