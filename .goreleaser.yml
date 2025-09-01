@@ -61,4 +61,4 @@ release:
   # If you want to manually examine the release before its live, uncomment this line:
   draft: false
 snapshot:
-  version_template: "{{ .Var.version }}"
+  version_template: "{{ .Env.VERSION }}"
