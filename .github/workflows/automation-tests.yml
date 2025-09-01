@@ -148,14 +148,14 @@ jobs:
             var version = full_version.substring(1);
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
-              repo: ${{ env.TESTS_REPO}},
-              workflow_id: ${{ env.TESTS_WORKFLOW }},
-              ref: ${{ env.TESTS_REF }},
+              repo: '${{ env.TESTS_REPO}}',
+              workflow_id: '${{ env.TESTS_WORKFLOW }}',
+              ref: '${{ env.TESTS_REF }}',
               inputs: {
                 customerkey: '${{ secrets.CONSUMERKEY }}',
                 integration: 'terraform',
                 allowed_ips: '${{ secrets.ALLOWED_IPS }}',
-                repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.build.outputs.full_version }}/terraform-provider-passwordsafe_'+version+'_linux_amd64.zip',
+                repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.build.outputs.full_version }}/terraform-provider-passwordsafe_${{ needs.build.outputs.full_version }}_linux_amd64.zip',
                 os_type: 'linux'
               }
             })
