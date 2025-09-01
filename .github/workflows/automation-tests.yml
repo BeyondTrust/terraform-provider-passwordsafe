@@ -119,12 +119,6 @@ jobs:
           mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
           jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
         working-directory: dist
-      
-      - name: Publish Build Information
-        run: |
-          jfrog rt build-add-git
-          jfrog rt build-collect-env
-          jfrog rt build-publish '${{ env.JFROG_CLI_BUILD_NAME }}' ${{ env.JFROG_CLI_BUILD_NUMBER }}
 
   automation-test-run:
     name: Automation Tests
