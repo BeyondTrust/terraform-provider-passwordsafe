@@ -83,11 +83,6 @@ jobs:
             echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
           fi
 
-      # - name: Setup version on .goreleaser.yml
-      #   uses: mikefarah/yq@b534aa9ee5d38001fba3cd8fe254a037e4847b37 # v4.45.4
-      #   with:
-      #     cmd: yq -i '.variables.version = "${{ steps.version.outputs.full_version }}"' '.goreleaser.yml'
-
       - name: Jfrog setup
         uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
         env:
