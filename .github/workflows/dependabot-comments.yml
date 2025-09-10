@@ -80,7 +80,7 @@ jobs:
           fetch-depth: 0
       
       - name: Make comment
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             var release_url;
@@ -128,7 +128,7 @@ jobs:
                 }
               }
 
-              output+='\n## Please DevOps or Development teams take a look at the possible issues.';
+              output +='\n## Please ask DevOps or Development teams to take a look at the possible issues.';
             
             } 
             const fs = require('fs');
