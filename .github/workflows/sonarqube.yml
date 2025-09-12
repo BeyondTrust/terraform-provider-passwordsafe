@@ -10,8 +10,6 @@ permissions:
 
 jobs:
   sonarqube:
-    # Enable when sonar token is added
-    if: false
     runs-on: ubuntu-latest
     environment: frogbot
     steps:
