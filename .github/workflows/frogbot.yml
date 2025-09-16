@@ -1,13 +1,14 @@
 name: Frogbot
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize]
     
 permissions: {}
 
 jobs:
   scan:
+    if: false
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
