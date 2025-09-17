@@ -33,5 +33,6 @@ jobs:
         uses: jfrog/frogbot@e99f970ca49cec3c362757d0306350fd229de299 # v2.25.1
         env:
           JF_URL: https://beyondtrust.jfrog.io
-          JF_ACCESS_TOKEN: ${{ secrets.JFROG_TOKEN }}
           JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          oidc-provider-name: nonprod-terraform-provider-passwordsafe
