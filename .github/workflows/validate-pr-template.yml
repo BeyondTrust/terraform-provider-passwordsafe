@@ -3,6 +3,9 @@ name: Validate PR Template
 on:
   pull_request:
     types: [opened, edited, reopened]
+  
+permissions:
+  contents: read
 
 jobs:
   validate-pr:
