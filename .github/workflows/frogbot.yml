@@ -8,7 +8,6 @@ permissions: {}
 
 jobs:
   scan:
-    if: false
     runs-on: ubuntu-latest
     environment: frogbot
     permissions:
