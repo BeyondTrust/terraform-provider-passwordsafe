@@ -9,7 +9,6 @@ permissions: {}
 jobs:
   scan:
     runs-on: ubuntu-latest
-    environment: frogbot
     permissions:
       pull-requests: write
       contents: read
