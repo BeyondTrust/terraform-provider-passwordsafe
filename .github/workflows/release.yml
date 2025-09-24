@@ -3,7 +3,7 @@ name: Release
 env:
   JFROG_SERVER: eng-tf-provider-dev-local
   JFROG_CLI_BUILD_NAME: ${{ github.event.repository.name }}
-  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_PUBLIC_REPOS }}
 # This GitHub action creates a release when a tag that matches the pattern
 # "v*" (e.g. v0.1.0) is created.
 on:
@@ -101,7 +101,7 @@ jobs:
     name: Release Provider
     runs-on: ubuntu-latest
     # include sonarqube as soon as sonar is enabled
-    needs: [unit_test]
+    needs: [unit_test, sonarqube]
     permissions:
       contents: write
       id-token: write
@@ -185,6 +185,7 @@ jobs:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          VERSION: ${{ steps.version.outputs.full_version }}
       
       - name: Preparing artifacts and Publish to Jfrog
         run: |
