@@ -20,7 +20,7 @@ Permissions for access to secrets in Password Safe can be granted to specific ac
 
 ### Required
 
-- `api_account_name` (String) The user name for the API request to the Password Safe instance. For use when authenticating with an API key.
+- `api_account_name` (String) The user name for the API request to the Password Safe instance. For use when authenticating with an API key, it is used as the “runas user” in the authorization header of the request.
 - `url` (String) The URL for the Password Safe instance from which to request a secret.
 - `api_key` (String) The API key for making requests to the Password Safe instance. For use when authenticating to Password Safe, if API key is not set, then client credentials (client Id and client Secret) method would be useds instead
 

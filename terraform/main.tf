@@ -32,11 +32,12 @@ output "random_uuid" {
 
 data "passwordsafe_managed_account" "manage_account_01" {
   system_name  = "system01"
-  account_name = "managed_account02"
+  account_name = "managed_account01"
 }
 
 output "manage_account_01" {
   value = data.passwordsafe_managed_account.manage_account_01.value
+  sensitive = true
 }
 
 data "passwordsafe_secret" "secret_text" {
@@ -46,6 +47,7 @@ data "passwordsafe_secret" "secret_text" {
 
 output "secret_text" {
   value = data.passwordsafe_secret.secret_text.value
+  sensitive = true
 }
 
 resource "passwordsafe_managed_account" "my_managed_account" {

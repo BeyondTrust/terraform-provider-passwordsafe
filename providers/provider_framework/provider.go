@@ -118,7 +118,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"api_account_name": schema.StringAttribute{
 				Required:    true,
-				Description: "The user name for the API request to the Password Safe instance. For use when authenticating with an API key.",
+				Description: "The user name for the API request to the Password Safe instance. For use when authenticating with an API key, it is used as the “runas user” in the authorization header of the request.",
 			},
 			"verify_ca": schema.BoolAttribute{
 				Optional:    true,
