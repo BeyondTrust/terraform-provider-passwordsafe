@@ -145,20 +145,20 @@ func (p *PasswordSafeProvider) ValidateCredentialsAndConfig(ctx context.Context,
 	var errorSummary string
 
 	if data.apiKey == "" && data.clientId == "" && data.clientSecret == "" {
-		errorSummary = "invalid Authentication method"
-		resp.Diagnostics.AddError(errorSummary, "Please add a valid credential (API Key / Client Credentials)")
+		errorSummary = "invalid authentication method"
+		resp.Diagnostics.AddError(fmt.Sprintf("Error: %s", errorSummary), "Please add a valid credential (API Key / Client Credentials)")
 		return errors.New(errorSummary)
 	}
 
 	if data.url == "" {
 		errorSummary = "invalid URL"
-		resp.Diagnostics.AddError(errorSummary, "Please add a proper URL")
+		resp.Diagnostics.AddError(fmt.Sprintf("Error: %s", errorSummary), "Please add a proper URL")
 		return errors.New(errorSummary)
 	}
 
 	if data.apiKey != "" && data.accountname == "" {
-		errorSummary = "invalid Account Name"
-		resp.Diagnostics.AddError(errorSummary, "Please add a proper Account Name")
+		errorSummary = "invalid account Name"
+		resp.Diagnostics.AddError(fmt.Sprintf("Error: %s", errorSummary), "Please add a proper Account Name")
 		return errors.New(errorSummary)
 	}
 	return nil
