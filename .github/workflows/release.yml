@@ -159,8 +159,8 @@ jobs:
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         id: import_gpg
         with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY_IG }}
+          passphrase: ${{ secrets.PASSPHRASE_IG }}
       # Release the tag into Github. If draft in .goreleaser.yml is on true, not going to auto-publish the build
       # It would work only is the is a tag pushed.
       - name: Run GoReleaser release
