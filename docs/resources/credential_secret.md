@@ -31,7 +31,7 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
 ### Required
 
 - `folder_name` (String)
-- `password` (String)
+- `password` (String, Sensitive)
 - `title` (String)
 - `username` (String)
 
@@ -43,7 +43,6 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
 - `owner_id` (Number)
 - `owner_type` (String)
 - `owners` (Block List) (see [below for nested schema](#nestedblock--owners))
-- `password_rule_id` (Number)
 - `urls` (Block List) (see [below for nested schema](#nestedblock--urls))
 
 ### Read-Only
@@ -53,14 +52,14 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
 <a id="nestedblock--owners"></a>
 ### Nested Schema for `owners`
 
-Required:
-
-- `owner` (String)
-- `owner_id` (Number)
-
 Optional:
 
 - `email` (String)
+- `group_id` (Number)
+- `name` (String)
+- `owner` (String)
+- `owner_id` (Number)
+- `user_id` (Number)
 
 
 <a id="nestedblock--urls"></a>
