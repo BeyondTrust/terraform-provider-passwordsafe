@@ -1,6 +1,6 @@
 name: SonarQube
 env:
-  SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_PUBLIC_REPOS }}
 
 on:
   pull_request:
@@ -12,8 +12,6 @@ permissions:
 
 jobs:
   sonarqube:
-    # Enable when sonar token is added
-    if: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -59,7 +57,7 @@ jobs:
 
       - name: SonarQube Quality Gate check
         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
-        uses: sonarsource/sonarqube-quality-gate-action@d304d050d930b02a896b0f85935344f023928496 # v1.1.0
+        uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
