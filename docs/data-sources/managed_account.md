@@ -29,7 +29,7 @@ data "passwordsafe_managed_account" "manage_account_01" {
 
 ### Optional
 
-- `value` (String)
+- `value` (String, Sensitive)
 
 ### Read-Only
 

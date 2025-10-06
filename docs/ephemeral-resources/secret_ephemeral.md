@@ -3,7 +3,8 @@
 page_title: "passwordsafe_secret_ephemeral Ephemeral Resource - terraform-provider-passwordsafe"
 subcategory: ""
 description: |-
-  Secret Ephemeral Resource, gets secret
+  Secret Ephemeral Resource, gets secret.
+  Note: Ephemeral resources are available in Terraform v1.10 and later.
 ---
 
 # passwordsafe_secret_ephemeral (Ephemeral Resource)
