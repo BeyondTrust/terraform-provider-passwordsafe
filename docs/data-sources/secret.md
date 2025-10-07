@@ -30,7 +30,7 @@ data "passwordsafe_secret" "secret_text" {
 ### Optional
 
 - `separator` (String)
-- `value` (String)
+- `value` (String, Sensitive)
 
 ### Read-Only
 

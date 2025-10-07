@@ -30,7 +30,7 @@ resource "passwordsafe_text_secret" "my_text_secret" {
 ### Required
 
 - `folder_name` (String)
-- `text` (String)
+- `text` (String, Sensitive)
 - `title` (String)
 
 ### Optional
@@ -50,14 +50,14 @@ resource "passwordsafe_text_secret" "my_text_secret" {
 <a id="nestedblock--owners"></a>
 ### Nested Schema for `owners`
 
-Required:
-
-- `owner` (String)
-- `owner_id` (Number)
-
 Optional:
 
 - `email` (String)
+- `group_id` (Number)
+- `name` (String)
+- `owner` (String)
+- `owner_id` (Number)
+- `user_id` (Number)
 
 
 <a id="nestedblock--urls"></a>
