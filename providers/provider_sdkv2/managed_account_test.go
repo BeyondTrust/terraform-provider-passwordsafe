@@ -280,3 +280,177 @@ func TestGetManagedAccountReadContext(t *testing.T) {
 	}
 
 }
+
+func TestResourceManagedAccountDelete(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"system_name":  "system01",
+		"account_name": "account_name",
+		"password":     "password",
+	}
+	var resourceSchema = getManagedAccountSchema()
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Set a test managed account ID
+	data.SetId("123")
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceManagedAccountDelete",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/Signout" {
+				_, err := w.Write([]byte(`{"Message": "SignOut successful"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/ManagedAccounts/123" && r.Method == "DELETE" {
+				w.WriteHeader(http.StatusOK)
+				_, err := w.Write([]byte(`{"Message": "Managed account deleted successfully"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceManagedAccountDelete(data, authenticate)
+
+	if err != nil {
+		t.Errorf("Test case Failed: %v", err)
+	}
+
+	// Verify that the ID was cleared
+	if data.Id() != "" {
+		t.Errorf("Expected ID to be cleared after deletion, but got: %v", data.Id())
+	}
+}
+
+func TestResourceManagedAccountDeleteInvalidID(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"system_name":  "system01",
+		"account_name": "account_name",
+		"password":     "password",
+	}
+	var resourceSchema = getManagedAccountSchema()
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Set an invalid ID that can't be converted to int
+	data.SetId("invalid_id")
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	err := resourceManagedAccountDelete(data, authenticate)
+
+	if err == nil {
+		t.Errorf("Expected error for invalid ID, but got nil")
+	}
+}
+
+func TestResourceManagedAccountDeleteError(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"system_name":  "system01",
+		"account_name": "account_name",
+		"password":     "password",
+	}
+	var resourceSchema = getManagedAccountSchema()
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Set a test managed account ID that will return 404
+	data.SetId("999")
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceManagedAccountDeleteError",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/ManagedAccounts/999" && r.Method == "DELETE" {
+				w.WriteHeader(http.StatusNotFound)
+				_, err := w.Write([]byte(`{"error": "Managed account not found"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceManagedAccountDelete(data, authenticate)
+
+	if err == nil {
+		t.Errorf("Expected error when deleting non-existent managed account, but got nil")
+	}
+}
+
+func TestResourceManagedAccountDeleteAuthenticationError(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"system_name":  "system01",
+		"account_name": "account_name",
+		"password":     "password",
+	}
+	var resourceSchema = getManagedAccountSchema()
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	data.SetId("123")
+
+	// Pass nil authentication object to simulate authentication error
+	err := resourceManagedAccountDelete(data, nil)
+
+	if err == nil {
+		t.Errorf("Expected authentication error when passing nil authentication object, but got nil")
+	}
+}

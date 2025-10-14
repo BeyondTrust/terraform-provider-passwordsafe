@@ -951,3 +951,338 @@ func TestResourceTextSecretCreateError(t *testing.T) {
 	}
 
 }
+
+func TestResourceSecretDelete(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"folder_name": "folder_test",
+		"title":       "Secret to Delete",
+		"description": "Secret Description",
+		"username":    "testuser",
+		"password":    "P@ssw0rd123!$",
+		"owner_id":    1,
+		"owner_type":  "User",
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"title": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"username": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"password": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"owner_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"owner_type": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Set a test secret ID
+	data.SetId("01ca9cf3-0751-4a90-4856-08dcf22d7472")
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceSecretDelete",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppOut" {
+				_, err := w.Write([]byte(`{"Message": "SignOut successful"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/secrets-safe/secrets/01ca9cf3-0751-4a90-4856-08dcf22d7472" && r.Method == "DELETE" {
+				w.WriteHeader(http.StatusOK)
+				_, err := w.Write([]byte(`{"Message": "Secret deleted successfully"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceSecretDelete(data, authenticate)
+
+	if err != nil {
+		t.Errorf("Test case Failed: %v", err)
+	}
+
+	// Verify that the ID was cleared
+	if data.Id() != "" {
+		t.Errorf("Expected ID to be cleared after deletion, but got: %v", data.Id())
+	}
+}
+
+func TestResourceSecretDeleteEmptyID(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"folder_name": "folder_test",
+		"title":       "Secret to Delete",
+		"description": "Secret Description",
+		"username":    "testuser",
+		"password":    "P@ssw0rd123!$",
+		"owner_id":    1,
+		"owner_type":  "User",
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"title": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"username": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"password": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"owner_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"owner_type": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Don't set ID to test empty ID case
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceSecretDeleteEmptyID",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceSecretDelete(data, authenticate)
+
+	if err == nil || err.Error() != "secret ID is empty" {
+		t.Errorf("Expected 'secret ID is empty' error, but got: %v", err)
+	}
+}
+
+func TestResourceSecretDeleteError(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"folder_name": "folder_test",
+		"title":       "Secret to Delete",
+		"description": "Secret Description",
+		"username":    "testuser",
+		"password":    "P@ssw0rd123!$",
+		"owner_id":    1,
+		"owner_type":  "User",
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"title": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"username": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"password": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"owner_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"owner_type": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Set a test secret ID that will return 404
+	data.SetId("non-existent-secret-id")
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceSecretDeleteError",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/secrets-safe/secrets/non-existent-secret-id" && r.Method == "DELETE" {
+				w.WriteHeader(http.StatusNotFound)
+				_, err := w.Write([]byte(`{"error": "Secret not found"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceSecretDelete(data, authenticate)
+
+	if err == nil {
+		t.Errorf("Expected error when deleting non-existent secret, but got nil")
+	}
+}
+
+func TestResourceSecretDeleteAuthenticationError(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"folder_name": "folder_test",
+		"title":       "Secret to Delete",
+		"description": "Secret Description",
+		"username":    "testuser",
+		"password":    "P@ssw0rd123!$",
+		"owner_id":    1,
+		"owner_type":  "User",
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"title": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"username": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"password": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"owner_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+		"owner_type": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	data.SetId("01ca9cf3-0751-4a90-4856-08dcf22d7472")
+
+	// Pass nil authentication object to simulate authentication error
+	err := resourceSecretDelete(data, nil)
+
+	if err == nil {
+		t.Errorf("Expected authentication error when passing nil authentication object, but got nil")
+	}
+}
