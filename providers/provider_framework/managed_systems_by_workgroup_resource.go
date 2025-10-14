@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -165,6 +166,8 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 		"remote_client_type": schema.StringAttribute{
 			MarkdownDescription: "Remote Client Type (one of: None, EPM)",
 			Optional:            true,
+			Default:             stringdefault.StaticString("None"),
+			Computed:            true,
 		},
 		"application_host_id": schema.Int32Attribute{
 			MarkdownDescription: "Application Host ID",
