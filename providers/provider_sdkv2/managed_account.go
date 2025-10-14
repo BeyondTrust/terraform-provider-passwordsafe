@@ -6,6 +6,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
+	"strconv"
 
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
@@ -100,7 +102,8 @@ func resourceManagedAccountCreate(d *schema.ResourceData, m interface{}) error {
 		ObjectID:                          d.Get("object_id").(string),
 	}
 
-	_, err = manageAccountObj.ManageAccountCreateFlow(system_name, accountDetailsObj)
+	var createResponse entities.CreateManagedAccountsResponse
+	createResponse, err = manageAccountObj.ManageAccountCreateFlow(system_name, accountDetailsObj)
 
 	if err != nil {
 		return err
@@ -111,7 +114,7 @@ func resourceManagedAccountCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	d.SetId(accountDetailsObj.AccountName)
+	d.SetId(fmt.Sprintf("%d", createResponse.ManagedAccountID))
 	return nil
 }
 
@@ -127,6 +130,36 @@ func resourceManagedAccountUpdate(d *schema.ResourceData, m interface{}) error {
 
 // Delete context for resourceManagedAccount Resource.
 func resourceManagedAccountDelete(d *schema.ResourceData, m interface{}) error {
+	if m == nil {
+		return fmt.Errorf("authentication object is nil")
+	}
+
+	authenticationObj := m.(*auth.AuthenticationObj)
+
+	_, err := autenticate(d, m)
+	if err != nil {
+		return err
+	}
+
+	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*authenticationObj, zapLogger)
+
+	// Get the managed account ID from the resource data
+	managedAccountID, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return err
+	}
+
+	err = manageAccountObj.DeleteManagedAccountById(managedAccountID)
+	if err != nil {
+		return err
+	}
+
+	err = signOut(d, m)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
 	return nil
 }
 

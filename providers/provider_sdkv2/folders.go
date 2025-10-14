@@ -3,6 +3,8 @@
 package provider
 
 import (
+	"fmt"
+
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
@@ -91,5 +93,36 @@ func resourceFolderUpdate(d *schema.ResourceData, m interface{}) error {
 
 // Delete context for resourceFolder Resource.
 func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
+	if m == nil {
+		return fmt.Errorf("authentication object is nil")
+	}
+
+	authenticationObj := m.(*auth.AuthenticationObj)
+
+	_, err := autenticate(d, m)
+	if err != nil {
+		return err
+	}
+
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+
+	// Get the folder ID from the resource data
+	folderID := d.Id()
+	if folderID == "" {
+		return fmt.Errorf("folder ID is empty")
+	}
+
+	// Delete the folder using the proper folder deletion method
+	err = secretObj.DeleteFolderById(folderID)
+	if err != nil {
+		return err
+	}
+
+	err = signOut(d, m)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
 	return nil
 }

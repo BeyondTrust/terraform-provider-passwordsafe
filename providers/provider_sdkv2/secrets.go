@@ -346,6 +346,37 @@ func resourceSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
 // Delete context for resourceSecret Resource.
 func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
+	if m == nil {
+		return fmt.Errorf("authentication object is nil")
+	}
+
+	authenticationObj := m.(*auth.AuthenticationObj)
+
+	_, err := autenticate(d, m)
+	if err != nil {
+		return err
+	}
+
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+
+	// Get the secret ID from the resource data
+	secretID := d.Id()
+	if secretID == "" {
+		return fmt.Errorf("secret ID is empty")
+	}
+
+	// Delete the secret using the proper secret deletion method
+	err = secretObj.DeleteSecretById(secretID)
+	if err != nil {
+		return err
+	}
+
+	err = signOut(d, m)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
 	return nil
 }
 
