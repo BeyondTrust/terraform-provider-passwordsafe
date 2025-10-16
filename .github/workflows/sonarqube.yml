@@ -13,7 +13,6 @@ permissions:
 jobs:
   sonarqube:
     runs-on: ubuntu-latest
-    environment: frogbot
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -41,7 +40,7 @@ jobs:
             -Dsonar.pullrequest.base=${{ github.base_ref }}
             -Dsonar.go.coverage.reportPaths=api/client/coverage.out
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
           
       - name: SonarQube Scan on branch
@@ -53,7 +52,7 @@ jobs:
             -Dsonar.projectKey=${{ github.event.repository.name }}
             -Dsonar.go.coverage.reportPaths=coverage.out
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
 
       - name: SonarQube Quality Gate check
@@ -61,4 +60,4 @@ jobs:
         uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
         timeout-minutes: 5
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}

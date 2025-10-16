@@ -126,7 +126,7 @@ jobs:
               ref: '${{ env.TESTS_REF }}',
               inputs: {
                 integration: 'terraform',
-                repo_path: '${{ needs.build.outputs.full_version }}',
+                build_version: '${{ needs.build.outputs.full_version }}',
                 os_type: 'linux'
               }
             })
@@ -144,7 +144,7 @@ jobs:
               ref: ${{ env.TESTS_REF }},
               inputs: {
                 integration: 'terraform',
-                repo_path: '${{ needs.build.outputs.full_version }},
+                build_version: '${{ needs.build.outputs.full_version }},
                 os_type: 'linux'
               }
             })
