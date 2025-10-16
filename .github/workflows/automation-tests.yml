@@ -3,7 +3,7 @@ name: Automation Tests
 env:
   TESTS_REPO: 'ps-integration-test-automation'
   TESTS_WORKFLOW: 'dependabot-workflow.yml'
-  TESTS_REF: 'main'
+  TESTS_REF: 'dependabot-workflow'
   JFROG_SERVER: eng-tf-provider-dev-local
 
 permissions:
