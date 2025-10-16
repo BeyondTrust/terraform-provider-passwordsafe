@@ -38,6 +38,7 @@ func getSecretByPath() *schema.Resource {
 			"value": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -55,6 +56,7 @@ func resourceCredentialSecret() *schema.Resource {
 		"password": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			Sensitive: true,
 		},
 	}
 
@@ -80,6 +82,7 @@ func resourceTextSecret() *schema.Resource {
 		"text": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			Sensitive: true,
 		},
 	}
 
@@ -108,6 +111,7 @@ func resourceFileSecret() *schema.Resource {
 		"file_content": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			Sensitive: true,
 		},
 	}
 
@@ -177,7 +181,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	credentialSecretDetails, exists := configMap[authenticationObj.ApiVersion]
 
 	if !exists {
-		return fmt.Errorf("Unsupported API version: %v", authenticationObj.ApiVersion)
+		return fmt.Errorf("unsupported API version: %v", authenticationObj.ApiVersion)
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, credentialSecretDetails)
@@ -245,7 +249,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	textSecretDetails, exists := configMap[authenticationObj.ApiVersion]
 
 	if !exists {
-		return fmt.Errorf("Unsupported API version: %v", authenticationObj.ApiVersion)
+		return fmt.Errorf("unsupported API version: %v", authenticationObj.ApiVersion)
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, textSecretDetails)
@@ -316,7 +320,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	fileSecretDetails, exists := configMap[authenticationObj.ApiVersion]
 
 	if !exists {
-		return fmt.Errorf("Unsupported API version: %v", authenticationObj.ApiVersion)
+		return fmt.Errorf("unsupported API version: %v", authenticationObj.ApiVersion)
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, fileSecretDetails)

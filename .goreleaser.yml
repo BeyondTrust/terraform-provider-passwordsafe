@@ -62,3 +62,4 @@ release:
   draft: false
 snapshot:
   version_template: "{{ .Env.VERSION }}"
+
