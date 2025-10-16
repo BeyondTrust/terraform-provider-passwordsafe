@@ -2,7 +2,7 @@ name: Automation Tests
 
 env:
   TESTS_REPO: 'ps-integration-test-automation'
-  TESTS_WORKFLOW: 'existing-instance-trigger.yml'
+  TESTS_WORKFLOW: 'dependabot-workflow.yml'
   TESTS_REF: 'main'
   JFROG_SERVER: eng-tf-provider-dev-local
 
@@ -133,46 +133,38 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: sleep 10s
 
-      - name: 'Triggering Automation workflow: existing-instance-trigger.yml from PR' 
+      - name: 'Triggering Automation tests workflow from PR' 
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
           github-token: ${{ secrets.AUTOMATION_PAT }}
           script: |
-            var full_version = '${{ needs.build.outputs.full_version }}';
-            var version = full_version.substring(1);
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: '${{ env.TESTS_REPO}}',
               workflow_id: '${{ env.TESTS_WORKFLOW }}',
               ref: '${{ env.TESTS_REF }}',
               inputs: {
-                customerkey: '${{ secrets.CONSUMERKEY }}',
                 integration: 'terraform',
-                allowed_ips: '${{ secrets.ALLOWED_IPS }}',
-                repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.build.outputs.full_version }}/terraform-provider-passwordsafe_${{ needs.build.outputs.full_version }}_linux_amd64.zip',
+                repo_path: '${{ needs.build.outputs.full_version }}',
                 os_type: 'linux'
               }
             })
         
-      - name: 'Triggering Automation workflow: existing-instance-trigger.yml from Dispatch' 
+      - name: 'Triggering Automation tests workflow on workflow dispatch event' 
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
           github-token: ${{ secrets.AUTOMATION_PAT }}
           script: |
-            var full_version = '${{ needs.build.outputs.full_version }}';
-            var version = full_version.substring(1);
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: ${{ env.TESTS_REPO}},
               workflow_id: ${{ env.TESTS_WORKFLOW }},
               ref: ${{ env.TESTS_REF }},
               inputs: {
-                customerkey: ${{ secrets.CONSUMERKEY }},
                 integration: 'terraform',
-                allowed_ips: ${{ secrets.ALLOWED_IPS }},
-                repo_path: 'eng-tf-provider-dev-local/beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ github.event.inputs.artifact }}/terraform-provider-passwordsafe_'+version+'_linux_amd64.zip',
+                repo_path: '${{ needs.build.outputs.full_version }},
                 os_type: 'linux'
               }
             })
@@ -213,7 +205,7 @@ jobs:
             core.setOutput("url", url);
 
   automation-test-PR:
-    name: Automation test result publish on PR 
+    name: Publish automation test results on PR 
     needs: [automation-test-run]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' }}
@@ -268,7 +260,7 @@ jobs:
             }
 
   automation-test-dispatch:
-    name: Automation test result publish on Workflow Dispatch 
+    name: Publish automation test result for Workflow Dispatch event
     needs: [automation-test-run]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' }}
