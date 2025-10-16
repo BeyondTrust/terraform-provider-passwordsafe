@@ -13,26 +13,6 @@ on:
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
-    inputs:
-      allowed_ips:
-        description: List of allowed ips
-        required: true
-        type: string
-      customerkey:
-        description: Customer Key
-        required: false
-        type: string
-      artifact:
-        description: Artifact version that will be tested
-        required: true
-        type: string 
-      os_type:
-        description: OS to test
-        required: true
-        type: choice
-        options:
-        - windows
-        - linux
 
 jobs:
   build:
