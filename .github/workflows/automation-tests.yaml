@@ -1,10 +1,10 @@
 name: Automation Tests
 
 env:
-  TESTS_REPO: 'ps-integration-test-automation'
+  TESTS_REPO: ${{ secrets.TESTS_REPO }}
   TESTS_WORKFLOW: 'dependabot-workflow.yml'
   TESTS_REF: 'dependabot-workflow'
-  JFROG_SERVER: eng-tf-provider-dev-local
+  JFROG_SERVER: ${{ secrets.JFROG_SERVER }}
 
 permissions:
   contents: read
@@ -66,9 +66,9 @@ jobs:
       - name: Jfrog setup
         uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
         env:
-          JF_URL: https://beyondtrust.jfrog.io
+          JF_URL: ${{ secrets.JF_URL }}
         with:
-          oidc-provider-name: nonprod-terraform-provider-passwordsafe
+          oidc-provider-name: ${{ secrets.OIDC_PROVIDER_NAME }}
 
       - name: Configure JFrog CLI build number
         run: |

@@ -1,8 +1,9 @@
 # Terraform Provider release workflow.
 name: Release
 env:
-  JFROG_SERVER: eng-tf-provider-dev-local
+  JFROG_SERVER: ${{ secrets.JFROG_SERVER }}
   JFROG_CLI_BUILD_NAME: ${{ github.event.repository.name }}
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_PUBLIC_REPOS }}
 # This GitHub action creates a release when a tag that matches the pattern
 # "v*" (e.g. v0.1.0) is created.
@@ -76,7 +77,7 @@ jobs:
             -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
           
       - name: SonarQube Scan on branch
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
@@ -88,7 +89,7 @@ jobs:
             -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
 
       - name: SonarQube Quality Gate check
         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 
@@ -147,9 +148,9 @@ jobs:
       - name: Jfrog setup
         uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
         env:
-          JF_URL: https://beyondtrust.jfrog.io
+          JF_URL: ${{ secrets.JF_URL }}
         with:
-          oidc-provider-name: nonprod-terraform-provider-passwordsafe
+          oidc-provider-name: ${{ secrets.OIDC_PROVIDER_NAME }}
 
       - name: Configure JFrog CLI build number
         run: |

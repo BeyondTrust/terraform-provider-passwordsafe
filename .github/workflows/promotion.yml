@@ -16,9 +16,9 @@ jobs:
     - name: Jfrog setup
       uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
-        JF_URL: https://beyondtrust.jfrog.io
+        JF_URL: ${{ secrets.JF_URL }}
       with:
-        oidc-provider-name: prod-terraform-provider-passwordsafe
+        oidc-provider-name: ${{ secrets.OIDC_PROVIDER_NAME }}
 
     - name: Extract version
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
