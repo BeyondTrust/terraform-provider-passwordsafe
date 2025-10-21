@@ -1,5 +1,6 @@
 name: SonarQube
 env:
+  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_PUBLIC_REPOS }}
 
 on:
@@ -41,7 +42,7 @@ jobs:
             -Dsonar.go.coverage.reportPaths=api/client/coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
           
       - name: SonarQube Scan on branch
         if: ${{ github.actor != 'dependabot[bot]' && github.event_name != 'pull_request' }} 
@@ -53,7 +54,7 @@ jobs:
             -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonar.dev.beyondtrust.com
+          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
 
       - name: SonarQube Quality Gate check
         if: ${{ github.actor != 'dependabot[bot]' && inputs.quality_gate_check }} 

@@ -1,0 +1,264 @@
+name: Automation Tests
+
+env:
+  TESTS_REPO: ${{ secrets.TESTS_REPO }}
+  TESTS_WORKFLOW: 'dependabot-workflow.yml'
+  TESTS_REF: 'dependabot-workflow'
+  JFROG_SERVER: ${{ secrets.JFROG_SERVER }}
+
+permissions:
+  contents: read
+
+on: 
+  pull_request:
+    types: [opened, synchronize]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Release Provider
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    outputs:
+      full_version: ${{ steps.version.outputs.full_version }}
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Get next version increment
+        id: increment
+        run: |
+          shopt -s nocasematch
+          commit_message=$(git log --format=%B -n 1)
+          if [[ $commit_message == "feat!:"* ]]; then
+            echo "INCREMENT=major" >> "$GITHUB_OUTPUT"
+          elif [[ $commit_message == "feat:"* ]]; then
+            echo "INCREMENT=minor" >> "$GITHUB_OUTPUT"
+          elif [[ $commit_message == "fix:"* ]]; then
+            echo "INCREMENT=patch" >> "$GITHUB_OUTPUT"
+          fi
+      
+      - name: Get next version numbers
+        uses: reecetech/version-increment@a29aa752dc3b8118a2dc2ed93faf0e95a73a9c7e # 2024.10.1
+        id: version_number
+        with:
+          increment: ${{ steps.increment.outputs.increment }}
+
+      - name: Get full version name and version numbers
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            echo "full_version="$(git tag --sort "-committerdate" | cut -d$'\n' -f1)"" >> "$GITHUB_OUTPUT"
+          else
+            version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
+            echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Jfrog setup
+        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
+        env:
+          JF_URL: ${{ secrets.JF_URL }}
+        with:
+          oidc-provider-name: ${{ secrets.OIDC_PROVIDER_NAME }}
+
+      - name: Configure JFrog CLI build number
+        run: |
+          echo "JFROG_CLI_BUILD_NUMBER=${{ steps.version.outputs.full_version }}" >> $GITHUB_ENV 
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
+        id: import_gpg
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+      # Builds binaries artifacts.
+      - name: Run GoReleaser build
+        uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --snapshot --clean 
+        env:
+          # GitHub sets the GITHUB_TOKEN secret automatically.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          VERSION: ${{ steps.version.outputs.full_version }}
+      
+      - name: Preparing artifacts and Publish to Jfrog
+        run: |
+          mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
+          mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
+          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+        working-directory: dist
+
+  automation-test-run:
+    name: Automation Tests
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      conclusion: ${{ steps.check_run.outputs.conclusion }}
+      url: ${{ steps.check_run.outputs.url }}
+    steps:
+      - name: Wait until Terraform provider's Release workflow finish.
+        if: ${{ github.event_name == 'pull_request' }}
+        run: sleep 10s
+
+      - name: 'Triggering Automation tests workflow from PR' 
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
+        with:
+          github-token: ${{ secrets.AUTOMATION_PAT }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: '${{ env.TESTS_REPO}}',
+              workflow_id: '${{ env.TESTS_WORKFLOW }}',
+              ref: '${{ env.TESTS_REF }}',
+              inputs: {
+                integration: 'terraform',
+                build_version: '${{ needs.build.outputs.full_version }}',
+                os_type: 'linux'
+              }
+            })
+        
+      - name: 'Triggering Automation tests workflow on workflow dispatch event' 
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
+        with:
+          github-token: ${{ secrets.AUTOMATION_PAT }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: ${{ env.TESTS_REPO}},
+              workflow_id: ${{ env.TESTS_WORKFLOW }},
+              ref: ${{ env.TESTS_REF }},
+              inputs: {
+                integration: 'terraform',
+                build_version: '${{ needs.build.outputs.full_version }},
+                os_type: 'linux'
+              }
+            })
+
+      - name: Wait until workflow information is available
+        run: sleep 10s
+
+      - name: Checking Automation tests workflow's status
+        id: check_run
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
+        with:
+          github-token: ${{ secrets.AUTOMATION_PAT }}
+          script: |
+            var status;
+            var conclusion;
+            var url;
+
+            while(status != 'completed'){
+              const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner: context.repo.owner,
+                repo: 'ps-integration-test-automation',
+                event: 'workflow_dispatch'
+              });
+
+              if (!workflow.data.workflow_runs || workflow.data.workflow_runs.length === 0) {
+                // No workflow runs found yet, wait and retry
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                continue;
+              }
+
+              status = workflow.data.workflow_runs[0].status;
+              conclusion = workflow.data.workflow_runs[0].conclusion;
+              url = workflow.data.workflow_runs[0].html_url;
+              await new Promise(resolve => setTimeout(resolve, 200000));
+            }
+
+            core.setOutput("conclusion", conclusion);
+            core.setOutput("url", url);
+
+  automation-test-PR:
+    name: Publish automation test results on PR 
+    needs: [automation-test-run]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      
+      - name: Make comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            var output;
+            var url = '${{ needs.automation-test-run.outputs.url }}';
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
+            
+            if (conclusion === 'success') {
+              output = `## Automation tests Checked
+
+              ### Automation tests are **successful**
+              `;
+            } else {
+              output = `## Automation tests Checked
+
+              ### Automation tests **failed**`;
+              output+="\nPlease check the Automation tests run [here]("+url+")";
+            } 
+
+            const fs = require('fs');
+            fs.writeFile('message.txt', output, (err) => {
+              if (err) throw err;
+            });
+                        
+      - name: Post Comment
+        uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
+        with:
+          message-path: |
+            message.txt
+          
+      - name: Set state for Automation test workflow
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
+            if (conclusion != 'success') {
+              core.setFailed(`Automation tests fail, please refer to PR comment for details`);
+            }
+
+  automation-test-dispatch:
+    name: Publish automation test result for Workflow Dispatch event
+    needs: [automation-test-run]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          
+      - name: Set state for Automation test workflow
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea
+        with:
+          script: |
+            var output;
+            var url = '${{ needs.automation-test-run.outputs.url }}';
+            var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
+            if (conclusion != 'success') {
+              output = "Automation tests fail, please check the Automation tests run here: "+url;
+              core.setFailed(output);
+            }
+                    
