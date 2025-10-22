@@ -118,12 +118,6 @@ jobs:
         with:
           github-token: ${{ secrets.AUTOMATION_PAT }}
           script: |
-            # get the workflow
-            # then, check if empty or error and recheck
-            # then, check if is in_progress or queue
-            # if true, recheck until is over
-            # false, go to next step
-
             const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
               repo: '${{ env.TESTS_REPO }}',
