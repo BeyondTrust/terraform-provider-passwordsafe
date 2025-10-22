@@ -113,6 +113,40 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         run: sleep 10s
 
+      - name: Checking if there Automation tests running
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
+        with:
+          github-token: ${{ secrets.AUTOMATION_PAT }}
+          script: |
+            var workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+              owner: context.repo.owner,
+              repo: '${{ env.TESTS_REPO }}',
+              event: 'workflow_dispatch'
+            });
+
+            while (!workflow.data.workflow_runs || workflow.data.workflow_runs.length === 0) {
+              // No workflow runs found yet, wait and retry
+              await new Promise(resolve => setTimeout(resolve, 5000));
+              workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner: context.repo.owner,
+                repo: '${{ env.TESTS_REPO }}',
+                event: 'workflow_dispatch'
+              });
+            }
+
+            var status = workflow.data.workflow_runs[0].status;
+
+            while(status === 'in_progress' || status === 'queued'){
+              workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner: context.repo.owner,
+                repo: '${{ env.TESTS_REPO }}',
+                event: 'workflow_dispatch'
+              });
+
+              status = workflow.data.workflow_runs[0].status;
+              await new Promise(resolve => setTimeout(resolve, 200000));
+            }
+
       - name: 'Triggering Automation tests workflow from PR' 
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
@@ -165,7 +199,7 @@ jobs:
             while(status != 'completed'){
               const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
                 owner: context.repo.owner,
-                repo: 'ps-integration-test-automation',
+                repo: '${{ env.TESTS_REPO }}',
                 event: 'workflow_dispatch'
               });
 
