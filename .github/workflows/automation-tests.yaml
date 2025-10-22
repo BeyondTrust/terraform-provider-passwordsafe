@@ -118,7 +118,7 @@ jobs:
         with:
           github-token: ${{ secrets.AUTOMATION_PAT }}
           script: |
-            const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+            var workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
               repo: '${{ env.TESTS_REPO }}',
               event: 'workflow_dispatch'
