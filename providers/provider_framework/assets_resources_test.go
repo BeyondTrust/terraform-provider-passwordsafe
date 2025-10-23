@@ -296,3 +296,211 @@ func TestCreateAssetInvalidCredentials(t *testing.T) {
 		},
 	})
 }
+
+func TestDeleteAssetByWorkGroupId(t *testing.T) {
+	// mocking Password Safe API
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// mocking Response according to the endpoint path
+		switch r.URL.Path {
+		case constants.APIPath + "/Auth/connect/token":
+			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/Auth/SignAppIn":
+			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/workgroups/20/assets":
+			if r.Method == http.MethodPost {
+				_, err := w.Write([]byte(`{"WorkgroupID": 20, "AssetID": 36, "AssetName": "Test Asset for Deletion", "AssetType": "Server", "DnsName": "test-server.local", "DomainName": "test.com", "IPAddress": "192.168.1.100", "OperatingSystem": "Ubuntu 22.04", "CreateDate": "2025-02-27T22:57:27.127Z", "LastUpdateDate": "2025-02-27T22:57:27.127Z", "Description": "Test asset for deletion by workgroup ID"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			}
+
+		case constants.APIPath + "/Assets/36":
+			if r.Method == http.MethodDelete {
+				// DELETE endpoint for asset
+				w.WriteHeader(http.StatusOK)
+			}
+
+		case constants.APIPath + "/Auth/Signout":
+			_, err := w.Write([]byte(``))
+			if err != nil {
+				t.Error(err.Error())
+			}
+		}
+	}))
+
+	server.URL = server.URL + constants.APIPath
+
+	configAsset := entities.PasswordSafeTestConfig{
+		APIKey:                       "",
+		ClientID:                     constants.FakeClientId,
+		ClientSecret:                 constants.FakeClientSecret,
+		APIAccountName:               "",
+		ClientCertificatesFolderPath: "",
+		ClientCertificateName:        "",
+		ClientCertificatePassword:    "",
+		APIVersion:                   "3.0",
+		URL:                          server.URL,
+		Resource: `
+		resource "passwordsafe_asset_by_workgroup_id" "test_asset_by_workgroup_id" {
+			work_group_id    = "20"
+			ip_address       = "192.168.1.100"
+			asset_name       = "Test Asset for Deletion"
+			dns_name         = "test-server.local"
+			domain_name      = "test.com"
+			asset_type       = "Server"
+			description      = "Test asset for deletion by workgroup ID"
+			operating_system = "Ubuntu 22.04"
+		}`,
+	}
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		PreCheck: func() {},
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"passwordsafe": providerserver.NewProtocol6WithError(NewProvider()),
+		},
+		Steps: []resource.TestStep{
+			{
+				// Create asset
+				Config: utils.TestResourceConfig(configAsset),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"passwordsafe_asset_by_workgroup_id.test_asset_by_workgroup_id",
+						tfjsonpath.New("asset_id"),
+						knownvalue.Int32Exact(36),
+					),
+				},
+			},
+			{
+				// Delete asset by removing from config
+				Config: utils.TestResourceConfig(entities.PasswordSafeTestConfig{
+					APIKey:                       configAsset.APIKey,
+					ClientID:                     configAsset.ClientID,
+					ClientSecret:                 configAsset.ClientSecret,
+					APIAccountName:               configAsset.APIAccountName,
+					ClientCertificatesFolderPath: configAsset.ClientCertificatesFolderPath,
+					ClientCertificateName:        configAsset.ClientCertificateName,
+					ClientCertificatePassword:    configAsset.ClientCertificatePassword,
+					APIVersion:                   configAsset.APIVersion,
+					URL:                          configAsset.URL,
+					Resource:                     "", // Empty resource to trigger deletion
+				}),
+			},
+		},
+	})
+}
+
+func TestDeleteAssetByWorkGroupName(t *testing.T) {
+	// mocking Password Safe API
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// mocking Response according to the endpoint path
+		switch r.URL.Path {
+		case constants.APIPath + "/Auth/connect/token":
+			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/Auth/SignAppIn":
+			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/workgroups/test_workgroup/assets":
+			if r.Method == http.MethodPost {
+				_, err := w.Write([]byte(`{"WorkgroupID": 21, "AssetID": 37, "AssetName": "Test Asset for Name Deletion", "AssetType": "Server", "DnsName": "test-name-server.local", "DomainName": "test.com", "IPAddress": "192.168.1.101", "OperatingSystem": "Ubuntu 22.04", "CreateDate": "2025-02-27T22:57:27.127Z", "LastUpdateDate": "2025-02-27T22:57:27.127Z", "Description": "Test asset for deletion by workgroup name"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			}
+
+		case constants.APIPath + "/Assets/37":
+			if r.Method == http.MethodDelete {
+				// DELETE endpoint for asset
+				w.WriteHeader(http.StatusOK)
+			}
+
+		case constants.APIPath + "/Auth/Signout":
+			_, err := w.Write([]byte(``))
+			if err != nil {
+				t.Error(err.Error())
+			}
+		}
+	}))
+
+	server.URL = server.URL + constants.APIPath
+
+	configAsset := entities.PasswordSafeTestConfig{
+		APIKey:                       "",
+		ClientID:                     constants.FakeClientId,
+		ClientSecret:                 constants.FakeClientSecret,
+		APIAccountName:               "",
+		ClientCertificatesFolderPath: "",
+		ClientCertificateName:        "",
+		ClientCertificatePassword:    "",
+		APIVersion:                   "3.0",
+		URL:                          server.URL,
+		Resource: `
+		resource "passwordsafe_asset_by_workgroup_name" "test_asset_by_workgroup_name" {
+			work_group_name  = "test_workgroup"
+			ip_address       = "192.168.1.101"
+			asset_name       = "Test Asset for Name Deletion"
+			dns_name         = "test-name-server.local"
+			domain_name      = "test.com"
+			asset_type       = "Server"
+			description      = "Test asset for deletion by workgroup name"
+			operating_system = "Ubuntu 22.04"
+		}`,
+	}
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		PreCheck: func() {},
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"passwordsafe": providerserver.NewProtocol6WithError(NewProvider()),
+		},
+		Steps: []resource.TestStep{
+			{
+				// Create asset
+				Config: utils.TestResourceConfig(configAsset),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"passwordsafe_asset_by_workgroup_name.test_asset_by_workgroup_name",
+						tfjsonpath.New("asset_id"),
+						knownvalue.Int32Exact(37),
+					),
+				},
+			},
+			{
+				// Delete asset by removing from config
+				Config: utils.TestResourceConfig(entities.PasswordSafeTestConfig{
+					APIKey:                       configAsset.APIKey,
+					ClientID:                     configAsset.ClientID,
+					ClientSecret:                 configAsset.ClientSecret,
+					APIAccountName:               configAsset.APIAccountName,
+					ClientCertificatesFolderPath: configAsset.ClientCertificatesFolderPath,
+					ClientCertificateName:        configAsset.ClientCertificateName,
+					ClientCertificatePassword:    configAsset.ClientCertificatePassword,
+					APIVersion:                   configAsset.APIVersion,
+					URL:                          configAsset.URL,
+					Resource:                     "", // Empty resource to trigger deletion
+				}),
+			},
+		},
+	})
+}

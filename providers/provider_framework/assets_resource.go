@@ -4,6 +4,7 @@ package provider_framework
 
 import (
 	"context"
+	"fmt"
 	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/assets"
@@ -63,7 +64,69 @@ func (r *assetResource) Update(ctx context.Context, req resource.UpdateRequest, 
 }
 
 func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	var data AssetResorceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		fmt.Printf("Error getting state data: %v\n", resp.Diagnostics.Errors())
+		return
+	}
+
+	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
+	// instantiating asset obj
+	assetObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating asset object", err.Error())
+		return
+	}
+
+	// deleting the asset by ID
+	err = assetObj.DeleteAssetById(int(data.AssetID.ValueInt32()))
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting asset", err.Error())
+		return
+	}
+
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
+}
+
+// Shared delete helper function that works with any asset model containing AssetID
+func (r *assetResource) deleteAssetByID(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse, assetID int32) {
+	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
+	// instantiating asset obj
+	assetObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating asset object", err.Error())
+		return
+	}
+
+	// deleting the asset by ID
+	err = assetObj.DeleteAssetById(int(assetID))
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting asset", err.Error())
+		return
+	}
+
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
 
 func (r *assetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -192,6 +255,19 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
+func (r *assetResourceByWorkGroupId) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data AssetResorceByWorkGroupIdModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		fmt.Printf("Error getting state data: %v\n", resp.Diagnostics.Errors())
+		return
+	}
+
+	r.deleteAssetByID(ctx, req, resp, data.AssetID.ValueInt32())
+}
+
 // AssetByWorkGroupNameResource
 
 var _ resource.Resource = &assetResourceByWorkGroupName{}
@@ -295,4 +371,17 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *assetResourceByWorkGroupName) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data AssetResorceByWorkGroupNameModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		fmt.Printf("Error getting state data: %v\n", resp.Diagnostics.Errors())
+		return
+	}
+
+	r.deleteAssetByID(ctx, req, resp, data.AssetID.ValueInt32())
 }
