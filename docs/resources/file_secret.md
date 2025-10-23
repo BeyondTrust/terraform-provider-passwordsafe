@@ -30,7 +30,7 @@ resource "passwordsafe_file_secret" "my_file_secret" {
 
 ### Required
 
-- `file_content` (String)
+- `file_content` (String, Sensitive)
 - `file_name` (String)
 - `folder_name` (String)
 - `title` (String)
@@ -52,14 +52,14 @@ resource "passwordsafe_file_secret" "my_file_secret" {
 <a id="nestedblock--owners"></a>
 ### Nested Schema for `owners`
 
-Required:
-
-- `owner` (String)
-- `owner_id` (Number)
-
 Optional:
 
 - `email` (String)
+- `group_id` (Number)
+- `name` (String)
+- `owner` (String)
+- `owner_id` (Number)
+- `user_id` (Number)
 
 
 <a id="nestedblock--urls"></a>

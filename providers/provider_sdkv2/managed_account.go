@@ -33,6 +33,7 @@ func getManagedAccount() *schema.Resource {
 			"value": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Sensitive: true,
 			},
 		},
 	}
