@@ -48,6 +48,11 @@ type ManagedSystemByDataBaseResourceModel struct {
 	ChangeTime                        types.String `tfsdk:"change_time"`
 }
 
+// Implement utils.ManagedSystemIDProvider interface
+func (m *ManagedSystemByDataBaseResourceModel) GetManagedSystemID() types.Int32 {
+	return m.ManagedSystemID
+}
+
 func (r *managedSystemByDatabaseResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_managed_system_by_database"
 }
@@ -144,7 +149,32 @@ func (r *managedSystemByDatabaseResource) Update(ctx context.Context, req resour
 }
 
 func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	var data ManagedSystemByDataBaseResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
+	// Delete managed system using helper function
+	err = utils.DeleteManagedSystemByID(*r.providerInfo.authenticationObj, int(data.ManagedSystemID.ValueInt32()), zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting managed system", err.Error())
+		return
+	}
+
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
 
 func (r *managedSystemByDatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
