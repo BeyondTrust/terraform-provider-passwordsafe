@@ -71,31 +71,7 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
-	// instantiating asset obj
-	assetObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating asset object", err.Error())
-		return
-	}
-
-	// deleting the asset by ID
-	err = assetObj.DeleteAssetById(int(data.AssetID.ValueInt32()))
-	if err != nil {
-		resp.Diagnostics.AddError("Error deleting asset", err.Error())
-		return
-	}
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
+	r.deleteAssetByID(ctx, req, resp, data.AssetID.ValueInt32())
 }
 
 // Shared delete helper function that works with any asset model containing AssetID

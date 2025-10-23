@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"fmt"
 	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
