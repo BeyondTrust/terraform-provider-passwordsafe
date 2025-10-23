@@ -207,12 +207,13 @@ func TestDeleteFunctionalAccount(t *testing.T) {
 			}
 
 		case constants.APIPath + "/FunctionalAccounts":
-			if r.Method == http.MethodPost {
+			switch r.Method {
+			case http.MethodPost:
 				_, err := w.Write([]byte(`{"FunctionalAccountID": 1001, "PlatformID": 2, "DomainName": "test-domain", "AccountName": "test-account"}`))
 				if err != nil {
 					t.Error(err.Error())
 				}
-			} else if r.Method == http.MethodDelete {
+			case http.MethodDelete:
 				// DELETE endpoint for functional account
 				w.WriteHeader(http.StatusOK)
 			}
