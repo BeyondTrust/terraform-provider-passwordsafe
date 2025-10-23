@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"fmt"
 	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/assets"
@@ -69,7 +68,6 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
-		fmt.Printf("Error getting state data: %v\n", resp.Diagnostics.Errors())
 		return
 	}
 
@@ -261,7 +259,6 @@ func (r *assetResourceByWorkGroupId) Delete(ctx context.Context, req resource.De
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
-		fmt.Printf("Error getting state data: %v\n", resp.Diagnostics.Errors())
 		return
 	}
 
@@ -379,7 +376,6 @@ func (r *assetResourceByWorkGroupName) Delete(ctx context.Context, req resource.
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
-		fmt.Printf("Error getting state data: %v\n", resp.Diagnostics.Errors())
 		return
 	}
 

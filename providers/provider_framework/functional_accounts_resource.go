@@ -212,7 +212,6 @@ func (r *FunctionalAccountResource) Delete(ctx context.Context, req resource.Del
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 
 	if resp.Diagnostics.HasError() {
-		fmt.Printf("Error getting state data: %v\n", resp.Diagnostics.Errors())
 		return
 	}
 
