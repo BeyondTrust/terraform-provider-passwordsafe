@@ -633,3 +633,129 @@ func TestGetBoolAttribute(t *testing.T) {
 		})
 	}
 }
+
+// Test DeleteAssetByID function
+func TestDeleteAssetByID(t *testing.T) {
+	InitializeGlobalConfig()
+
+	// Test case 1: Successful deletion
+	t.Run("Successful deletion", func(t *testing.T) {
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case constants.APIPath + "/Auth/connect/token":
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			case constants.APIPath + "/Auth/SignAppIn":
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			case "/BeyondTrust/api/public/v3/Assets/123":
+				if r.Method == "DELETE" {
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(`{}`))
+					if err != nil {
+						t.Error(err.Error())
+					}
+				}
+			case constants.APIPath + "/Auth/Signout":
+				_, err := w.Write([]byte(``))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			}
+		}))
+		defer server.Close()
+
+		authenticateObj, _ := authentication.Authenticate(*authParams)
+		server.URL = server.URL + constants.APIPath
+		apiUrl, _ := url.Parse(server.URL)
+		authenticateObj.ApiUrl = *apiUrl
+
+		var signInCount uint64
+		var mu sync.Mutex
+		var muOut sync.Mutex
+
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		if err != nil {
+			t.Errorf("Expected no error, but got: %s", err.Error())
+		}
+	})
+
+	// Test case 2: Error when deleting asset
+	t.Run("Delete error", func(t *testing.T) {
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case constants.APIPath + "/Auth/connect/token":
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			case constants.APIPath + "/Auth/SignAppIn":
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			case "/BeyondTrust/api/public/v3/Assets/123":
+				if r.Method == "DELETE" {
+					w.WriteHeader(http.StatusBadRequest)
+					_, err := w.Write([]byte(`{"error": "not found"}`))
+					if err != nil {
+						t.Error(err.Error())
+					}
+				}
+			case constants.APIPath + "/Auth/Signout":
+				_, err := w.Write([]byte(``))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			}
+		}))
+		defer server.Close()
+
+		authenticateObj, _ := authentication.Authenticate(*authParams)
+		server.URL = server.URL + constants.APIPath
+		apiUrl, _ := url.Parse(server.URL)
+		authenticateObj.ApiUrl = *apiUrl
+
+		var signInCount uint64
+		var mu sync.Mutex
+		var muOut sync.Mutex
+
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		if err == nil {
+			t.Error("Expected error when deleting asset, but got none")
+		}
+	})
+
+	// Test case 3: Authentication error
+	t.Run("Authentication error", func(t *testing.T) {
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case constants.APIPath + "/Auth/connect/token":
+				w.WriteHeader(http.StatusBadRequest)
+				_, err := w.Write([]byte(`{"error": "invalid_client"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			}
+		}))
+		defer server.Close()
+
+		authenticateObj, _ := authentication.Authenticate(*authParams)
+		server.URL = server.URL + constants.APIPath
+		apiUrl, _ := url.Parse(server.URL)
+		authenticateObj.ApiUrl = *apiUrl
+
+		var signInCount uint64
+		var mu sync.Mutex
+		var muOut sync.Mutex
+
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		if err == nil {
+			t.Error("Expected error due to authentication failure, but got none")
+		}
+	})
+}
