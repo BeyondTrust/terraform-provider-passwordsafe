@@ -73,7 +73,7 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -102,7 +102,7 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 // Shared delete helper function that works with any asset model containing AssetID
 func (r *assetResource) deleteAssetByID(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse, assetID int32) {
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -200,7 +200,7 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 
 func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) *assets.AssetObj {
 
-	_, err := utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return nil

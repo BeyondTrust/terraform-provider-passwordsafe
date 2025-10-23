@@ -83,7 +83,7 @@ func (r *WorkGroupResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return

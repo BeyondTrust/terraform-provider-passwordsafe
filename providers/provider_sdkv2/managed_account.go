@@ -57,7 +57,7 @@ func resourceManagedAccountCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	system_name := d.Get("system_name").(string)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func resourceManagedAccountDelete(d *schema.ResourceData, m interface{}) error {
 
 	authenticationObj := m.(*auth.AuthenticationObj)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 	system_name := d.Get("system_name").(string)
 	account_name := d.Get("account_name").(string)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}

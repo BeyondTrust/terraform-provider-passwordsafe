@@ -129,7 +129,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := autenticate(d, m)
+	signAppinResponse, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := autenticate(d, m)
+	signAppinResponse, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := autenticate(d, m)
+	signAppinResponse, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -352,7 +352,7 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 
 	authenticationObj := m.(*auth.AuthenticationObj)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -391,7 +391,7 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	secretTitle := d.Get("title").(string)
 	separator := d.Get("separator").(string)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}

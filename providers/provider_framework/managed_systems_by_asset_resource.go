@@ -246,7 +246,7 @@ func (r *managedSystemResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return

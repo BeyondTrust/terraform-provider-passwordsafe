@@ -157,7 +157,7 @@ func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -190,7 +190,7 @@ func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, re
 		return nil, err
 	}
 
-	_, err = utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	_, err = utils.Authenticate(authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return nil, err

@@ -85,7 +85,7 @@ func InitializeGlobalConfig() {
 	}
 }
 
-func TestAutenticate(t *testing.T) {
+func TestAuthenticate(t *testing.T) {
 
 	InitializeGlobalConfig()
 
@@ -120,19 +120,19 @@ func TestAutenticate(t *testing.T) {
 	var signInCount uint64
 	var mu sync.Mutex
 
-	_, err := Autenticate(*authenticateObj, &mu, &signInCount, zapLogger)
+	_, err := Authenticate(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// Increment counter
-	_, err = Autenticate(*authenticateObj, &mu, &signInCount, zapLogger)
+	_, err = Authenticate(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func TestAutenticateErrorGettingToken(t *testing.T) {
+func TestAuthenticateErrorGettingToken(t *testing.T) {
 
 	InitializeGlobalConfig()
 
@@ -162,7 +162,7 @@ func TestAutenticateErrorGettingToken(t *testing.T) {
 
 	expectedError := `error - status code: 400 - {"error": "invalid_client"}`
 
-	_, err := Autenticate(*authenticateObj, &mu, &signInCount, zapLogger)
+	_, err := Authenticate(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err.Error() != expectedError {
 		t.Errorf("Test case Failed %v, %v", err.Error(), expectedError)
 	}

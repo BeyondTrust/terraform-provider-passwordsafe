@@ -48,7 +48,7 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	parent_folder_name := d.Get("parent_folder_name").(string)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 
 	authenticationObj := m.(*auth.AuthenticationObj)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
