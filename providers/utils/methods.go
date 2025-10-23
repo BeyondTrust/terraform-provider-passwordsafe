@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"terraform-provider-passwordsafe/providers/entities"
 
+	"github.com/BeyondTrust/go-client-library-passwordsafe/api/assets"
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	libraryEntitites "github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/logging"
@@ -103,5 +104,32 @@ func ValidateChangeFrequencyDays(changeFrequencyType string, changeFrequencyDays
 			return errors.New("error in change Frequency field, (min=1, max=999)")
 		}
 	}
+	return nil
+}
+
+// DeleteAssetByID deletes an asset by its ID using the provided authentication object
+func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu *sync.Mutex, muOut *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) error {
+	_, err := Authenticate(authenticationObj, mu, signInCount, zapLogger)
+	if err != nil {
+		return fmt.Errorf("error getting Authentication: %w", err)
+	}
+
+	// instantiating asset obj
+	assetObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
+	if err != nil {
+		return fmt.Errorf("error creating asset object: %w", err)
+	}
+
+	// deleting the asset by ID
+	err = assetObj.DeleteAssetById(int(assetID))
+	if err != nil {
+		return fmt.Errorf("error deleting asset: %w", err)
+	}
+
+	err = SignOut(authenticationObj, muOut, signInCount, zapLogger)
+	if err != nil {
+		return fmt.Errorf("error signing out: %w", err)
+	}
+
 	return nil
 }

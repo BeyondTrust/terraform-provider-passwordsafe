@@ -502,7 +502,6 @@ func TestGetInt32Attribute(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			attr := GetInt32Attribute(tt.description, tt.required, tt.optional, tt.computed)
 
-			// Note: The function returns schema.Int64Attribute (this appears to be a bug in the implementation)
 			if int64Attr, ok := attr.(schema.Int64Attribute); ok {
 				if int64Attr.MarkdownDescription != tt.description {
 					t.Errorf("Expected description '%s', got '%s'", tt.description, int64Attr.MarkdownDescription)

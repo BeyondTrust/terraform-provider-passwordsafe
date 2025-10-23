@@ -71,34 +71,9 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	r.deleteAssetByID(ctx, req, resp, data.AssetID.ValueInt32())
-}
-
-// Shared delete helper function that works with any asset model containing AssetID
-func (r *assetResource) deleteAssetByID(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse, assetID int32) {
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
-	// instantiating asset obj
-	assetObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating asset object", err.Error())
-		return
-	}
-
-	// deleting the asset by ID
-	err = assetObj.DeleteAssetById(int(assetID))
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting asset", err.Error())
-		return
-	}
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
 	}
 }
@@ -238,7 +213,11 @@ func (r *assetResourceByWorkGroupId) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	r.deleteAssetByID(ctx, req, resp, data.AssetID.ValueInt32())
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting asset", err.Error())
+		return
+	}
 }
 
 // AssetByWorkGroupNameResource
@@ -355,5 +334,9 @@ func (r *assetResourceByWorkGroupName) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	r.deleteAssetByID(ctx, req, resp, data.AssetID.ValueInt32())
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting asset", err.Error())
+		return
+	}
 }
