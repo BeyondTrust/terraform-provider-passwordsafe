@@ -272,6 +272,7 @@ func TestDeleteManagedSystemByWorkGroup(t *testing.T) {
 			workgroup_id                           = "5"
 			entity_type_id                         = 1
 			host_name                              = "test-host"
+			ip_address                             = "192.168.1.100"
 			platform_id                            = 2
 			contact_email                          = "admin@example.com"
 			description                            = "Test managed system for workgroup deletion"

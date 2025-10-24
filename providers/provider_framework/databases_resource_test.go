@@ -296,6 +296,9 @@ func TestDeleteDatabase(t *testing.T) {
 
 func TestDeleteDatabaseNotFound(t *testing.T) {
 
+	// Track delete attempts to handle test vs cleanup differently
+	deleteAttempts := 0
+
 	// mocking Password Safe API
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -324,11 +327,21 @@ func TestDeleteDatabaseNotFound(t *testing.T) {
 
 		case constants.APIPath + "/Databases/9999":
 			if r.Method == http.MethodDelete {
-				// Delete database response - not found
-				w.WriteHeader(http.StatusNotFound)
-				_, err := w.Write([]byte(`{"error": "Database not found"}`))
-				if err != nil {
-					t.Error(err.Error())
+				deleteAttempts++
+				if deleteAttempts == 1 {
+					// First delete (test phase) - return 404 as expected
+					w.WriteHeader(http.StatusNotFound)
+					_, err := w.Write([]byte(`{"error": "Database not found"}`))
+					if err != nil {
+						t.Error(err.Error())
+					}
+				} else {
+					// Subsequent deletes (cleanup phase) - return 200 to avoid cleanup errors
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(``))
+					if err != nil {
+						t.Error(err.Error())
+					}
 				}
 			}
 
@@ -408,6 +421,9 @@ func TestDeleteDatabaseNotFound(t *testing.T) {
 
 func TestDeleteDatabaseServerError(t *testing.T) {
 
+	// Track delete attempts to handle test vs cleanup differently
+	deleteAttempts := 0
+
 	// mocking Password Safe API
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -436,11 +452,22 @@ func TestDeleteDatabaseServerError(t *testing.T) {
 
 		case constants.APIPath + "/Databases/5000":
 			if r.Method == http.MethodDelete {
-				// Delete database response - server error
-				w.WriteHeader(http.StatusInternalServerError)
-				_, err := w.Write([]byte(`{"error": "Internal server error"}`))
-				if err != nil {
-					t.Error(err.Error())
+				deleteAttempts++
+				if deleteAttempts == 1 {
+					// First delete (test phase) - return 500 as expected
+					w.WriteHeader(http.StatusInternalServerError)
+					w.Header().Set("Content-Type", "application/json")
+					_, err := w.Write([]byte(`{"error": "Internal server error"}`))
+					if err != nil {
+						t.Error(err.Error())
+					}
+				} else {
+					// Subsequent deletes (cleanup phase) - return 200 to avoid cleanup errors
+					w.WriteHeader(http.StatusOK)
+					_, err := w.Write([]byte(``))
+					if err != nil {
+						t.Error(err.Error())
+					}
 				}
 			}
 
