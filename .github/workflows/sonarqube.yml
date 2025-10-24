@@ -23,9 +23,8 @@ jobs:
       - name: Run unit tests
         run: |
           export TF_ACC=1
-          cd providers
           go mod tidy
-          go test ./... -cover -coverprofile=coverage.out -v
+          go test ./providers/... -cover -coverprofile=coverage.out -v
           ls -alt
           go tool cover -func="coverage.out"
 
@@ -39,7 +38,7 @@ jobs:
             -Dsonar.pullrequest.key=${{ github.event.number }}
             -Dsonar.pullrequest.branch=${{ github.head_ref }}
             -Dsonar.pullrequest.base=${{ github.base_ref }}
-            -Dsonar.go.coverage.reportPaths=api/client/coverage.out
+            -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
