@@ -187,3 +187,109 @@ func TestCreateFunctionaAccountBadRequest(t *testing.T) {
 		},
 	})
 }
+
+func TestDeleteFunctionalAccount(t *testing.T) {
+	// mocking Password Safe API
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// mocking Response according to the endpoint path
+		switch r.URL.Path {
+		case constants.APIPath + "/Auth/connect/token":
+			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/Auth/SignAppIn":
+			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+		case constants.APIPath + "/FunctionalAccounts":
+			switch r.Method {
+			case http.MethodPost:
+				_, err := w.Write([]byte(`{"FunctionalAccountID": 1001, "PlatformID": 2, "DomainName": "test-domain", "AccountName": "test-account"}`))
+				if err != nil {
+					t.Error(err.Error())
+				}
+			case http.MethodDelete:
+				// DELETE endpoint for functional account
+				w.WriteHeader(http.StatusOK)
+			}
+
+		case constants.APIPath + "/FunctionalAccounts/1001":
+			if r.Method == http.MethodDelete {
+				// DELETE endpoint for specific functional account
+				w.WriteHeader(http.StatusOK)
+			}
+
+		case constants.APIPath + "/Auth/Signout":
+			_, err := w.Write([]byte(``))
+			if err != nil {
+				t.Error(err.Error())
+			}
+		}
+	}))
+
+	server.URL = server.URL + constants.APIPath
+
+	configFunctionalAccount := entities.PasswordSafeTestConfig{
+		APIKey:                       "",
+		ClientID:                     constants.FakeClientId,
+		ClientSecret:                 constants.FakeClientSecret,
+		APIAccountName:               "",
+		ClientCertificatesFolderPath: "",
+		ClientCertificateName:        "",
+		ClientCertificatePassword:    "",
+		APIVersion:                   "3.1",
+		URL:                          server.URL,
+		Resource: `
+		resource "passwordsafe_functional_account" "test_functional_account" {
+			platform_id     = 2
+			domain_name     = "test-domain"
+			account_name    = "test-account"
+			display_name    = "Test Functional Account"
+			password        = "TestPassword123!"
+			description     = "Test functional account for deletion"
+		}`,
+	}
+
+	resource.Test(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		PreCheck: func() {},
+		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
+			"passwordsafe": providerserver.NewProtocol6WithError(NewProvider()),
+		},
+		Steps: []resource.TestStep{
+			{
+				// Create functional account
+				Config: utils.TestResourceConfig(configFunctionalAccount),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"passwordsafe_functional_account.test_functional_account",
+						tfjsonpath.New("functional_account_id"),
+						knownvalue.Int32Exact(1001),
+					),
+				},
+			},
+			{
+				// Delete functional account by removing from config
+				Config: utils.TestResourceConfig(entities.PasswordSafeTestConfig{
+					APIKey:                       configFunctionalAccount.APIKey,
+					ClientID:                     configFunctionalAccount.ClientID,
+					ClientSecret:                 configFunctionalAccount.ClientSecret,
+					APIAccountName:               configFunctionalAccount.APIAccountName,
+					ClientCertificatesFolderPath: configFunctionalAccount.ClientCertificatesFolderPath,
+					ClientCertificateName:        configFunctionalAccount.ClientCertificateName,
+					ClientCertificatePassword:    configFunctionalAccount.ClientCertificatePassword,
+					APIVersion:                   configFunctionalAccount.APIVersion,
+					URL:                          configFunctionalAccount.URL,
+					Resource:                     "", // Empty resource to trigger deletion
+				}),
+			},
+		},
+	})
+}

@@ -38,7 +38,7 @@ func resourceSafe() *schema.Resource {
 func resourceSafeCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}

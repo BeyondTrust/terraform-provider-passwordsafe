@@ -146,7 +146,7 @@ func (r *FunctionalAccountResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -206,7 +206,39 @@ func (r *FunctionalAccountResource) Update(ctx context.Context, req resource.Upd
 }
 
 func (r *FunctionalAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	var data FunctionalResourceResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
+	// instantiating functional account obj
+	functionalAccountObj, err := functional_accounts.NewFuncionalAccount(*r.providerInfo.authenticationObj, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating functional account object", err.Error())
+		return
+	}
+
+	// deleting the functional account by ID
+	err = functionalAccountObj.DeleteFunctionalAccountById(int(data.FunctionalAccountID.ValueInt32()))
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting functional account", err.Error())
+		return
+	}
+
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
 
 func (r *FunctionalAccountResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
