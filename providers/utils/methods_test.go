@@ -76,7 +76,7 @@ func InitializeGlobalConfig() {
 	authParams = &authentication.AuthenticationParametersObj{
 		HTTPClient:                 *httpClientObj,
 		BackoffDefinition:          backoffDefinition,
-		EndpointURL:                "https://fake.api.com:443/BeyondTrust/api/public/v3/",
+		EndpointURL:                constants.FakeApiUrl,
 		APIVersion:                 apiVersion,
 		ClientID:                   "fakeone_a654+9sdf7+8we4f",
 		ClientSecret:               "fakeone_a654+9sdf7+8we4f",
