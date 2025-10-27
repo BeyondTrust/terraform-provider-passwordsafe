@@ -1,6 +1,8 @@
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
 version: 2
+env:
+  - VERSION={{ .Env.VERSION }}
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
@@ -58,3 +60,6 @@ release:
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   # If you want to manually examine the release before its live, uncomment this line:
   draft: false
+snapshot:
+  version_template: "{{ .Env.VERSION }}"
+

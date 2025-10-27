@@ -8,7 +8,6 @@ permissions: {}
 
 jobs:
   scan:
-    if: false
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -16,21 +15,22 @@ jobs:
       id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
       
       - name: Jfrog setup
-        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
+        uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
         env:
           JF_URL: https://beyondtrust.jfrog.io
         with:
           oidc-provider-name: nonprod-terraform-provider-passwordsafe
 
       - name: Run Frogbot scan
-        uses: jfrog/frogbot@e99f970ca49cec3c362757d0306350fd229de299 # v2.25.1
+        uses: jfrog/frogbot@1a74b262a66598e097912558d30b58126d498208 # v2.25.1
         env:
           JF_URL: https://beyondtrust.jfrog.io
-          JF_ACCESS_TOKEN: ${{ secrets.ARTIFACTORY_FROGBOT_TOKEN }}
           JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          oidc-provider-name: nonprod-terraform-provider-passwordsafe 

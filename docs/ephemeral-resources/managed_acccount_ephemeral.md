@@ -4,6 +4,7 @@ page_title: "passwordsafe_managed_acccount_ephemeral Ephemeral Resource - terraf
 subcategory: ""
 description: |-
   Managed Account Ephemeral Resource, gets managed account.
+  Note: Ephemeral resources are available in Terraform v1.10 and later.
 ---
 
 # passwordsafe_managed_acccount_ephemeral (Ephemeral Resource)
