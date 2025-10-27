@@ -171,6 +171,7 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 		"remote_client_type": schema.StringAttribute{
 			MarkdownDescription: "Remote Client Type (one of: None, EPM)",
 			Optional:            true,
+			Computed:            true,
 			Default:             stringdefault.StaticString("None"),
 		},
 		"application_host_id": schema.Int32Attribute{
