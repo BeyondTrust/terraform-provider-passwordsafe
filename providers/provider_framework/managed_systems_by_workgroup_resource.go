@@ -172,7 +172,6 @@ func (r *managedSystemByWorkGroupResource) Schema(ctx context.Context, req resou
 			MarkdownDescription: "Remote Client Type (one of: None, EPM)",
 			Optional:            true,
 			Default:             stringdefault.StaticString("None"),
-			Computed:            true,
 		},
 		"application_host_id": schema.Int32Attribute{
 			MarkdownDescription: "Application Host ID",
