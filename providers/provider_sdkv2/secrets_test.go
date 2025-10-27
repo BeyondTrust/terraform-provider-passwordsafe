@@ -22,7 +22,7 @@ func TestResourceFileSecretCreate(t *testing.T) {
 		"description":  "File Secret Description",
 		"title":        "File Secret title",
 		"file_name":    "file.txt",
-		"file_content": "P@ssw0rd123!$",
+		"file_content": "SafeText",
 		"owner_id":     1,
 		"owner_type":   "User",
 	}
@@ -157,7 +157,7 @@ func TestResourceFileSecretCreateError(t *testing.T) {
 		"description":  "Description",
 		"title":        "Secret Title",
 		"file_name":    "file.txt",
-		"file_content": "P@ssw0rd123!$",
+		"file_content": "SafeText",
 		"owner_id":     1,
 		"owner_type":   "User",
 	}
@@ -266,7 +266,7 @@ func TestResourceCredentialSecretCreate(t *testing.T) {
 		"description": "Secret Description",
 		"title":       "Secret Title",
 		"username":    "username",
-		"password":    "P@ssw0rd123!$",
+		"password":    "SafeText",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -400,7 +400,7 @@ func TestResourceCredentialSecretCreateError(t *testing.T) {
 		"description": "Credential Description",
 		"title":       "Credential Title",
 		"username":    "",
-		"password":    "P@ssw0rd123!$",
+		"password":    "SafeText",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -703,7 +703,7 @@ func TestResourceTextSecretCreate(t *testing.T) {
 		"name":        "Text secret name",
 		"description": "Text secret description",
 		"title":       "Text secret title",
-		"text":        "P@ssw0rd123!$",
+		"text":        "SafeText",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -961,7 +961,7 @@ func TestResourceSecretDelete(t *testing.T) {
 		"title":       "Secret to Delete",
 		"description": "Secret Description",
 		"username":    "testuser",
-		"password":    "P@ssw0rd123!$",
+		"password":    "SafeText",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -1065,7 +1065,7 @@ func TestResourceSecretDeleteEmptyID(t *testing.T) {
 		"title":       "Secret to Delete",
 		"description": "Secret Description",
 		"username":    "testuser",
-		"password":    "P@ssw0rd123!$",
+		"password":    "SafeText",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -1148,7 +1148,7 @@ func TestResourceSecretDeleteError(t *testing.T) {
 		"title":       "Secret to Delete",
 		"description": "Secret Description",
 		"username":    "testuser",
-		"password":    "P@ssw0rd123!$",
+		"password":    "SafeText",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
@@ -1240,7 +1240,7 @@ func TestResourceSecretDeleteAuthenticationError(t *testing.T) {
 		"title":       "Secret to Delete",
 		"description": "Secret Description",
 		"username":    "testuser",
-		"password":    "P@ssw0rd123!$",
+		"password":    "SafeText",
 		"owner_id":    1,
 		"owner_type":  "User",
 	}
