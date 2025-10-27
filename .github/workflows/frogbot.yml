@@ -21,14 +21,14 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       
       - name: Jfrog setup
-        uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
+        uses: jfrog/setup-jfrog-cli@e5d3afdd1d75e4aa14a4f217cca93a2a9b5b846d # v4.8.0
         env:
           JF_URL: https://beyondtrust.jfrog.io
         with:
           oidc-provider-name: nonprod-terraform-provider-passwordsafe
 
       - name: Run Frogbot scan
-        uses: jfrog/frogbot@1a74b262a66598e097912558d30b58126d498208 # v2.25.1
+        uses: jfrog/frogbot@110dbb5b57b91b956ed2506570d258d1ce29f049 # v2.25.1
         env:
           JF_URL: https://beyondtrust.jfrog.io
           JF_GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -64,7 +64,7 @@ jobs:
           fi
 
       - name: Jfrog setup
-        uses: jfrog/setup-jfrog-cli@f748a0599171a192a2668afee8d0497f7c1069df # v4.5.6
+        uses: jfrog/setup-jfrog-cli@e5d3afdd1d75e4aa14a4f217cca93a2a9b5b846d # v4.8.0
         env:
           JF_URL: ${{ secrets.JF_URL }}
         with:
@@ -82,7 +82,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
       # Builds binaries artifacts.
       - name: Run GoReleaser build
-        uses: goreleaser/goreleaser-action@9c156ee8a17a598857849441385a2041ef570552 # v6.3.0
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           distribution: goreleaser
