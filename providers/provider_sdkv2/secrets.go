@@ -36,8 +36,8 @@ func getSecretByPath() *schema.Resource {
 				Default:  "/",
 			},
 			"value": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
 				Sensitive: true,
 			},
 		},
@@ -54,8 +54,8 @@ func resourceCredentialSecret() *schema.Resource {
 			Required: true,
 		},
 		"password": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
 			Sensitive: true,
 		},
 	}
@@ -80,8 +80,8 @@ func resourceTextSecret() *schema.Resource {
 	commonAttributes := getCreateSecretCommonSchema()
 	textSecretAttributes := map[string]*schema.Schema{
 		"text": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
 			Sensitive: true,
 		},
 	}
@@ -109,8 +109,8 @@ func resourceFileSecret() *schema.Resource {
 			Required: true,
 		},
 		"file_content": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
 			Sensitive: true,
 		},
 	}
@@ -361,7 +361,10 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	if err != nil {
+		return err
+	}
 
 	// Get the secret ID from the resource data
 	secretID := d.Id()
