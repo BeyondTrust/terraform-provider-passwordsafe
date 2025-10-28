@@ -104,7 +104,10 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	if err != nil {
+		return err
+	}
 
 	// Get the folder ID from the resource data
 	folderID := d.Id()
