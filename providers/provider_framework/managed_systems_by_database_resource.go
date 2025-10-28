@@ -48,11 +48,6 @@ type ManagedSystemByDataBaseResourceModel struct {
 	ChangeTime                        types.String `tfsdk:"change_time"`
 }
 
-// Implement utils.ManagedSystemIDProvider interface
-func (m *ManagedSystemByDataBaseResourceModel) GetManagedSystemID() types.Int32 {
-	return m.ManagedSystemID
-}
-
 func (r *managedSystemByDatabaseResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_managed_system_by_database"
 }

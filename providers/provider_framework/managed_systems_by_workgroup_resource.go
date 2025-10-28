@@ -71,11 +71,6 @@ type ManagedSystemByWorkGroupResourceModel struct {
 	IsApplicationHost                  types.Bool   `tfsdk:"is_application_host"`
 }
 
-// Implement utils.ManagedSystemIDProvider interface
-func (m *ManagedSystemByWorkGroupResourceModel) GetManagedSystemID() types.Int32 {
-	return m.ManagedSystemID
-}
-
 func (r *managedSystemByWorkGroupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_managed_system_by_workgroup"
 }
