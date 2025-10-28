@@ -31,8 +31,8 @@ func getManagedAccount() *schema.Resource {
 				Required: true,
 			},
 			"value": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
 				Sensitive: true,
 			},
 		},
@@ -142,7 +142,10 @@ func resourceManagedAccountDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*authenticationObj, zapLogger)
+	manageAccountObj, err := managed_accounts.NewManagedAccountObj(*authenticationObj, zapLogger)
+	if err != nil {
+		return err
+	}
 
 	// Get the managed account ID from the resource data
 	managedAccountID, err := strconv.Atoi(d.Id())
