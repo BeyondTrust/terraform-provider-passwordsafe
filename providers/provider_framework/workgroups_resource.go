@@ -38,7 +38,7 @@ func (r *WorkGroupResource) Metadata(ctx context.Context, req resource.MetadataR
 
 func (r *WorkGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Workgroup Resource, creates workgroup.",
+		MarkdownDescription: "Workgroup Resource, creates workgroup. **Note:** Terraform destroy will only remove the workgroup from Terraform state. The actual workgroup must be manually deleted through the BeyondTrust Password Safe web console.",
 
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
