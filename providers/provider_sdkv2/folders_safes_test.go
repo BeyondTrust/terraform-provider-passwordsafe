@@ -241,3 +241,278 @@ func TestSecretFolderFlowError(t *testing.T) {
 	}
 
 }
+
+func TestResourceFolderDelete(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"name":               "MyFolder",
+		"description":        "A folder to delete",
+		"parent_folder_name": "folder_test",
+		"user_group_id":      1,
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"parent_folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"user_group_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Set a test folder ID
+	data.SetId("cb871861-8b40-4556-820c-1ca6d522adfa")
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceFolderDelete",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/Signout" {
+				_, err := w.Write([]byte(`{"Message": "SignOut successful"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/secrets-safe/folders/cb871861-8b40-4556-820c-1ca6d522adfa" && r.Method == "DELETE" {
+				w.WriteHeader(http.StatusOK)
+				_, err := w.Write([]byte(`{"Message": "Folder deleted successfully"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceFolderDelete(data, authenticate)
+
+	if err != nil {
+		t.Errorf("Test case Failed: %v", err)
+	}
+
+	// Verify that the ID was cleared
+	if data.Id() != "" {
+		t.Errorf("Expected ID to be cleared after deletion, but got: %v", data.Id())
+	}
+}
+
+func TestResourceFolderDeleteEmptyID(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"name":               "MyFolder",
+		"description":        "A folder to delete",
+		"parent_folder_name": "folder_test",
+		"user_group_id":      1,
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"parent_folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"user_group_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Don't set ID to test empty ID case
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceFolderDeleteEmptyID",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceFolderDelete(data, authenticate)
+
+	if err == nil || err.Error() != "folder ID is empty" {
+		t.Errorf("Expected 'folder ID is empty' error, but got: %v", err)
+	}
+}
+
+func TestResourceFolderDeleteError(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"name":               "MyFolder",
+		"description":        "A folder to delete",
+		"parent_folder_name": "folder_test",
+		"user_group_id":      1,
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"parent_folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"user_group_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	// Set a test folder ID that will return 404
+	data.SetId("non-existent-folder-id")
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	// mock config
+	testConfig := SecretTestConfigStringResponse{
+		name: "TestResourceFolderDeleteError",
+		server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			// Mocking Response according to the endpoint path
+			if r.URL.Path == "/Auth/connect/token" {
+				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/Auth/SignAppIn" {
+				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+			if r.URL.Path == "/secrets-safe/folders/non-existent-folder-id" && r.Method == "DELETE" {
+				w.WriteHeader(http.StatusNotFound)
+				_, err := w.Write([]byte(`{"error": "Folder not found"}`))
+				if err != nil {
+					t.Error("Test case Failed")
+				}
+			}
+
+		})),
+	}
+
+	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	err := resourceFolderDelete(data, authenticate)
+
+	if err == nil {
+		t.Errorf("Expected error when deleting non-existent folder, but got nil")
+	}
+}
+
+func TestResourceFolderDeleteAuthenticationError(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	rawData := map[string]interface{}{
+		"name":               "MyFolder",
+		"description":        "A folder to delete",
+		"parent_folder_name": "folder_test",
+		"user_group_id":      1,
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"description": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"parent_folder_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"user_group_id": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+	data.SetId("cb871861-8b40-4556-820c-1ca6d522adfa")
+
+	// Pass nil authentication object to simulate authentication error
+	err := resourceFolderDelete(data, nil)
+
+	if err == nil {
+		t.Errorf("Expected authentication error when passing nil authentication object, but got nil")
+	}
+}

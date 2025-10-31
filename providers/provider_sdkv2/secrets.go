@@ -36,8 +36,8 @@ func getSecretByPath() *schema.Resource {
 				Default:  "/",
 			},
 			"value": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
 				Sensitive: true,
 			},
 		},
@@ -54,8 +54,8 @@ func resourceCredentialSecret() *schema.Resource {
 			Required: true,
 		},
 		"password": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
 			Sensitive: true,
 		},
 	}
@@ -80,8 +80,8 @@ func resourceTextSecret() *schema.Resource {
 	commonAttributes := getCreateSecretCommonSchema()
 	textSecretAttributes := map[string]*schema.Schema{
 		"text": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
 			Sensitive: true,
 		},
 	}
@@ -109,8 +109,8 @@ func resourceFileSecret() *schema.Resource {
 			Required: true,
 		},
 		"file_content": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
+			Type:      schema.TypeString,
+			Required:  true,
 			Sensitive: true,
 		},
 	}
@@ -133,7 +133,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := autenticate(d, m)
+	signAppinResponse, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := autenticate(d, m)
+	signAppinResponse, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -272,7 +272,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := autenticate(d, m)
+	signAppinResponse, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -350,6 +350,40 @@ func resourceSecretUpdate(d *schema.ResourceData, m interface{}) error {
 
 // Delete context for resourceSecret Resource.
 func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
+	if m == nil {
+		return fmt.Errorf("authentication object is nil")
+	}
+
+	authenticationObj := m.(*auth.AuthenticationObj)
+
+	_, err := authenticate(d, m)
+	if err != nil {
+		return err
+	}
+
+	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	if err != nil {
+		return err
+	}
+
+	// Get the secret ID from the resource data
+	secretID := d.Id()
+	if secretID == "" {
+		return fmt.Errorf("secret ID is empty")
+	}
+
+	// Delete the secret using the proper secret deletion method
+	err = secretObj.DeleteSecretById(secretID)
+	if err != nil {
+		return err
+	}
+
+	err = signOut(d, m)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
 	return nil
 }
 
@@ -364,7 +398,7 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	secretTitle := d.Get("title").(string)
 	separator := d.Get("separator").(string)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}

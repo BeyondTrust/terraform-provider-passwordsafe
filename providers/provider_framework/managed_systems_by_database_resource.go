@@ -144,7 +144,32 @@ func (r *managedSystemByDatabaseResource) Update(ctx context.Context, req resour
 }
 
 func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	var data ManagedSystemByDataBaseResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
+	// Delete managed system using helper function
+	err = utils.DeleteManagedSystemByID(*r.providerInfo.authenticationObj, int(data.ManagedSystemID.ValueInt32()), zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting managed system", err.Error())
+		return
+	}
+
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
 
 func (r *managedSystemByDatabaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -160,7 +185,7 @@ func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, re
 		return nil, err
 	}
 
-	_, err = utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	_, err = utils.Authenticate(authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return nil, err

@@ -1,6 +1,7 @@
 package provider_framework
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"terraform-provider-passwordsafe/providers/utils"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -171,4 +173,38 @@ func TestGetAssetsListNotFound(t *testing.T) {
 			},
 		},
 	})
+}
+
+// TestAssetDataSourceBasics tests basic asset datasource functions for coverage
+func TestAssetDataSourceBasics(t *testing.T) {
+	dataSource := NewAssetDataSource()
+	if dataSource == nil {
+		t.Error("NewAssetDataSource() returned nil")
+	}
+}
+
+// TestAssetDataSourceMetadata tests the Metadata method for coverage
+func TestAssetDataSourceMetadata(t *testing.T) {
+	dataSource := NewAssetDataSource()
+	req := datasource.MetadataRequest{
+		ProviderTypeName: "passwordsafe",
+	}
+	var resp datasource.MetadataResponse
+	dataSource.Metadata(context.Background(), req, &resp)
+
+	if resp.TypeName != "passwordsafe_asset_datasource" {
+		t.Errorf("Expected TypeName to be 'passwordsafe_asset_datasource', got '%s'", resp.TypeName)
+	}
+}
+
+// TestAssetDataSourceSchema tests the Schema method for coverage
+func TestAssetDataSourceSchema(t *testing.T) {
+	dataSource := NewAssetDataSource()
+	req := datasource.SchemaRequest{}
+	var resp datasource.SchemaResponse
+	dataSource.Schema(context.Background(), req, &resp)
+
+	if len(resp.Schema.Blocks) == 0 {
+		t.Error("Expected Schema to have blocks")
+	}
 }

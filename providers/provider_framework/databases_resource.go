@@ -107,7 +107,7 @@ func (r *databaseResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -158,7 +158,39 @@ func (r *databaseResource) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (r *databaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	var data DatabaseResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
+	// instantiating database obj
+	databaseObj, err := databases.NewDatabaseObj(*r.providerInfo.authenticationObj, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating database object", err.Error())
+		return
+	}
+
+	// deleting the database by ID
+	err = databaseObj.DeleteDatabaseById(int(data.DatabaseID.ValueInt32()))
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting database", err.Error())
+		return
+	}
+
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
 
 func (r *databaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

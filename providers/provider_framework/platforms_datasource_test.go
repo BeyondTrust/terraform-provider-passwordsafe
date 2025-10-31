@@ -1,6 +1,7 @@
 package provider_framework
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"terraform-provider-passwordsafe/providers/utils"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -155,4 +157,39 @@ func TestGetPlatformsListNotFound(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unit tests for platform datasource methods
+func TestPlatformDataSourceBasics(t *testing.T) {
+	datasource := NewPlatformDataSource()
+
+	if datasource == nil {
+		t.Error("NewPlatformDataSource returned nil")
+	}
+}
+
+func TestPlatformDataSourceMetadata(t *testing.T) {
+	ds := NewPlatformDataSource()
+	req := datasource.MetadataRequest{
+		ProviderTypeName: "passwordsafe",
+	}
+	resp := &datasource.MetadataResponse{}
+
+	ds.Metadata(context.Background(), req, resp)
+
+	if resp.TypeName != "passwordsafe_platform_datasource" {
+		t.Errorf("Expected TypeName 'passwordsafe_platform_datasource', got '%s'", resp.TypeName)
+	}
+}
+
+func TestPlatformDataSourceSchema(t *testing.T) {
+	ds := NewPlatformDataSource()
+	req := datasource.SchemaRequest{}
+	resp := &datasource.SchemaResponse{}
+
+	ds.Schema(context.Background(), req, resp)
+
+	if resp.Schema.Description != "Platform Datasource, gets platforms list" {
+		t.Errorf("Unexpected schema description: %s", resp.Schema.Description)
+	}
 }

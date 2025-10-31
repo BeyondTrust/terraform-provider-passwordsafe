@@ -1,6 +1,7 @@
 package provider_framework
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"terraform-provider-passwordsafe/providers/utils"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -155,4 +157,39 @@ func TestSecretGetSafesListNotFound(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unit tests for safes datasource methods
+func TestSafesDataSourceBasics(t *testing.T) {
+	ds := NewSafesDataSource()
+
+	if ds == nil {
+		t.Error("NewSafesDataSource returned nil")
+	}
+}
+
+func TestSafesDataSourceMetadata(t *testing.T) {
+	ds := NewSafesDataSource()
+	req := datasource.MetadataRequest{
+		ProviderTypeName: "passwordsafe",
+	}
+	resp := &datasource.MetadataResponse{}
+
+	ds.Metadata(context.Background(), req, resp)
+
+	if resp.TypeName != "passwordsafe_safe_datasource" {
+		t.Errorf("Expected TypeName 'passwordsafe_safe_datasource', got '%s'", resp.TypeName)
+	}
+}
+
+func TestSafesDataSourceSchema(t *testing.T) {
+	ds := NewSafesDataSource()
+	req := datasource.SchemaRequest{}
+	resp := &datasource.SchemaResponse{}
+
+	ds.Schema(context.Background(), req, resp)
+
+	if len(resp.Schema.Description) == 0 {
+		t.Error("Schema description should not be empty")
+	}
 }

@@ -10,13 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// autenticate get Password Safe authentication.
-func autenticate(d *schema.ResourceData, m interface{}) (entities.SignAppinResponse, error) {
+// authenticate get Password Safe authentication.
+func authenticate(d *schema.ResourceData, m interface{}) (entities.SignAppinResponse, error) {
 	authenticationObj := m.(*auth.AuthenticationObj)
 	var err error
 	var signAppinResponse entities.SignAppinResponse
 
-	signAppinResponse, err = utils.Autenticate(*authenticationObj, &mu, &signInCount, zapLogger)
+	signAppinResponse, err = utils.Authenticate(*authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		zapLogger.Error(err.Error())
 		return signAppinResponse, err

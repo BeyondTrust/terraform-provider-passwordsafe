@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -95,8 +96,10 @@ func (r *managedSystemResource) Schema(ctx context.Context, req resource.SchemaR
 			Optional:            true,
 		},
 		"remote_client_type": schema.StringAttribute{
-			MarkdownDescription: "Remote Client Type (one of: None, EPM)",
+			MarkdownDescription: "Remote Client Type (one of: None, EPM). Default: None.",
 			Optional:            true,
+			Computed:            true,
+			Default:             stringdefault.StaticString("None"),
 		},
 		"application_host_id": schema.Int32Attribute{
 			MarkdownDescription: "Application Host ID",
@@ -230,7 +233,32 @@ func (r *managedSystemResource) Update(ctx context.Context, req resource.UpdateR
 }
 
 func (r *managedSystemResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	var data ManagedSystemResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
+		return
+	}
+
+	// Delete managed system using helper function
+	err = utils.DeleteManagedSystemByID(*r.providerInfo.authenticationObj, int(data.ManagedSystemID.ValueInt32()), zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting managed system", err.Error())
+		return
+	}
+
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		return
+	}
 }
 
 func (r *managedSystemResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
