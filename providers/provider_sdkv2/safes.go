@@ -3,6 +3,8 @@
 package provider
 
 import (
+	"fmt"
+
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
@@ -38,7 +40,7 @@ func resourceSafe() *schema.Resource {
 func resourceSafeCreate(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 
-	_, err := autenticate(d, m)
+	_, err := authenticate(d, m)
 	if err != nil {
 		return err
 	}
@@ -80,5 +82,39 @@ func resourceSafeUpdate(d *schema.ResourceData, m interface{}) error {
 
 // Delete context for resourceSafe Resource.
 func resourceSafeDelete(d *schema.ResourceData, m interface{}) error {
+	if m == nil {
+		return fmt.Errorf("authentication object is nil")
+	}
+
+	authenticationObj := m.(*auth.AuthenticationObj)
+
+	_, err := authenticate(d, m)
+	if err != nil {
+		return err
+	}
+
+	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	if err != nil {
+		return err
+	}
+
+	// Get the safe ID from the resource data
+	safeID := d.Id()
+	if safeID == "" {
+		return fmt.Errorf("safe ID is empty")
+	}
+
+	// Delete the safe using the DeleteSafeById method
+	err = secretObj.DeleteSafeById(safeID)
+	if err != nil {
+		return err
+	}
+
+	err = signOut(d, m)
+	if err != nil {
+		return err
+	}
+
+	d.SetId("")
 	return nil
 }

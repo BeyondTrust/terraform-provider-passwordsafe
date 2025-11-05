@@ -85,7 +85,7 @@ func (d *WorkgroupDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	_, err := utils.Autenticate(*d.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*d.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return

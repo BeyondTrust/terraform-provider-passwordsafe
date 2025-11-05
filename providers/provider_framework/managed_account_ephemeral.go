@@ -85,7 +85,7 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 		return
 	}
 
-	_, err := utils.Autenticate(*e.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*e.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		response.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
