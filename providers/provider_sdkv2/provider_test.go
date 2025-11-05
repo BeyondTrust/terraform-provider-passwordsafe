@@ -67,9 +67,9 @@ func TestProviderConfigureEmtyUrl(t *testing.T) {
 		"client_certificate_password":     "",
 	})
 
-	autenticate, diags := providerConfigure(context.Background(), resourceData)
+	authenticate, diags := providerConfigure(context.Background(), resourceData)
 
-	if autenticate != nil {
+	if authenticate != nil {
 		t.Errorf("Error %v", diags)
 	}
 
@@ -92,9 +92,9 @@ func TestProviderConfigureEmptyCredentials(t *testing.T) {
 		"client_certificate_password":     "",
 	})
 
-	autenticate, diags := providerConfigure(context.Background(), resourceData)
+	authenticate, diags := providerConfigure(context.Background(), resourceData)
 
-	if autenticate != nil {
+	if authenticate != nil {
 		t.Errorf("Error %v", diags)
 	}
 
@@ -117,9 +117,9 @@ func TestProviderConfigureEmptyAccountName(t *testing.T) {
 		"client_certificate_password":     "",
 	})
 
-	autenticate, diags := providerConfigure(context.Background(), resourceData)
+	authenticate, diags := providerConfigure(context.Background(), resourceData)
 
-	if autenticate != nil {
+	if authenticate != nil {
 		t.Errorf("Error %v", diags)
 	}
 

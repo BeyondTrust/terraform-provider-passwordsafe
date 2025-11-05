@@ -38,7 +38,7 @@ func (r *WorkGroupResource) Metadata(ctx context.Context, req resource.MetadataR
 
 func (r *WorkGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Workgroup Resource, creates workgroup.",
+		MarkdownDescription: "Workgroup Resource, creates workgroup. **Note:** Terraform destroy will only remove the workgroup from Terraform state. The actual workgroup must be manually deleted through the BeyondTrust Password Safe web console.",
 
 		Attributes: map[string]schema.Attribute{
 			"name": schema.StringAttribute{
@@ -83,7 +83,7 @@ func (r *WorkGroupResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	_, err := utils.Autenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -134,7 +134,11 @@ func (r *WorkGroupResource) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *WorkGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	resp.Diagnostics.AddAttributeWarning(
+		path.Root("id"),
+		"Workgroup Deletion Info",
+		"Terraform resource deleted. For total deletion of the workgroup, please delete it in the web console as well.",
+	)
 }
 
 func (r *WorkGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

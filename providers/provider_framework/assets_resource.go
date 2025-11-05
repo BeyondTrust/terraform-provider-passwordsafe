@@ -63,7 +63,19 @@ func (r *assetResource) Update(ctx context.Context, req resource.UpdateRequest, 
 }
 
 func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// method not implemented
+	var data AssetResorceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting asset", err.Error())
+		return
+	}
 }
 
 func (r *assetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -137,7 +149,7 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 
 func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) *assets.AssetObj {
 
-	_, err := utils.Autenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(authenticationObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return nil
@@ -190,6 +202,22 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *assetResourceByWorkGroupId) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data AssetResorceByWorkGroupIdModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting asset", err.Error())
+		return
+	}
 }
 
 // AssetByWorkGroupNameResource
@@ -295,4 +323,20 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *assetResourceByWorkGroupName) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data AssetResorceByWorkGroupNameModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error deleting asset", err.Error())
+		return
+	}
 }

@@ -3,7 +3,7 @@ name: Automation Tests
 env:
   TESTS_REPO: ${{ secrets.TESTS_REPO }}
   TESTS_WORKFLOW: 'dependabot-workflow.yml'
-  TESTS_REF: 'dependabot-workflow'
+  TESTS_REF: 'main'
   JFROG_SERVER: ${{ secrets.JFROG_SERVER }}
 
 permissions:

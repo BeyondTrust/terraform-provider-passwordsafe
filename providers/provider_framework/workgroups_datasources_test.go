@@ -1,6 +1,7 @@
 package provider_framework
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -9,6 +10,7 @@ import (
 	"terraform-provider-passwordsafe/providers/utils"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -155,4 +157,39 @@ func TestGetWorkgroupsListNotFound(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Unit tests for workgroup datasource methods
+func TestWorkgroupDataSourceBasics(t *testing.T) {
+	ds := NewWorkgroupDataSource()
+
+	if ds == nil {
+		t.Error("NewWorkgroupDataSource returned nil")
+	}
+}
+
+func TestWorkgroupDataSourceMetadata(t *testing.T) {
+	ds := NewWorkgroupDataSource()
+	req := datasource.MetadataRequest{
+		ProviderTypeName: "passwordsafe",
+	}
+	resp := &datasource.MetadataResponse{}
+
+	ds.Metadata(context.Background(), req, resp)
+
+	if resp.TypeName != "passwordsafe_workgroup_datasource" {
+		t.Errorf("Expected TypeName 'passwordsafe_workgroup_datasource', got '%s'", resp.TypeName)
+	}
+}
+
+func TestWorkgroupDataSourceSchema(t *testing.T) {
+	ds := NewWorkgroupDataSource()
+	req := datasource.SchemaRequest{}
+	resp := &datasource.SchemaResponse{}
+
+	ds.Schema(context.Background(), req, resp)
+
+	if resp.Schema.Description != "Workgroup Datasource, gets workgroups list" {
+		t.Errorf("Unexpected schema description: %s", resp.Schema.Description)
+	}
 }
