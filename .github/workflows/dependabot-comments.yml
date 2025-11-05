@@ -104,8 +104,6 @@ jobs:
               Release Workflow **${{ needs.release.result }}**
               - Build **success**
               - Unit testing **success**
-              - Publish to JFrog **success**
-              - X-ray scan **success**
 
               Linter Workflow **${pr_runs_result.linter.conclusion}**
               - golangci linter **success**
