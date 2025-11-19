@@ -26,8 +26,18 @@ jobs:
       if: false
       with:
         script: |
-          const version = context.ref.match(/[\d][\d*\.]*$/)[0];
-          core.setOutput("version", version);
+          if( context.eventName === "workflow_dispatch" ){
+            const version = context.ref.match(/[\d][\d*\.]*$/)[0];
+            core.setOutput("version", version);
+          } else {
+            const version_sha = await exec.exec('git rev-list --tags --max-count=1');
+            const {
+              exitCode,
+              stdout,
+              stderr
+            }  = await exec.getExecOutput('git describe --tags', version_sha);
+            core.setOutput("version", stdout.split("-")[0]);
+          }
 
     - name: Promote artifact
       run: |
