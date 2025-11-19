@@ -31,7 +31,7 @@ jobs:
 
     - name: Promote artifact
       run: |
-        VERSION="v1.0.7.211"
+        VERSION="1.1.1.223"
         BUILD_NAME="${{ github.event.repository.name }}"
 
           BUILD_NUMBER=$(
