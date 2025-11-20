@@ -26,41 +26,31 @@ jobs:
       if: false
       with:
         script: |
-          if( context.eventName === "workflow_dispatch" ){
-            const version = context.ref.match(/[\d][\d*\.]*$/)[0];
-            core.setOutput("version", version);
-          } else {
-            const version_sha = await exec.exec('git rev-list --tags --max-count=1');
-            const {
-              exitCode,
-              stdout,
-              stderr
-            }  = await exec.getExecOutput('git describe --tags', version_sha);
-            core.setOutput("version", stdout.split("-")[0]);
-          }
+          const version = context.ref.match(/[\d][\d*\.]*$/)[0];
+          core.setOutput("version", version);
 
     - name: Promote artifact
       run: |
         VERSION="1.1.1.223"
         BUILD_NAME="${{ github.event.repository.name }}"
 
-        BUILD_NUMBER=$(
-          jfrog rt curl api/build/${BUILD_NAME} -s | \
-          jq -r "
-            [
-              .buildsNumbers[]
-              | select(.uri | contains(\"$VERSION\"))
-            ]
-            | sort_by(.started)
-            | reverse
-            | .[0].uri[1:]
-          "
-        )
+          BUILD_NUMBER=$(
+            jfrog rt curl api/build/${BUILD_NAME} -s | \
+            jq -r "
+              [
+                .buildsNumbers[]
+                | select(.uri | contains(\"$VERSION\"))
+              ]
+              | sort_by(.started)
+              | reverse
+              | .[0].uri[1:]
+            "
+          )
 
-        if [ -z "$BUILD_NUMBER" ]; then
-          echo "::error::Error retrieving build from Artifactory. No matching name/version. Name: $BUILD_NAME; Version: $VERSION"
-          exit 1
-        fi
+          if [ -z "$BUILD_NUMBER" ]; then
+            echo "::error::Error retrieving build from Artifactory. No matching name/version. Name: $BUILD_NAME; Version: $VERSION"
+            exit 1
+          fi
 
-        echo "Promoting generic $BUILD_NAME $BUILD_NUMBER"
-        jfrog rt build-promote  "$BUILD_NAME" "$BUILD_NUMBER" eng-generic-prod-local --status released --copy=true
+          echo "Promoting generic $BUILD_NAME $BUILD_NUMBER"
+          jfrog rt build-promote  "$BUILD_NAME" "$BUILD_NUMBER" eng-generic-prod-local --status released --copy=true
