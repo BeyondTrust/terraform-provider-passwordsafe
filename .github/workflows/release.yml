@@ -133,7 +133,7 @@ jobs:
           fi
 
       - name: Jfrog setup
-        uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
+        uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
         env:
           JF_URL: ${{ secrets.JF_URL }}
         with:
