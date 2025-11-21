@@ -71,6 +71,7 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.projectKey=${{ github.event.repository.name }}
+            -Dsonar.exclusions=**/*_test.go
             -Dsonar.go.coverage.reportPaths=coverage.out
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
@@ -125,7 +126,7 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            echo "full_version="$(git tag --sort "-committerdate" | cut -d$'\n' -f1)"" >> "$GITHUB_OUTPUT"
+            echo "full_version="$(git tag --sort=-creatordate --list 'v*' | head -n 1)"" >> "$GITHUB_OUTPUT"
           else
             version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
             echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
