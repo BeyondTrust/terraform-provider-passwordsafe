@@ -18,7 +18,7 @@ jobs:
       env:
         JF_URL: ${{ secrets.JF_URL }}
       with:
-        oidc-provider-name: ${{ secrets.OIDC_PROVIDER_NAME }}
+        oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
 
     - name: Extract version
       uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
