@@ -137,7 +137,7 @@ jobs:
         env:
           JF_URL: ${{ secrets.JF_URL }}
         with:
-          oidc-provider-name: ${{ secrets.OIDC_PROVIDER_NAME }}
+          oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
 
       - name: Configure JFrog CLI build number
         run: |
