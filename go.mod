@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.13.3
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.11.1
-	go.uber.org/zap v1.27.0
+	go.uber.org/zap v1.27.1
 )
 
 require (
@@ -43,7 +43,7 @@ require (
 )
 
 require (
-	github.com/BeyondTrust/go-client-library-passwordsafe v0.23.0
+	github.com/BeyondTrust/go-client-library-passwordsafe v0.25.0
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/fatih/color v1.16.0 // indirect
