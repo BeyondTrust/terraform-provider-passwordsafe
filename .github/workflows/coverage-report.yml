@@ -9,7 +9,7 @@ on:
     workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   unit_test:
@@ -40,9 +40,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: unit_test 
     permissions:
-      contents: read
       actions: read  
-      pull-requests: write 
+      pull-requests: write
+      issues: write
     steps:
       - uses: fgrosse/go-coverage-report@8c1d1a09864211d258937b1b1a5b849f7e4f2682 # v1.2.0
         with:

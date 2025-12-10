@@ -3,15 +3,14 @@ name: Build promotion
 on:
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   promotion:
     runs-on: ubuntu-latest
     name: Promote built artifact
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - name: Jfrog setup
         uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
