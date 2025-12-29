@@ -36,9 +36,10 @@ func getSecretByPath() *schema.Resource {
 				Default:  "/",
 			},
 			"decrypt": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Whether to decrypt the secret value when retrieving it.",
 			},
 			"value": &schema.Schema{
 				Type:      schema.TypeString,
