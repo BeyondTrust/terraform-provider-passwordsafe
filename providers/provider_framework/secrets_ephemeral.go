@@ -63,7 +63,7 @@ func (e *EphemeralSecret) Schema(ctx context.Context, _ ephemeral.SchemaRequest,
 				Optional:    true,
 			},
 			"decrypt": schema.BoolAttribute{
-				Description: "Decrypt",
+				Description: "Whether to decrypt the secret value when retrieving it.",
 				Optional:    true,
 				Computed:    true,
 			},
