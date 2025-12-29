@@ -29,6 +29,7 @@ type EphemeralSecretModel struct {
 	Title     types.String `tfsdk:"title"`
 	Path      types.String `tfsdk:"path"`
 	Separator types.String `tfsdk:"separator"`
+	Decrypt   types.Bool   `tfsdk:"decrypt"`
 	Value     types.String `tfsdk:"value"`
 }
 
@@ -60,6 +61,11 @@ func (e *EphemeralSecret) Schema(ctx context.Context, _ ephemeral.SchemaRequest,
 			"separator": schema.StringAttribute{
 				Description: "Separator",
 				Optional:    true,
+			},
+			"decrypt": schema.BoolAttribute{
+				Description: "Decrypt",
+				Optional:    true,
+				Computed:    true,
 			},
 			"value": schema.StringAttribute{
 				Description: "Value",
@@ -98,8 +104,15 @@ func (e *EphemeralSecret) Open(ctx context.Context, request ephemeral.OpenReques
 		return
 	}
 
+	var decryptValue bool
+	if data.Decrypt.IsNull() {
+		decryptValue = true
+	} else {
+		decryptValue = data.Decrypt.ValueBool()
+	}
+
 	// instantiating secret obj
-	secretObj, err := secrets.NewSecretObj(*e.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes)
+	secretObj, err := secrets.NewSecretObj(*e.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes, decryptValue)
 
 	if err != nil {
 		response.Diagnostics.AddError("Error getting secret", err.Error())

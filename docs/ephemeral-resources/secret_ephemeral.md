@@ -30,6 +30,7 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
 
 ### Optional
 
+- `decrypt` (Boolean) Decrypt
 - `separator` (String) Separator
 
 ### Read-Only

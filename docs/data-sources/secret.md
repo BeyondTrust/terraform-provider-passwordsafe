@@ -29,6 +29,7 @@ data "passwordsafe_secret" "secret_text" {
 
 ### Optional
 
+- `decrypt` (Boolean)
 - `separator` (String)
 - `value` (String, Sensitive)
 
