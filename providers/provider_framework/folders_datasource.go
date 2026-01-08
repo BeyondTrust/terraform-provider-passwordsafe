@@ -103,7 +103,7 @@ func (d *FolderDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	// instantiating secrets obj (contains folder methods)
-	secretObj, _ := secrets.NewSecretObj(*d.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes)
+	secretObj, _ := secrets.NewSecretObj(*d.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes, false)
 
 	// get folders list
 	items, err := secretObj.SecretGetFoldersListFlow()

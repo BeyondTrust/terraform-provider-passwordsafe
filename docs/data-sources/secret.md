@@ -29,6 +29,7 @@ data "passwordsafe_secret" "secret_text" {
 
 ### Optional
 
+- `decrypt` (Boolean) Whether to decrypt the secret value when retrieving it. Defaults to true.
 - `separator` (String)
 - `value` (String, Sensitive)
 

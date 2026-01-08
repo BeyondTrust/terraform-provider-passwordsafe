@@ -53,7 +53,7 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
 
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -104,7 +104,7 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
 	if err != nil {
 		return err
 	}
