@@ -9,10 +9,18 @@ env:
 permissions:
   contents: read
 
-on: 
+on:
+  push:
+    tags:
+      - 'v*'
   pull_request:
     types: [opened, synchronize]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      build_version:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -56,7 +64,7 @@ jobs:
         id: version
         run: |
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            echo "full_version="$(git tag --sort "-committerdate" | cut -d$'\n' -f1)"" >> "$GITHUB_OUTPUT"
+            echo "full_version="$git tag --sort=-creatordate --list 'v*' | head -n 1)"" >> "$GITHUB_OUTPUT"
           else
             version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
             echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
@@ -146,7 +154,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 200000));
             }
 
-      - name: 'Triggering Automation tests workflow from PR' 
+      - name: 'Triggering Automation tests workflow' 
         if: ${{ github.event_name == 'pull_request' }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
@@ -164,8 +172,8 @@ jobs:
               }
             })
         
-      - name: 'Triggering Automation tests workflow on workflow dispatch event' 
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+      - name: 'Triggering Automation tests workflow on workflow call event' 
+        if: ${{ github.event_name == 'workflow_call' }}
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1  
         with:
           github-token: ${{ secrets.AUTOMATION_PAT }}
@@ -177,6 +185,7 @@ jobs:
               ref: ${{ env.TESTS_REF }},
               inputs: {
                 integration: 'terraform',
+                provider: 'jfrog' || 'registry',
                 build_version: '${{ needs.build.outputs.full_version }},
                 os_type: 'linux'
               }

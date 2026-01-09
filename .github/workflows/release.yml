@@ -22,6 +22,51 @@ permissions:
   contents: read
 
 jobs:
+
+  get_version:
+    name: Get version for package
+    runs-on: ubuntu-latest
+    outputs:
+      full_version: ${{ steps.version.outputs.full_version }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+      
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Get next version increment
+        id: increment
+        run: |
+          shopt -s nocasematch
+          commit_message=$(git log --format=%B -n 1)
+          if [[ $commit_message == "feat!:"* ]]; then
+            echo "INCREMENT=major" >> "$GITHUB_OUTPUT"
+          elif [[ $commit_message == "feat:"* ]]; then
+            echo "INCREMENT=minor" >> "$GITHUB_OUTPUT"
+          elif [[ $commit_message == "fix:"* ]]; then
+            echo "INCREMENT=patch" >> "$GITHUB_OUTPUT"
+          fi
+      
+      - name: Get next version numbers
+        uses: reecetech/version-increment@a29aa752dc3b8118a2dc2ed93faf0e95a73a9c7e # 2024.10.1
+        id: version_number
+        with:
+          increment: ${{ steps.increment.outputs.increment }}
+
+      - name: Get full version name and version numbers
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+            echo "full_version="$(git tag --sort=-creatordate --list 'v*' | head -n 1)"" >> "$GITHUB_OUTPUT"
+          else
+            version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
+            echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
+          fi
+
   unit_test:
     name: Unit Testing
     runs-on: ubuntu-latest
@@ -81,15 +126,15 @@ jobs:
         env:
           SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
 
-  goreleaser:
-    name: Release Provider
+  goreleaser_no_tag:
+    name: Release Provider to Jfrog
     runs-on: ubuntu-latest
     # include sonarqube as soon as sonar is enabled
-    needs: [unit_test, sonarqube]
+    needs: [get_version, sonarqube]
     permissions:
       id-token: write
       contents: write
-    if: ${{ github.event_name != 'workflow_call' }}
+    if: ${{ github.event_name != 'workflow_call' && !startsWith(github.ref, 'refs/tags/') }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -100,34 +145,72 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
-      - name: Get next version increment
-        id: increment
-        run: |
-          shopt -s nocasematch
-          commit_message=$(git log --format=%B -n 1)
-          if [[ $commit_message == "feat!:"* ]]; then
-            echo "INCREMENT=major" >> "$GITHUB_OUTPUT"
-          elif [[ $commit_message == "feat:"* ]]; then
-            echo "INCREMENT=minor" >> "$GITHUB_OUTPUT"
-          elif [[ $commit_message == "fix:"* ]]; then
-            echo "INCREMENT=patch" >> "$GITHUB_OUTPUT"
-          fi
-      
-      - name: Get next version numbers
-        uses: reecetech/version-increment@a29aa752dc3b8118a2dc2ed93faf0e95a73a9c7e # 2024.10.1
-        id: version_number
+      - name: Jfrog setup
+        uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
+        env:
+          JF_URL: ${{ secrets.JF_URL }}
         with:
-          increment: ${{ steps.increment.outputs.increment }}
+          oidc-provider-name: ${{ vars.OIDC_PROVIDER_NAME }}
 
-      - name: Get full version name and version numbers
-        id: version
+      - name: Configure JFrog CLI build number
         run: |
-          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            echo "full_version="$(git tag --sort=-creatordate --list 'v*' | head -n 1)"" >> "$GITHUB_OUTPUT"
-          else
-            version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
-            echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
-          fi
+          echo "JFROG_CLI_BUILD_NUMBER=${{ needs.get_version.outputs.full_version }}" >> $GITHUB_ENV 
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
+        id: import_gpg
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PASSPHRASE }}
+     
+      # Builds binaries artifacts.
+      - name: Run GoReleaser build
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --snapshot --clean 
+        env:
+          # GitHub sets the GITHUB_TOKEN secret automatically.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          VERSION: ${{ needs.get_version.outputs.full_version  }}
+      
+      - name: Preparing artifacts and Publish to Jfrog
+        run: |
+          mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}
+          mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}
+          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}/*" ${{ env.JFROG_SERVER}}
+        working-directory: dist
+      
+      - name: Publish Build Information
+        run: |
+          jfrog rt build-add-git
+          jfrog rt build-collect-env
+          jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
+
+      - name: Scan Build
+        run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
+  
+  goreleaser_tag:
+    name: Release Provider to Terraform Registry
+    runs-on: ubuntu-latest
+    # include sonarqube as soon as sonar is enabled
+    needs: [get_version, sonarqube]
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ github.event_name != 'workflow_call' && startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+      
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: 'go.mod'
+          cache: true
 
       - name: Jfrog setup
         uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
@@ -138,8 +221,45 @@ jobs:
 
       - name: Configure JFrog CLI build number
         run: |
-          echo "JFROG_CLI_BUILD_NUMBER=${{ steps.version.outputs.full_version }}" >> $GITHUB_ENV 
+          echo "JFROG_CLI_BUILD_NUMBER=${{ needs.get_version.outputs.full_version  }}" >> $GITHUB_ENV
 
+      - name: Checking if there Automation tests running
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            var workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+              owner: context.repo.owner,
+              repo: '${{ github.event.repository.name }}',
+              head_sha: 'context.sha'
+            });
+
+            while (!workflow.data.workflow_runs || workflow.data.workflow_runs.length === 0) {
+              // No workflow runs found yet, wait and retry
+              await new Promise(resolve => setTimeout(resolve, 5000));
+              workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner: context.repo.owner,
+                repo: '${{ github.event.repository.name }}',
+                head_sha: 'context.sha'
+              });
+            }
+
+            var status = workflow.data.workflow_runs[0].status;
+
+            while(status === 'in_progress' || status === 'queued'){
+              workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                owner: context.repo.owner,
+                repo: '${{ github.event.repository.name }}',
+                head_sha: 'context.sha'
+              });
+
+              status = workflow.data.workflow_runs[0].status;
+              await new Promise(resolve => setTimeout(resolve, 200000));
+            }
+            
+            if(status !== 'success'){
+              core.setFailed('Automation tests did not complete successfully. Current status: ' + status);
+            }
+          
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
         id: import_gpg
@@ -158,26 +278,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          VERSION: ${{ steps.version.outputs.full_version }}
-      # Builds binaries artifacts.
-      - name: Run GoReleaser build
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: release --snapshot --clean 
-        env:
-          # GitHub sets the GITHUB_TOKEN secret automatically.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          VERSION: ${{ steps.version.outputs.full_version }}
+          VERSION: ${{ needs.get_version.outputs.full_version  }}
       
       - name: Preparing artifacts and Publish to Jfrog
         run: |
-          mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+          mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}
+          mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}
+          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}/*" ${{ env.JFROG_SERVER}}
         working-directory: dist
       
       - name: Publish Build Information
