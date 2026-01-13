@@ -1,7 +1,7 @@
 name: Automation Tests
 
 env:
-  TESTS_REPO: ${{ secrets.TESTS_REPO }}
+  TESTS_REPO: 'ps-integration-test-automation'
   TESTS_WORKFLOW: 'dependabot-workflow.yml'
   TESTS_REF: 'main'
   JFROG_SERVER: ${{ secrets.JFROG_SERVER }}
@@ -263,11 +263,13 @@ jobs:
               ### Automation tests are **successful** link 
               `;
               output+="\nPlease check the Automation tests run [here]("+test_url+")";
+              output+="\nPlease check the Automation tests run 2 [here]("+url+")";
             } else {
               output = `## Automation tests Checked
 
               ### Automation tests **failed**`;
               output+="\nPlease check the Automation tests run [here]("+test_url+")";
+              output+="\nPlease check the Automation tests run 2 [here]("+url+")";
             } 
 
             const fs = require('fs');
