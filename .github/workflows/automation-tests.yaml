@@ -253,8 +253,9 @@ jobs:
             if (conclusion === 'success') {
               output = `## Automation tests Checked
 
-              ### Automation tests are **successful**
+              ### Automation tests are **successful** link 
               `;
+              output+="\nPlease check the Automation tests run [here]("+url+")";
             } else {
               output = `## Automation tests Checked
 
