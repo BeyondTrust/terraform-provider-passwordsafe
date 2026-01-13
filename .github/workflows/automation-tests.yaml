@@ -107,6 +107,7 @@ jobs:
     outputs:
       conclusion: ${{ steps.check_run.outputs.conclusion }}
       url: ${{ steps.check_run.outputs.url }}
+      id: ${{ steps.check_run.outputs.id }}
     steps:
       - name: Wait until Terraform provider's Release workflow finish.
         if: ${{ github.event_name == 'pull_request' }}
@@ -213,19 +214,14 @@ jobs:
               conclusion = workflow.data.workflow_runs[0].conclusion;
               url = workflow.data.workflow_runs[0].html_url;
               id = workflow.data.workflow_runs[0].id;
-              const test = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
-                owner: context.repo.owner,
-                repo: '${{ env.TESTS_REPO }}',
-                run_id: id,
-              });
-
-              console.log(`Current url: ${test.data.html_url}`);
 
               await new Promise(resolve => setTimeout(resolve, 200000));
             }
 
             core.setOutput("conclusion", conclusion);
+            console.log(`Final url: ${url}`);
             core.setOutput("url", url);
+            core.setOutput("id", id);
 
   automation-test-PR:
     name: Publish automation test results on PR 
@@ -249,18 +245,29 @@ jobs:
             var output;
             var url = '${{ needs.automation-test-run.outputs.url }}';
             var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
+            var id = '${{ needs.automation-test-run.outputs.id }}';
+
+            const test = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
+              owner: context.repo.owner,
+              repo: '${{ env.TESTS_REPO }}',
+              run_id: id,
+            });
+
+            var test_url = test.data.html_url;
+
+            console.log(`Test url: ${test_url}`);
             
             if (conclusion === 'success') {
               output = `## Automation tests Checked
 
               ### Automation tests are **successful** link 
               `;
-              output+="\nPlease check the Automation tests run [here]("+url+")";
+              output+="\nPlease check the Automation tests run [here]("+test_url+")";
             } else {
               output = `## Automation tests Checked
 
               ### Automation tests **failed**`;
-              output+="\nPlease check the Automation tests run [here]("+url+")";
+              output+="\nPlease check the Automation tests run [here]("+test_url+")";
             } 
 
             const fs = require('fs');
