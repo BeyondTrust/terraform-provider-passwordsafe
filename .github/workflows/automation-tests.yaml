@@ -217,14 +217,14 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 200000));
             }
 
-            const run = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
+            const workflow_run = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
               owner: context.repo.owner,
               repo: '${{ env.TESTS_REPO }}',
               run_id: id,
             });
 
             core.setOutput("conclusion", conclusion);
-            core.setOutput("url", run.data.html_url);
+            core.setOutput("url", workflow_run.data.html_url);
 
   automation-test-PR:
     name: Publish automation test results on PR 
