@@ -218,8 +218,14 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 200000));
             }
 
+            const test = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
+              owner: context.repo.owner,
+              repo: '${{ env.TESTS_REPO }}',
+              run_id: id,
+            });
+
             core.setOutput("conclusion", conclusion);
-            console.log(`Final url: ${url}`);
+            console.log(`Final url: ${test.data.html_url}`);
             core.setOutput("url", url);
             core.setOutput("id", id);
 
@@ -245,31 +251,18 @@ jobs:
             var output;
             var url = '${{ needs.automation-test-run.outputs.url }}';
             var conclusion = '${{ needs.automation-test-run.outputs.conclusion }}';
-            var id = '${{ needs.automation-test-run.outputs.id }}';
-
-            const test = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
-              owner: context.repo.owner,
-              repo: '${{ env.TESTS_REPO }}',
-              run_id: id,
-            });
-
-            var test_url = test.data.html_url;
-
-            console.log(`Test url: ${test_url}`);
             
             if (conclusion === 'success') {
               output = `## Automation tests Checked
 
               ### Automation tests are **successful** link 
               `;
-              output+="\nPlease check the Automation tests run [here]("+test_url+")";
-              output+="\nPlease check the Automation tests run 2 [here]("+url+")";
+              output+="\nPlease check the Automation tests run [here]("+url+")";
             } else {
               output = `## Automation tests Checked
 
               ### Automation tests **failed**`;
-              output+="\nPlease check the Automation tests run [here]("+test_url+")";
-              output+="\nPlease check the Automation tests run 2 [here]("+url+")";
+              output+="\nPlease check the Automation tests run [here]("+url+")";
             } 
 
             const fs = require('fs');
