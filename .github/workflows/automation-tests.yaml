@@ -211,7 +211,6 @@ jobs:
 
               status = workflow.data.workflow_runs[0].status;
               conclusion = workflow.data.workflow_runs[0].conclusion;
-              url = workflow.data.workflow_runs[0].html_url;
               id = workflow.data.workflow_runs[0].id;
 
               await new Promise(resolve => setTimeout(resolve, 200000));
@@ -252,7 +251,7 @@ jobs:
             if (conclusion === 'success') {
               output = `## Automation tests Checked
 
-              ### Automation tests are **successful** link 
+              ### Automation tests are **successful** 
               `;
               output+="\nPlease check the Automation tests run [here]("+url+")";
             } else {
