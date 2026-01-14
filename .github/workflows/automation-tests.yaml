@@ -1,7 +1,8 @@
 name: Automation Tests
 
 env:
-  TESTS_REPO: 'ps-integration-test-automation'
+  #TESTS_REPO: 'ps-integration-test-automation'
+  TESTS_REPO: ${{ secrets.TESTS_REPO }}
   TESTS_WORKFLOW: 'dependabot-workflow.yml'
   TESTS_REF: 'main'
   JFROG_SERVER: ${{ secrets.JFROG_SERVER }}
