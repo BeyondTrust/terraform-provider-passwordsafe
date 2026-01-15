@@ -193,7 +193,6 @@ jobs:
           script: |
             var status;
             var conclusion;
-            var url;
             var id;
 
             while(status != 'completed'){
