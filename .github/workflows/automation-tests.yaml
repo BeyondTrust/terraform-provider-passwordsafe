@@ -1,7 +1,7 @@
 name: Automation Tests
 
 env:
-  TESTS_REPO: ${{ secrets.TESTS_REPO }}
+  TESTS_REPO: ${{ vars.TEST_REPO }}
   TESTS_WORKFLOW: 'dependabot-workflow.yml'
   TESTS_REF: 'main'
   JFROG_SERVER: ${{ secrets.JFROG_SERVER }}
@@ -193,7 +193,7 @@ jobs:
           script: |
             var status;
             var conclusion;
-            var url;
+            var id;
 
             while(status != 'completed'){
               const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
@@ -210,12 +210,19 @@ jobs:
 
               status = workflow.data.workflow_runs[0].status;
               conclusion = workflow.data.workflow_runs[0].conclusion;
-              url = workflow.data.workflow_runs[0].html_url;
+              id = workflow.data.workflow_runs[0].id;
+
               await new Promise(resolve => setTimeout(resolve, 200000));
             }
 
+            const workflow_run = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
+              owner: context.repo.owner,
+              repo: '${{ env.TESTS_REPO }}',
+              run_id: id,
+            });
+
             core.setOutput("conclusion", conclusion);
-            core.setOutput("url", url);
+            core.setOutput("url", workflow_run.data.html_url);
 
   automation-test-PR:
     name: Publish automation test results on PR 
@@ -243,8 +250,9 @@ jobs:
             if (conclusion === 'success') {
               output = `## Automation tests Checked
 
-              ### Automation tests are **successful**
+              ### Automation tests are **successful** 
               `;
+              output+="\nPlease check the Automation tests run [here]("+url+")";
             } else {
               output = `## Automation tests Checked
 
