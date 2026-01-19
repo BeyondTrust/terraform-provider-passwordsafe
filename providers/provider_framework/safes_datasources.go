@@ -94,7 +94,7 @@ func (d *SafesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 
 	// instantiating secrets obj (contains safes methods)
-	secretObj, _ := secrets.NewSecretObj(*d.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes)
+	secretObj, _ := secrets.NewSecretObj(*d.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes, false)
 
 	// get safes list
 	items, err := secretObj.SecretGetSafesListFlow()

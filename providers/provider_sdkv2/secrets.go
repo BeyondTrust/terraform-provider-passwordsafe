@@ -35,6 +35,12 @@ func getSecretByPath() *schema.Resource {
 				Optional: true,
 				Default:  "/",
 			},
+			"decrypt": &schema.Schema{
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     true,
+				Description: "Whether to decrypt the secret value when retrieving it.",
+			},
 			"value": &schema.Schema{
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -138,7 +144,7 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -209,7 +215,7 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
 
 	text := d.Get("text").(string)
 	title := d.Get("title").(string)
@@ -277,7 +283,7 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
 
 	fileName := d.Get("file_name").(string)
 	fileContent := d.Get("file_content").(string)
@@ -361,7 +367,7 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
 	if err != nil {
 		return err
 	}
@@ -397,13 +403,14 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	secretPath := d.Get("path").(string)
 	secretTitle := d.Get("title").(string)
 	separator := d.Get("separator").(string)
+	decrypt := d.Get("decrypt").(bool)
 
 	_, err := authenticate(d, m)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000)
+	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, decrypt)
 	secret, err := secretObj.GetSecret(secretPath+separator+secretTitle, separator)
 
 	if err != nil {

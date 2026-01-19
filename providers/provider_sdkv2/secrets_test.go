@@ -553,6 +553,11 @@ func TestGetSecretByPathReadContext(t *testing.T) {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"decrypt": &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
+		},
 	}
 
 	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
@@ -637,6 +642,11 @@ func TestGetSecretByPathReadContextError(t *testing.T) {
 		"value": &schema.Schema{
 			Type:     schema.TypeString,
 			Optional: true,
+		},
+		"decrypt": &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  true,
 		},
 	}
 
