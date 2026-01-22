@@ -247,6 +247,10 @@ jobs:
 
             var status = running_worflows.data.workflow_runs[0].status;
 
+            console.log('Automation Tests current status: ' + status);
+
+            console.log(running_worflows.data.workflow_runs[0].id);
+
             while(status === 'in_progress' || status === 'queued'){
               console.log('Automation Tests are still running. Current status: ' + status);
               workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
