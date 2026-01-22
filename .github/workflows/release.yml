@@ -289,7 +289,7 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            await github.actions.createWorkflowDispatch({
+            await request('POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches', {
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'automation-tests.yaml',
