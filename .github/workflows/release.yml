@@ -230,10 +230,8 @@ jobs:
             var workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
               repo: '${{ github.event.repository.name }}',
-              head_sha: 'context.sha'
+              event: 'workflow_dispatch'
             });
-
-            console.log(workflows.data.workflow_runs.length);
 
             while (!workflows.data.workflow_runs || workflows.data.workflow_runs.length === 0) {
               // No workflow runs found yet, wait and retry
@@ -241,7 +239,7 @@ jobs:
               workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
                 owner: context.repo.owner,
                 repo: '${{ github.event.repository.name }}',
-                head_sha: 'context.sha'
+                event: 'workflow_dispatch'
               });
             }
 
@@ -258,7 +256,7 @@ jobs:
               workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
                 owner: context.repo.owner,
                 repo: '${{ github.event.repository.name }}',
-                head_sha: 'context.sha'
+                event: 'workflow_dispatch'
               });
 
               running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests');
