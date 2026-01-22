@@ -173,6 +173,7 @@ jobs:
                   os_type: 'linux'
                 }
               })
+              console.log("Triggered DEV");
             }else{
               await github.rest.actions.createWorkflowDispatch({
                 owner: context.repo.owner,
@@ -186,6 +187,7 @@ jobs:
                   os_type: 'linux'
                 }
               })
+              console.log("Triggered PROD");
             }
             /*        
             await github.rest.actions.createWorkflowDispatch({
