@@ -22,7 +22,6 @@ permissions:
   contents: read
 
 jobs:
-
   get_version:
     name: Get version for package
     runs-on: ubuntu-latest
@@ -134,7 +133,8 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ github.event_name != 'workflow_call' && !startsWith(github.ref, 'refs/tags/') }}
+    #if: ${{ github.event_name != 'workflow_call' && !startsWith(github.ref, 'refs/tags/') }}
+    if: false
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -201,7 +201,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    if: ${{ github.event_name != 'workflow_call' && startsWith(github.ref, 'refs/tags/') }}
+    #if: ${{ github.event_name != 'workflow_call' && startsWith(github.ref, 'refs/tags/') }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
@@ -227,33 +227,36 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            var workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+            var workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
               repo: '${{ github.event.repository.name }}',
               head_sha: 'context.sha'
             });
 
-            while (!workflow.data.workflow_runs || workflow.data.workflow_runs.length === 0) {
+            while (!workflows.data.workflow_runs || workflows.data.workflow_runs.length === 0) {
               // No workflow runs found yet, wait and retry
               await new Promise(resolve => setTimeout(resolve, 5000));
-              workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+              workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
                 owner: context.repo.owner,
                 repo: '${{ github.event.repository.name }}',
                 head_sha: 'context.sha'
               });
             }
 
-            var status = workflow.data.workflow_runs[0].status;
+            const running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests' && (run.status === 'in_progress' || run.status === 'queued'));
+
+            var status = running_worflows.data.workflow_runs[0].status;
 
             while(status === 'in_progress' || status === 'queued'){
-              workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+              workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
                 owner: context.repo.owner,
                 repo: '${{ github.event.repository.name }}',
                 head_sha: 'context.sha'
               });
 
-              status = workflow.data.workflow_runs[0].status;
-              await new Promise(resolve => setTimeout(resolve, 200000));
+              running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests' && (run.status === 'in_progress' || run.status === 'queued'));
+
+              status = running_worflows.data.workflow_runs[0].status;
             }
             
             if(status !== 'success'){
@@ -270,7 +273,8 @@ jobs:
       # It would work only is the is a tag pushed.
       - name: Run GoReleaser release
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
-        if: startsWith(github.ref, 'refs/tags/') 
+        # if: startsWith(github.ref, 'refs/tags/') 
+        if: false
         with:
           distribution: goreleaser
           version: '~> v2'
@@ -279,8 +283,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           VERSION: ${{ needs.get_version.outputs.full_version  }}
-      
+
+      - name: Run Automation Tests after release
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            await github.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'automation-tests.yaml',
+              ref: context.ref,
+              inputs: {
+                'build_origin': 'PROD'
+              }
+            });
+
       - name: Preparing artifacts and Publish to Jfrog
+        if: false
         run: |
           mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}
           mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ needs.get_version.outputs.full_version  }}
@@ -288,10 +307,12 @@ jobs:
         working-directory: dist
       
       - name: Publish Build Information
+        if: false
         run: |
           jfrog rt build-add-git
           jfrog rt build-collect-env
           jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
 
       - name: Scan Build
+        if: false
         run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
