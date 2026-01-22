@@ -233,6 +233,8 @@ jobs:
               head_sha: 'context.sha'
             });
 
+            console.log(workflows.data.workflow_runs.length);
+
             while (!workflows.data.workflow_runs || workflows.data.workflow_runs.length === 0) {
               // No workflow runs found yet, wait and retry
               await new Promise(resolve => setTimeout(resolve, 5000));
@@ -249,7 +251,7 @@ jobs:
 
             console.log('Automation Tests current status: ' + status);
 
-            console.log(running_worflows.data.workflow_runs[0].id);
+            console.log(running_worflows.data.workflow_runs[0].id); 
 
             while(status === 'in_progress' || status === 'queued'){
               console.log('Automation Tests are still running. Current status: ' + status);
