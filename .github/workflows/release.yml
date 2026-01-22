@@ -300,6 +300,8 @@ jobs:
               }
             });
 
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
             var workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
               repo: '${{ github.event.repository.name }}',
