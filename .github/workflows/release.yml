@@ -245,11 +245,11 @@ jobs:
 
             const running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests' && (run.status === 'in_progress' || run.status === 'queued'));
 
-            var status = running_worflows.data.workflow_runs[0].status;
+            //var status = running_worflows.data.workflow_runs[0].status;
 
-            console.log('Automation Tests current status: ' + status);
+            //console.log('Automation Tests current status: ' + status);
 
-            console.log(running_worflows.data.workflow_runs[0].id); 
+            console.log(running_worflows); 
 
             while(status === 'in_progress' || status === 'queued'){
               console.log('Automation Tests are still running. Current status: ' + status);
