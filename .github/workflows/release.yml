@@ -256,7 +256,7 @@ jobs:
 
               running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests');
               status = running_worflows[0].status;
-              await new Promise(resolve => setTimeout(resolve, 200000));
+              await new Promise(resolve => setTimeout(resolve, 180000));
             }
             /*
             if(status !== 'success'){
@@ -329,7 +329,7 @@ jobs:
 
               running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests');
               status = running_worflows[0].status;
-              await new Promise(resolve => setTimeout(resolve, 200000));
+              await new Promise(resolve => setTimeout(resolve, 180000));
             }
             /*
             if(status !== 'success'){
