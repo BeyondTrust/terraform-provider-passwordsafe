@@ -254,7 +254,7 @@ jobs:
                 head_sha: 'context.sha'
               });
 
-              running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests' && (run.status === 'in_progress' || run.status === 'queued'));
+              running_worflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests');
 
               status = running_worflows.data.workflow_runs[0].status;
             }
