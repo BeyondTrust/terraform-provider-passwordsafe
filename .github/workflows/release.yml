@@ -258,11 +258,10 @@ jobs:
               status = running_worflows[0].status;
               await new Promise(resolve => setTimeout(resolve, 180000));
             }
-            /*
+
             if(status !== 'success'){
               core.setFailed('Automation tests did not complete successfully. Current status: ' + status);
             }
-            */
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
@@ -333,11 +332,11 @@ jobs:
               status = running_worflows[0].status;
               await new Promise(resolve => setTimeout(resolve, 180000));
             }
-            /*
+            
             if(status !== 'success'){
               core.setFailed('Automation tests did not complete successfully. Current status: ' + status);
             }
-            */
+            
 
       - name: Preparing artifacts and Publish to Jfrog
         if: false
