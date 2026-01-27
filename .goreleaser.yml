@@ -32,15 +32,15 @@ builds:
   ignore:
     - goos: darwin
       goarch: '386'
-  binary: '{{ .ProjectName }}_v{{ .Version }}'
+  binary: '{{ .ProjectName }}_{{ .Version }}'
 archives:
   - formats: [ "zip" ]
-    name_template: '{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   extra_files:
     - glob: 'terraform-registry-manifest.json'
-      name_template: '{{ .ProjectName }}_v{ .Version }}_manifest.json'
-  name_template: '{{ .ProjectName }}_v{{ .Version }}_SHA256SUMS'
+      name_template: '{{ .ProjectName }}_{ .Version }}_manifest.json'
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
   algorithm: sha256
 signs:
   - artifacts: checksum
@@ -57,9 +57,8 @@ signs:
 release:
   extra_files:
     - glob: 'terraform-registry-manifest.json'
-      name_template: '{{ .ProjectName }}_v{{ .Version }}_manifest.json'
+      name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   # If you want to manually examine the release before its live, uncomment this line:
   draft: false
 snapshot:
   version_template: "{{ .Env.VERSION }}"
-

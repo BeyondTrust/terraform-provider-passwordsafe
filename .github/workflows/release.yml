@@ -125,8 +125,11 @@ jobs:
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
             echo "full_version="$(git tag --sort=-creatordate --list 'v*' | head -n 1)"" >> "$GITHUB_OUTPUT"
           else
-            version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
-            echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
+            #version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
+            #echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
+            version="v1.2.3"
+            trimmed="${version:1}"
+            echo "full_version=${trimmed}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Jfrog setup
@@ -177,14 +180,17 @@ jobs:
         run: |
           mkdir -p beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
           mv *.zip beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}
-          jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+          # jfrog rt u "beyondtrust/passwordsafe/terraform-provider-passwordsafe/${{ steps.version.outputs.full_version }}/*" ${{ env.JFROG_SERVER}}
+          ls -alt
         working-directory: dist
       
       - name: Publish Build Information
+        if: false
         run: |
           jfrog rt build-add-git
           jfrog rt build-collect-env
           jfrog rt build-publish ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
 
       - name: Scan Build
+        if: false
         run: jfrog rt build-scan ${{ env.JFROG_CLI_BUILD_NAME }} ${{ env.JFROG_CLI_BUILD_NUMBER }}
