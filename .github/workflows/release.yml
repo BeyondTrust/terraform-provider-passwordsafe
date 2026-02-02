@@ -163,13 +163,26 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           VERSION: ${{ steps.version.outputs.full_version }}
       # Builds binaries artifacts.
-      - name: Run GoReleaser build
+      - name: Run GoReleaser build dev
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         with:
           distribution: goreleaser
           version: '~> v2'
-          args: release --snapshot --clean 
+          args: release --snapshot --clean --config .goreleaser-dev.yml
+        env:
+          # GitHub sets the GITHUB_TOKEN secret automatically.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
+          VERSION: ${{ steps.version.outputs.full_version }}
+
+      - name: Run GoReleaser build prod
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --snapshot --clean --config .goreleaser-prod.yml
         env:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
