@@ -168,10 +168,10 @@ jobs:
                 integration: 'terraform',
                 env: '${{ github.event.inputs.build_origin }}',
                 // build_version: '${{ needs.build.outputs.full_version }}',
-                build_version: 'v1.2.1',
+                build_version: 'v1.2.3.4',
                 os_type: 'linux'
               }
-            })       
+            })
 
       - name: Wait until workflow information is available
         run: sleep 10s
