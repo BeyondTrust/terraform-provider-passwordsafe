@@ -127,9 +127,8 @@ jobs:
           else
             #version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
             #echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
-            version="v1.2.3"
-            trimmed="${version:1}"
-            echo "full_version=${trimmed}" >> "$GITHUB_OUTPUT"
+            version="v1.2.3.4"
+            echo "full_version=${version}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Jfrog setup
@@ -165,7 +164,8 @@ jobs:
       # Builds binaries artifacts.
       - name: Run GoReleaser build dev
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        # if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        if: false
         with:
           distribution: goreleaser
           version: '~> v2'
@@ -179,7 +179,6 @@ jobs:
       - name: Run GoReleaser build prod
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         # if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        if: false
         with:
           distribution: goreleaser
           version: '~> v2'
