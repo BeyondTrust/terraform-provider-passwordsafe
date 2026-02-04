@@ -127,7 +127,7 @@ jobs:
           else
             #version=$(echo ${{ steps.version_number.outputs.version  }} | sed -e 's/-pre.*//g')
             #echo "full_version="${version}.${{ github.run_number }}"" >> "$GITHUB_OUTPUT"
-            version="v1.2.3.4"
+            version="v0.1.10"
             echo "full_version=${version}" >> "$GITHUB_OUTPUT"
           fi
 
