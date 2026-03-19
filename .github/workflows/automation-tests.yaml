@@ -47,11 +47,14 @@ jobs:
           shopt -s nocasematch
           commit_message=$(git log --format=%B -n 1)
           if [[ $commit_message == "feat!:"* ]]; then
-            echo "INCREMENT=major" >> "$GITHUB_OUTPUT"
+            echo "increment=major" >> "$GITHUB_OUTPUT"
           elif [[ $commit_message == "feat:"* ]]; then
-            echo "INCREMENT=minor" >> "$GITHUB_OUTPUT"
+            echo "increment=minor" >> "$GITHUB_OUTPUT"
           elif [[ $commit_message == "fix:"* ]]; then
-            echo "INCREMENT=patch" >> "$GITHUB_OUTPUT"
+            echo "increment=patch" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unable to determine version increment from commit message: '$commit_message'. Expected prefixes: 'feat!:', 'feat:', or 'fix:'." 1>&2
+            exit 1
           fi
       
       - name: Get next version numbers
