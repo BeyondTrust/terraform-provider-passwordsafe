@@ -232,7 +232,7 @@ jobs:
           script: |
             var workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
-              repo: context.repo.name,
+              repo: context.repo.repo,
               event: 'push'
             });
 
@@ -241,7 +241,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 5000));
               workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
                 owner: context.repo.owner,
-                repo: context.repo.name,
+                repo: context.repo.repo,
                 event: 'push'
               });
             }
@@ -253,9 +253,9 @@ jobs:
               var conclusion = running_workflows[0].conclusion;
 
               while(status === 'in_progress' || status === 'queued'){
-                workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
+                const workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
                   owner: context.repo.owner,
-                  repo: context.repo.name,
+                  repo: context.repo.repo,
                   event: 'push'
                 });
 
@@ -272,6 +272,7 @@ jobs:
               if(conclusion !== 'success'){
                 core.setFailed('Automation tests did not complete successfully. Workflow\'s conclusion: ' + conclusion);
               }
+            }
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6.3.0
@@ -334,51 +335,35 @@ jobs:
               }
             });
 
-            
+            // Wait until the dispatched Automation Tests run is visible
+            let automationTestsRun = await findLatestAutomationTestsRun();
+            while (!automationTestsRun) {
+              await sleep(5000);
+              automationTestsRun = await findLatestAutomationTestsRun();
+            }
 
-            
+            let status = automationTestsRun.status;
+            let conclusion = automationTestsRun.conclusion;
 
-            while (!tests_workflow_runs.data.workflow_runs || tests_workflow_runs.data.workflow_runs.length === 0) {
-              // No workflow runs found yet, wait and retry
-              await new Promise(resolve => setTimeout(resolve, 5000));
-              tests_workflow_runs = await github.request('GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs', {
-                owner: context.repo.owner,
-                repo: context.repo.name,
-                workflow_id: workflowId,
-                event: 'workflow_dispatch'
+            while (status === 'queued' || status === 'in_progress') {
+              const runDetails = await github.request('GET /repos/{owner}/{repo}/actions/runs/{run_id}', {
+                 owner: context.repo.owner,
+                 repo: context.repo.repo,
+                 run_id: automationTestsRun.id
               });
-            }
 
-            var running_workflows = tests_workflow_runs.data.workflow_runs.filter(run => run.name === 'Automation Tests' && (run.status === 'in_progress' || run.status === 'queued'));
+              automationTestsRun = runDetails.data;
+              status = automationTestsRun.status;
+              conclusion = automationTestsRun.conclusion;
 
-            if (running_workflows.length > 0) {
-              var status = running_workflows[0].status;
-              var conclusion = running_workflows[0].conclusion;
-
-              while(status === 'in_progress' || status === 'queued'){
-                workflows = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
-                  owner: context.repo.owner,
-                  repo: context.repo.name,
-                  event: 'workflow_dispatch'
-                });
-
-                running_workflows = workflows.data.workflow_runs.filter(run => run.name === 'Automation Tests');
-                status = running_workflows[0].status;
-
-                if(status === 'in_progress' || status === 'queued'){
-                  await new Promise(resolve => setTimeout(resolve, 180000));
-                }else{
-                  conclusion = running_workflows[0].conclusion;
-                }
+              if (status === 'queued' || status === 'in_progress') {
+                await sleep(180000);
               }
-
-              if(conclusion !== 'success'){
-                core.setFailed('Automation tests did not complete successfully. Workflow\'s conclusion: ' + conclusion);
-              }
-            }else{
-               core.setFailed('No in-progress or queued Automation Tests workflow runs found.');
             }
             
+            if(conclusion !== 'success'){
+              core.setFailed('Automation tests did not complete successfully. Workflow\'s conclusion: ' + conclusion);
+            }
 
       - name: Preparing artifacts and Publish to Jfrog
         run: |
