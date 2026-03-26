@@ -53,8 +53,8 @@ jobs:
           elif [[ $commit_message == "fix:"* ]]; then
             echo "increment=patch" >> "$GITHUB_OUTPUT"
           else
-            echo "Unable to determine version increment from commit message: '$commit_message'. Expected prefixes: 'feat!:', 'feat:', or 'fix:'." 1>&2
-            exit 1
+            echo "Unable to determine version increment from commit message: '$commit_message'. Expected prefixes: 'feat!:', 'feat:', or 'fix:', getting patch version." 1>&2
+            echo "increment=patch" >> "$GITHUB_OUTPUT"
           fi
       
       - name: Get next version numbers
