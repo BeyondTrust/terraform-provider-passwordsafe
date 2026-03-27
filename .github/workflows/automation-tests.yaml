@@ -168,7 +168,7 @@ jobs:
               ref: '${{ env.TESTS_REF }}',
               inputs: {
                 integration: 'terraform',
-                env: '${{ github.event.inputs.build_origin }}',
+                env: '${{ github.event.inputs.build_origin || 'DEV' }}',
                 build_version: '${{ needs.build.outputs.full_version }}',
                 os_type: 'linux'
               }
