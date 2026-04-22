@@ -152,7 +152,7 @@ func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -165,7 +165,7 @@ func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
@@ -185,7 +185,7 @@ func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, re
 		return nil, err
 	}
 
-	_, err = utils.Authenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	_, err = utils.Authenticate(authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return nil, err
@@ -203,7 +203,7 @@ func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, re
 
 // APISignOut close connection with Password Safe API.
 func APISignOut(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) {
-	err := utils.SignOut(authenticationObj, &muOut, &signInCount, zapLogger)
+	err := utils.SignOut(authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return

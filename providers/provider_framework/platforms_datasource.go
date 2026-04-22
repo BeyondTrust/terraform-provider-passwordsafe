@@ -164,7 +164,7 @@ func (d *PlatformDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	_, err := utils.Authenticate(*d.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*d.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return

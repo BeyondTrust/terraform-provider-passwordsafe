@@ -35,8 +35,7 @@ var (
 )
 
 var signInCount uint64
-var mu sync.Mutex
-var muOut sync.Mutex
+var authMu sync.Mutex
 
 type PasswordSafeProvider struct {
 }
