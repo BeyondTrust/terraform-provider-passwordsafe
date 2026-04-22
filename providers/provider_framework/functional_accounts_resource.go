@@ -146,7 +146,7 @@ func (r *FunctionalAccountResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -187,7 +187,7 @@ func (r *FunctionalAccountResource) Create(ctx context.Context, req resource.Cre
 
 	data.FunctionalAccountID = types.Int32Value(int32(createdFunctionalAccount.FunctionalAccountID))
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
@@ -214,7 +214,7 @@ func (r *FunctionalAccountResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -234,7 +234,7 @@ func (r *FunctionalAccountResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
