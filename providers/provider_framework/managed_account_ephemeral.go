@@ -85,7 +85,7 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 		return
 	}
 
-	_, err := utils.Authenticate(*e.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*e.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		response.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -110,7 +110,7 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 	// setting secret to value attribute
 	data.Value = types.StringValue(gotManagedAccount)
 
-	err = utils.SignOut(*e.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	err = utils.SignOut(*e.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		response.Diagnostics.AddError("Error Signing Out", err.Error())
 		return

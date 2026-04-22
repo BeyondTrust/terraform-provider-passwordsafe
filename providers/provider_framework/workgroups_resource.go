@@ -83,7 +83,7 @@ func (r *WorkGroupResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
@@ -116,7 +116,7 @@ func (r *WorkGroupResource) Create(ctx context.Context, req resource.CreateReque
 
 	data.Id = types.Int32Value(int32(createdWorkGroup.ID))
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
+	err = utils.SignOut(*r.providerInfo.authenticationObj, &authMu, &signInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return

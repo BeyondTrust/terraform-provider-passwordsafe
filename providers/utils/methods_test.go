@@ -196,15 +196,15 @@ func TestSignOut(t *testing.T) {
 	authenticateObj.ApiUrl = *apiUrl
 
 	var signInCount uint64
-	var muOut sync.Mutex
+	var mu sync.Mutex
 
-	err := SignOut(*authenticateObj, &muOut, &signInCount, zapLogger)
+	err := SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
 	}
 
 	// decrement counter, don't signout case
-	err = SignOut(*authenticateObj, &muOut, &signInCount, zapLogger)
+	err = SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
 	}
@@ -237,13 +237,13 @@ func TestSignOutError(t *testing.T) {
 	authenticateObj.ApiUrl = *apiUrl
 
 	var signInCount uint64
-	var muOut sync.Mutex
+	var mu sync.Mutex
 
 	signInCount = 1
 
 	expectedError := `error - status code: 400 - `
 
-	err := SignOut(*authenticateObj, &muOut, &signInCount, zapLogger)
+	err := SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err.Error() != expectedError {
 		t.Errorf("Test case Failed %v, %v", err.Error(), expectedError)
 	}
@@ -676,9 +676,8 @@ func TestDeleteAssetByID(t *testing.T) {
 
 		var signInCount uint64
 		var mu sync.Mutex
-		var muOut sync.Mutex
 
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
 		if err != nil {
 			t.Errorf("Expected no error, but got: %s", err.Error())
 		}
@@ -722,9 +721,8 @@ func TestDeleteAssetByID(t *testing.T) {
 
 		var signInCount uint64
 		var mu sync.Mutex
-		var muOut sync.Mutex
 
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
 		if err == nil {
 			t.Error("Expected error when deleting asset, but got none")
 		}
@@ -751,9 +749,8 @@ func TestDeleteAssetByID(t *testing.T) {
 
 		var signInCount uint64
 		var mu sync.Mutex
-		var muOut sync.Mutex
 
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
 		if err == nil {
 			t.Error("Expected error due to authentication failure, but got none")
 		}

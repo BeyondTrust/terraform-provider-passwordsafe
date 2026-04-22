@@ -20,8 +20,7 @@ import (
 )
 
 var signInCount uint64
-var mu sync.Mutex
-var muOut sync.Mutex
+var authMu sync.Mutex
 
 // Define the zap configuration
 var config = zap.Config{
