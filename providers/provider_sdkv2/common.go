@@ -16,7 +16,7 @@ func authenticate(d *schema.ResourceData, m interface{}) (entities.SignAppinResp
 	var err error
 	var signAppinResponse entities.SignAppinResponse
 
-	signAppinResponse, err = utils.Authenticate(*authenticationObj, &authMu, &signInCount, zapLogger)
+	signAppinResponse, err = utils.Authenticate(*authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		zapLogger.Error(err.Error())
 		return signAppinResponse, err
@@ -29,7 +29,7 @@ func authenticate(d *schema.ResourceData, m interface{}) (entities.SignAppinResp
 func signOut(d *schema.ResourceData, m interface{}) error {
 	authenticationObj := m.(*auth.AuthenticationObj)
 
-	err := utils.SignOut(*authenticationObj, &authMu, &signInCount, zapLogger)
+	err := utils.SignOut(*authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		zapLogger.Error(err.Error())
 		return err

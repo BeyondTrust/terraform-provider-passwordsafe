@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
@@ -33,9 +32,6 @@ var (
 	separator                  = "/"
 	retryMaxElapsedTimeMinutes = 15
 )
-
-var signInCount uint64
-var authMu sync.Mutex
 
 type PasswordSafeProvider struct {
 }

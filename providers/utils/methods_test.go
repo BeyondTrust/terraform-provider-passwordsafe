@@ -198,15 +198,27 @@ func TestSignOut(t *testing.T) {
 	var signInCount uint64
 	var mu sync.Mutex
 
+	// First call: signInCount = 1 means this is the last caller, so SignOut
+	// should hit the API and decrement the counter back to 0.
+	signInCount = 1
 	err := SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
 	}
+	if signInCount != 0 {
+		t.Errorf("expected signInCount to be 0 after final signout, got %d", signInCount)
+	}
 
-	// decrement counter, don't signout case
+	// Second call: signInCount = 2 exercises the "decrement without signing
+	// out" branch — another caller still holds the session, so the counter
+	// drops to 1 but the API is not called.
+	signInCount = 2
 	err = SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
+	}
+	if signInCount != 1 {
+		t.Errorf("expected signInCount to be 1 after non-final signout, got %d", signInCount)
 	}
 }
 

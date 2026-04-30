@@ -46,6 +46,18 @@ func TestResourceConfig(config entities.PasswordSafeTestConfig) string {
 
 var signAppinResponse libraryEntitites.SignAppinResponse
 
+// SignInCount tracks the number of concurrent callers currently holding a
+// reference to the shared Password Safe session. It is package-level state
+// because signAppinResponse (the cached session) is also package-level: every
+// caller across both providers must share the same counter, otherwise two
+// providers could each think they own the session and race on signout.
+var SignInCount uint64
+
+// AuthMu serializes access to SignInCount and signAppinResponse so signin and
+// signout can never run concurrently — the API's signout is user-global and
+// would otherwise tear down a session another worker is racing to use.
+var AuthMu sync.Mutex
+
 // Authenticate gets Password Safe authentication, sharing a session across
 // concurrent callers via the reference count guarded by mu.
 func Authenticate(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) (libraryEntitites.SignAppinResponse, error) {
@@ -76,6 +88,14 @@ func Authenticate(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, sign
 func SignOut(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) error {
 	mu.Lock()
 	defer mu.Unlock()
+
+	// Guard against underflow: if no one is holding the session there is
+	// nothing to sign out, and decrementing a uint64 zero would wrap to
+	// math.MaxUint64 and pin the counter open forever.
+	if *signInCount == 0 {
+		zapLogger.Debug("Signout called with no active sessions, no-op")
+		return nil
+	}
 
 	if *signInCount > 1 {
 		zapLogger.Debug(fmt.Sprintf("%v %v", "Ignore signout", *signInCount))
