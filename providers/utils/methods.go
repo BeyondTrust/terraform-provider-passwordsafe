@@ -135,14 +135,12 @@ func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu
 	// instantiating asset obj
 	assetObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
 	if err != nil {
-		_ = SignOut(authenticationObj, mu, signInCount, zapLogger)
 		return fmt.Errorf("error creating asset object: %w", err)
 	}
 
 	// deleting the asset by ID
 	err = assetObj.DeleteAssetById(int(assetID))
 	if err != nil {
-		_ = SignOut(authenticationObj, mu, signInCount, zapLogger)
 		return fmt.Errorf("error deleting asset: %w", err)
 	}
 
