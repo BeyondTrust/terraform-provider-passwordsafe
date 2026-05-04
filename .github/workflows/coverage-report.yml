@@ -20,9 +20,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
       - name: Run unit tests
         run: |
           export TF_ACC=1
+          export TF_ACC_TERRAFORM_PATH="$(which terraform)"
           go mod tidy
           go test -cover -coverprofile=coverage.txt ./...
           ls -alt
