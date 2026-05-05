@@ -86,7 +86,6 @@ jobs:
       - name: Run unit tests
         run: |
           export TF_ACC=1
-          export TF_ACC_TERRAFORM_PATH="$(which terraform)"
           go mod tidy
           go test ./... -cover -coverprofile=coverage.out -v
           go tool cover -func="coverage.out"
