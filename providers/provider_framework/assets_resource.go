@@ -147,22 +147,25 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 	return assetResource
 }
 
-func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) *assets.AssetObj {
+func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) (*assets.AssetObj, error) {
 
 	_, err := utils.Authenticate(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return nil
+		return nil, err
 	}
 
 	assetGroupObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
-		return nil
+		if signOutErr := utils.SignOut(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); signOutErr != nil {
+			resp.Diagnostics.AddError("Error Signing Out", signOutErr.Error())
+		}
+		return nil, err
 	}
 
-	return assetGroupObj
+	return assetGroupObj, nil
 }
 
 func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -175,7 +178,10 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	assetGroupObj := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	assetGroupObj, err := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	if err != nil {
+		return
+	}
 
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
@@ -296,7 +302,10 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 		return
 	}
 
-	assetGroupObj := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	assetGroupObj, err := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	if err != nil {
+		return
+	}
 
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
