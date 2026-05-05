@@ -93,6 +93,12 @@ func (d *SafesDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
+	defer func() {
+		if err := utils.SignOut(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error signing out", err.Error())
+		}
+	}()
+
 	// instantiating secrets obj (contains safes methods)
 	secretObj, _ := secrets.NewSecretObj(*d.providerInfo.authenticationObj, zapLogger, maxFileSecretSizeBytes, false)
 

@@ -170,6 +170,12 @@ func (d *PlatformDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
+	defer func() {
+		if err := utils.SignOut(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error signing out", err.Error())
+		}
+	}()
+
 	// instantiating platform obj
 	platformObj, _ := platforms.NewPlatformObj(*d.providerInfo.authenticationObj, zapLogger)
 

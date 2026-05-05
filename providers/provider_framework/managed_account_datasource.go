@@ -120,6 +120,12 @@ func (d *ManagedAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
+	defer func() {
+		if err := utils.SignOut(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error signing out", err.Error())
+		}
+	}()
+
 	// instantiating managed acocunt obj.
 	managedAccountObj, _ := managed_accounts.NewManagedAccountObj(*d.providerInfo.authenticationObj, zapLogger)
 

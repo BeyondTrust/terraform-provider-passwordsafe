@@ -167,6 +167,12 @@ func (d *ManagedSystemDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
+	defer func() {
+		if err := utils.SignOut(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error signing out", err.Error())
+		}
+	}()
+
 	// instantiating managed system obj.
 	managedSystemObj, _ := managed_systems.NewManagedSystem(*d.providerInfo.authenticationObj, zapLogger)
 

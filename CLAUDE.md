@@ -12,9 +12,11 @@ A Terraform provider for BeyondTrust Password Safe / BeyondInsight, distributed 
 # Build the provider binary (versioned name is what Terraform expects in the plugin dir)
 go build -o terraform-provider-passwordsafe_<major>_<minor>_<build>
 
-# Unit tests — must run from the providers/ directory and need TF_ACC=1
-# (the acceptance-test framework is used even for the unit-style tests in this repo)
+# Unit tests — TF_ACC=1 is required (the acceptance-test framework is used even
+# for the unit-style tests in this repo). Either invocation works:
 cd providers && TF_ACC=1 go test ./...
+# or, equivalent, from repo root (this is what sonarqube.yml CI uses):
+TF_ACC=1 go test ./providers/...
 
 # Single test
 cd providers && TF_ACC=1 go test ./provider_framework -run TestName
@@ -52,7 +54,7 @@ Both providers run in the **same process** and must share a single Password Safe
 - `signAppinResponse` — the cached session.
 - `AuthMu sync.Mutex` — **single** mutex guarding both signin and signout.
 
-Rules — violating these has caused a real race-condition bug (see commit `ea692e1` and `BIPS-36840-race-fix-review.md`):
+Rules — violating these has caused a real race-condition bug (see commit `ea692e1`):
 
 - Every Open/Read/Create/Update/Delete that hits the API must call `utils.Authenticate(..., &utils.AuthMu, &utils.SignInCount, ...)` and pair it with `utils.SignOut(...)` using the **same** `AuthMu` and `SignInCount`. Do not introduce a second mutex for signin vs. signout — they must be serialized against each other because the API's signout is user-global.
 - `SignOut` must guard against underflow (no decrement when count is 0) and must decrement even on signout error so a transient failure does not pin the counter open forever.

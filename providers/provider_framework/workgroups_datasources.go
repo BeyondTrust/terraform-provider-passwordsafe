@@ -91,6 +91,12 @@ func (d *WorkgroupDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
+	defer func() {
+		if err := utils.SignOut(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error signing out", err.Error())
+		}
+	}()
+
 	// instantiating workgroup obj
 	workgroupObj, _ := workgroups.NewWorkGroupObj(*d.providerInfo.authenticationObj, zapLogger)
 
