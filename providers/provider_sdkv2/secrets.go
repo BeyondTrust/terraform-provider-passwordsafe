@@ -155,42 +155,22 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
-	secretDetailsConfig := entities.SecretDetailsBaseConfig{
-		Title:       title,
-		Description: description,
-		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
-		Notes:       notes,
+	credentialSecretInput := entities.SecretCredentialInput{
+		SecretDetailsBaseConfig: entities.SecretDetailsBaseConfig{
+			Title:       title,
+			Description: description,
+			Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+			Notes:       notes,
+		},
+		Username:        username,
+		Password:        password,
+		OwnerId:         ownerId,
+		OwnerType:       ownerType,
+		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
+		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
 	}
 
-	secretCredentialDetailsConfig30 := entities.SecretCredentialDetailsConfig30{
-		SecretDetailsBaseConfig: secretDetailsConfig,
-		Username:                username,
-		Password:                password,
-		OwnerId:                 ownerId,
-		OwnerType:               ownerType,
-		Owners:                  getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
-	}
-
-	secretCredentialDetailsConfig31 := entities.SecretCredentialDetailsConfig31{
-		SecretDetailsBaseConfig: secretDetailsConfig,
-		Username:                username,
-		Password:                password,
-		Owners:                  getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
-	}
-
-	// Configure input object according to API version.
-	configMap := map[string]interface{}{
-		"3.0": secretCredentialDetailsConfig30,
-		"3.1": secretCredentialDetailsConfig31,
-	}
-
-	credentialSecretDetails, exists := configMap[authenticationObj.ApiVersion]
-
-	if !exists {
-		return fmt.Errorf("unsupported API version: %v", authenticationObj.ApiVersion)
-	}
-
-	createdSecret, err := secretObj.CreateSecretFlow(folderName, credentialSecretDetails)
+	createdSecret, err := secretObj.CreateSecretFlow(folderName, credentialSecretInput)
 
 	if err != nil {
 		return err
@@ -225,40 +205,21 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
-	secretDetailsConfig := entities.SecretDetailsBaseConfig{
-		Title:       title,
-		Description: description,
-		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
-		Notes:       notes,
+	textSecretInput := entities.SecretTextInput{
+		SecretDetailsBaseConfig: entities.SecretDetailsBaseConfig{
+			Title:       title,
+			Description: description,
+			Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+			Notes:       notes,
+		},
+		Text:            text,
+		OwnerId:         ownerId,
+		OwnerType:       ownerType,
+		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
+		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
 	}
 
-	secretTextDetailsConfig30 := entities.SecretTextDetailsConfig30{
-		SecretDetailsBaseConfig: secretDetailsConfig,
-		Text:                    text,
-		OwnerId:                 ownerId,
-		OwnerType:               ownerType,
-		Owners:                  getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
-	}
-
-	secretTextDetailsConfig31 := entities.SecretTextDetailsConfig31{
-		SecretDetailsBaseConfig: secretDetailsConfig,
-		Text:                    text,
-		Owners:                  getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
-	}
-
-	// Configure input object according to API version.
-	configMap := map[string]interface{}{
-		"3.0": secretTextDetailsConfig30,
-		"3.1": secretTextDetailsConfig31,
-	}
-
-	textSecretDetails, exists := configMap[authenticationObj.ApiVersion]
-
-	if !exists {
-		return fmt.Errorf("unsupported API version: %v", authenticationObj.ApiVersion)
-	}
-
-	createdSecret, err := secretObj.CreateSecretFlow(folderName, textSecretDetails)
+	createdSecret, err := secretObj.CreateSecretFlow(folderName, textSecretInput)
 
 	if err != nil {
 		return err
@@ -294,42 +255,22 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 	ownerType := d.Get("owner_type").(string)
 	notes := d.Get("notes").(string)
 
-	secretDetailsConfig := entities.SecretDetailsBaseConfig{
-		Title:       title,
-		Description: description,
-		Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
-		Notes:       notes,
+	fileSecretInput := entities.SecretFileInput{
+		SecretDetailsBaseConfig: entities.SecretDetailsBaseConfig{
+			Title:       title,
+			Description: description,
+			Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+			Notes:       notes,
+		},
+		FileName:        fileName,
+		FileContent:     fileContent,
+		OwnerId:         ownerId,
+		OwnerType:       ownerType,
+		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
+		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
 	}
 
-	secretFileDetailsConfig30 := entities.SecretFileDetailsConfig30{
-		SecretDetailsBaseConfig: secretDetailsConfig,
-		FileContent:             fileContent,
-		FileName:                fileName,
-		OwnerId:                 ownerId,
-		OwnerType:               ownerType,
-		Owners:                  getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
-	}
-
-	secretFileDetailsConfig31 := entities.SecretFileDetailsConfig31{
-		SecretDetailsBaseConfig: secretDetailsConfig,
-		FileContent:             fileContent,
-		FileName:                fileName,
-		Owners:                  getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
-	}
-
-	// Configure input object according to API version.
-	configMap := map[string]interface{}{
-		"3.0": secretFileDetailsConfig30,
-		"3.1": secretFileDetailsConfig31,
-	}
-
-	fileSecretDetails, exists := configMap[authenticationObj.ApiVersion]
-
-	if !exists {
-		return fmt.Errorf("unsupported API version: %v", authenticationObj.ApiVersion)
-	}
-
-	createdSecret, err := secretObj.CreateSecretFlow(folderName, fileSecretDetails)
+	createdSecret, err := secretObj.CreateSecretFlow(folderName, fileSecretInput)
 
 	if err != nil {
 		return err
