@@ -71,7 +71,7 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting asset", err.Error())
 		return
@@ -147,22 +147,25 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 	return assetResource
 }
 
-func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) *assets.AssetObj {
+func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) (*assets.AssetObj, error) {
 
-	_, err := utils.Authenticate(authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return nil
+		return nil, err
 	}
 
 	assetGroupObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
-		return nil
+		if signOutErr := utils.SignOut(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); signOutErr != nil {
+			resp.Diagnostics.AddError("Error Signing Out", signOutErr.Error())
+		}
+		return nil, err
 	}
 
-	return assetGroupObj
+	return assetGroupObj, nil
 }
 
 func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -175,7 +178,16 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	assetGroupObj := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	assetGroupObj, err := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		if err := utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		}
+	}()
 
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
@@ -195,12 +207,6 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 
 	data.AssetID = types.Int32Value(int32(createdAsset.AssetID))
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -213,7 +219,7 @@ func (r *assetResourceByWorkGroupId) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting asset", err.Error())
 		return
@@ -296,7 +302,16 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 		return
 	}
 
-	assetGroupObj := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	assetGroupObj, err := getAssetObj(resp, *r.providerInfo.authenticationObj, data)
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		if err := utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		}
+	}()
 
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
@@ -316,12 +331,6 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 
 	data.AssetID = types.Int32Value(int32(createdAsset.AssetID))
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &muOut, &signInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -334,7 +343,7 @@ func (r *assetResourceByWorkGroupName) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &mu, &muOut, &signInCount, zapLogger)
+	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting asset", err.Error())
 		return

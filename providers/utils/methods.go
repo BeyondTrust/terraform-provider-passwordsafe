@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"terraform-provider-passwordsafe/providers/entities"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/assets"
@@ -47,53 +46,72 @@ func TestResourceConfig(config entities.PasswordSafeTestConfig) string {
 
 var signAppinResponse libraryEntitites.SignAppinResponse
 
-// authenticate get Password Safe authentication.
+// SignInCount tracks the number of concurrent callers currently holding a
+// reference to the shared Password Safe session. It is package-level state
+// because signAppinResponse (the cached session) is also package-level: every
+// caller across both providers must share the same counter, otherwise two
+// providers could each think they own the session and race on signout.
+var SignInCount uint64
+
+// AuthMu serializes access to SignInCount and signAppinResponse so signin and
+// signout can never run concurrently — the API's signout is user-global and
+// would otherwise tear down a session another worker is racing to use.
+var AuthMu sync.Mutex
+
+// Authenticate gets Password Safe authentication, sharing a session across
+// concurrent callers via the reference count guarded by mu.
 func Authenticate(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) (libraryEntitites.SignAppinResponse, error) {
-	var err error
-
 	mu.Lock()
-	if atomic.LoadUint64(signInCount) > 0 {
-		atomic.AddUint64(signInCount, 1)
-		zapLogger.Debug(fmt.Sprintf("%v %v", "Already signed in", atomic.LoadUint64(signInCount)))
-		mu.Unlock()
+	defer mu.Unlock()
 
-	} else {
-		signAppinResponse, err = authenticationObj.GetPasswordSafeAuthentication()
-		if err != nil {
-			mu.Unlock()
-			zapLogger.Error(err.Error())
-			return libraryEntitites.SignAppinResponse{}, err
-		}
-		atomic.AddUint64(signInCount, 1)
-		zapLogger.Debug(fmt.Sprintf("%v %v", "signin", atomic.LoadUint64(signInCount)))
-		mu.Unlock()
+	if *signInCount > 0 {
+		*signInCount++
+		zapLogger.Debug(fmt.Sprintf("%v %v", "Already signed in", *signInCount))
+		return signAppinResponse, nil
 	}
 
+	resp, err := authenticationObj.GetPasswordSafeAuthentication()
+	if err != nil {
+		zapLogger.Error(err.Error())
+		return libraryEntitites.SignAppinResponse{}, err
+	}
+	signAppinResponse = resp
+	*signInCount++
+	zapLogger.Debug(fmt.Sprintf("%v %v", "signin", *signInCount))
 	return signAppinResponse, nil
 }
 
-// signOut sign Password Safe out
-func SignOut(authenticationObj auth.AuthenticationObj, muOut *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) error {
-	var err error
+// SignOut releases this caller's reference to the shared session. The same
+// mutex used by Authenticate must be passed in so signin and signout can never
+// run concurrently — the API's signout is user-global and would otherwise tear
+// down a session another worker is racing to use.
+func SignOut(authenticationObj auth.AuthenticationObj, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) error {
+	mu.Lock()
+	defer mu.Unlock()
 
-	muOut.Lock()
-	if atomic.LoadUint64(signInCount) > 1 {
-		zapLogger.Debug(fmt.Sprintf("%v %v", "Ignore signout", atomic.LoadUint64(signInCount)))
-		// decrement counter, don't signout.
-		atomic.AddUint64(signInCount, ^uint64(0))
-		muOut.Unlock()
-	} else {
-		err = authenticationObj.SignOut()
-		if err != nil {
-			return err
-		}
-		zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", atomic.LoadUint64(signInCount)))
-		// decrement counter
-		atomic.AddUint64(signInCount, ^uint64(0))
-		muOut.Unlock()
-
+	// Guard against underflow: if no one is holding the session there is
+	// nothing to sign out, and decrementing a uint64 zero would wrap to
+	// math.MaxUint64 and pin the counter open forever.
+	if *signInCount == 0 {
+		zapLogger.Debug("Signout called with no active sessions, no-op")
+		return nil
 	}
 
+	if *signInCount > 1 {
+		zapLogger.Debug(fmt.Sprintf("%v %v", "Ignore signout", *signInCount))
+		*signInCount--
+		return nil
+	}
+
+	err := authenticationObj.SignOut()
+	// Decrement regardless of error: this caller is leaving, and on signout
+	// failure the cached session state is unreliable, so the next Authenticate
+	// should establish a fresh one.
+	*signInCount--
+	if err != nil {
+		return err
+	}
+	zapLogger.Debug(fmt.Sprintf("%v %v", "signout user", *signInCount))
 	return nil
 }
 
@@ -108,11 +126,19 @@ func ValidateChangeFrequencyDays(changeFrequencyType string, changeFrequencyDays
 }
 
 // DeleteAssetByID deletes an asset by its ID using the provided authentication object
-func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu *sync.Mutex, muOut *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) error {
-	_, err := Authenticate(authenticationObj, mu, signInCount, zapLogger)
+func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) (err error) {
+	_, err = Authenticate(authenticationObj, mu, signInCount, zapLogger)
 	if err != nil {
 		return fmt.Errorf("error getting Authentication: %w", err)
 	}
+	// Release the shared session ref-count on every return path. Surface a
+	// signout error only when no other error has occurred, preserving the
+	// original behavior where signout failure was returned to the caller.
+	defer func() {
+		if signOutErr := SignOut(authenticationObj, mu, signInCount, zapLogger); signOutErr != nil && err == nil {
+			err = fmt.Errorf("error signing out: %w", signOutErr)
+		}
+	}()
 
 	// instantiating asset obj
 	assetObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
@@ -124,11 +150,6 @@ func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu
 	err = assetObj.DeleteAssetById(int(assetID))
 	if err != nil {
 		return fmt.Errorf("error deleting asset: %w", err)
-	}
-
-	err = SignOut(authenticationObj, muOut, signInCount, zapLogger)
-	if err != nil {
-		return fmt.Errorf("error signing out: %w", err)
 	}
 
 	return nil

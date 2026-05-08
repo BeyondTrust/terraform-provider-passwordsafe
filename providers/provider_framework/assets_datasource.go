@@ -113,11 +113,17 @@ func (d *AssetDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	_, err := utils.Authenticate(*d.providerInfo.authenticationObj, &mu, &signInCount, zapLogger)
+	_, err := utils.Authenticate(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
 		return
 	}
+
+	defer func() {
+		if err := utils.SignOut(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error signing out", err.Error())
+		}
+	}()
 
 	// instantiating asset obj
 	asssetObj, _ := assets.NewAssetObj(*d.providerInfo.authenticationObj, zapLogger)

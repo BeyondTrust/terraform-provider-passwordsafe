@@ -196,17 +196,29 @@ func TestSignOut(t *testing.T) {
 	authenticateObj.ApiUrl = *apiUrl
 
 	var signInCount uint64
-	var muOut sync.Mutex
+	var mu sync.Mutex
 
-	err := SignOut(*authenticateObj, &muOut, &signInCount, zapLogger)
+	// First call: signInCount = 1 means this is the last caller, so SignOut
+	// should hit the API and decrement the counter back to 0.
+	signInCount = 1
+	err := SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
 	}
+	if signInCount != 0 {
+		t.Errorf("expected signInCount to be 0 after final signout, got %d", signInCount)
+	}
 
-	// decrement counter, don't signout case
-	err = SignOut(*authenticateObj, &muOut, &signInCount, zapLogger)
+	// Second call: signInCount = 2 exercises the "decrement without signing
+	// out" branch — another caller still holds the session, so the counter
+	// drops to 1 but the API is not called.
+	signInCount = 2
+	err = SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err != nil {
 		t.Error(err)
+	}
+	if signInCount != 1 {
+		t.Errorf("expected signInCount to be 1 after non-final signout, got %d", signInCount)
 	}
 }
 
@@ -237,13 +249,13 @@ func TestSignOutError(t *testing.T) {
 	authenticateObj.ApiUrl = *apiUrl
 
 	var signInCount uint64
-	var muOut sync.Mutex
+	var mu sync.Mutex
 
 	signInCount = 1
 
 	expectedError := `error - status code: 400 - `
 
-	err := SignOut(*authenticateObj, &muOut, &signInCount, zapLogger)
+	err := SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
 	if err.Error() != expectedError {
 		t.Errorf("Test case Failed %v, %v", err.Error(), expectedError)
 	}
@@ -676,9 +688,8 @@ func TestDeleteAssetByID(t *testing.T) {
 
 		var signInCount uint64
 		var mu sync.Mutex
-		var muOut sync.Mutex
 
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
 		if err != nil {
 			t.Errorf("Expected no error, but got: %s", err.Error())
 		}
@@ -722,9 +733,8 @@ func TestDeleteAssetByID(t *testing.T) {
 
 		var signInCount uint64
 		var mu sync.Mutex
-		var muOut sync.Mutex
 
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
 		if err == nil {
 			t.Error("Expected error when deleting asset, but got none")
 		}
@@ -751,9 +761,8 @@ func TestDeleteAssetByID(t *testing.T) {
 
 		var signInCount uint64
 		var mu sync.Mutex
-		var muOut sync.Mutex
 
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &muOut, &signInCount, zapLogger)
+		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
 		if err == nil {
 			t.Error("Expected error due to authentication failure, but got none")
 		}
