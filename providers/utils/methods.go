@@ -126,11 +126,19 @@ func ValidateChangeFrequencyDays(changeFrequencyType string, changeFrequencyDays
 }
 
 // DeleteAssetByID deletes an asset by its ID using the provided authentication object
-func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) error {
-	_, err := Authenticate(authenticationObj, mu, signInCount, zapLogger)
+func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu *sync.Mutex, signInCount *uint64, zapLogger logging.Logger) (err error) {
+	_, err = Authenticate(authenticationObj, mu, signInCount, zapLogger)
 	if err != nil {
 		return fmt.Errorf("error getting Authentication: %w", err)
 	}
+	// Release the shared session ref-count on every return path. Surface a
+	// signout error only when no other error has occurred, preserving the
+	// original behavior where signout failure was returned to the caller.
+	defer func() {
+		if signOutErr := SignOut(authenticationObj, mu, signInCount, zapLogger); signOutErr != nil && err == nil {
+			err = fmt.Errorf("error signing out: %w", signOutErr)
+		}
+	}()
 
 	// instantiating asset obj
 	assetObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
@@ -142,11 +150,6 @@ func DeleteAssetByID(authenticationObj auth.AuthenticationObj, assetID int32, mu
 	err = assetObj.DeleteAssetById(int(assetID))
 	if err != nil {
 		return fmt.Errorf("error deleting asset: %w", err)
-	}
-
-	err = SignOut(authenticationObj, mu, signInCount, zapLogger)
-	if err != nil {
-		return fmt.Errorf("error signing out: %w", err)
 	}
 
 	return nil

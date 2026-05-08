@@ -183,6 +183,12 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	defer func() {
+		if err := utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		}
+	}()
+
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
 		AssetName:       data.AssetName.ValueString(),
@@ -200,12 +206,6 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 	}
 
 	data.AssetID = types.Int32Value(int32(createdAsset.AssetID))
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -307,6 +307,12 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 		return
 	}
 
+	defer func() {
+		if err := utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
+			resp.Diagnostics.AddError("Error Signing Out", err.Error())
+		}
+	}()
+
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
 		AssetName:       data.AssetName.ValueString(),
@@ -324,12 +330,6 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 	}
 
 	data.AssetID = types.Int32Value(int32(createdAsset.AssetID))
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
