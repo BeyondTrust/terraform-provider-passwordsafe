@@ -29,7 +29,6 @@ import (
 var (
 	maxFileSecretSizeBytes     = 5000000
 	clientTimeOutInSeconds     = 45
-	separator                  = "/"
 	retryMaxElapsedTimeMinutes = 15
 )
 
@@ -190,7 +189,7 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 		url:                       strings.TrimSpace(data.Url.ValueString()),
 		apiVersion:                data.APIVersion.ValueString(),
 		accountname:               strings.TrimSpace(data.APIAccountName.ValueString()),
-		verifyca:                  data.VerifyCA.ValueBool(),
+		verifyca:                  data.VerifyCA.IsNull() || data.VerifyCA.ValueBool(),
 		clientCertificatePath:     data.ClientCertificatesFolderPath.ValueString(),
 		clientCertificateName:     data.ClientCertificateName.ValueString(),
 		clientCertificatePassword: data.ClientCertificatePassword.ValueString(),
@@ -233,7 +232,11 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 	backoffDefinition.RandomizationFactor = 0.5
 
 	// creating a http client
-	httpClientObj, _ := utils.GetHttpClient(clientTimeOutInSeconds, providerData.verifyca, certificate, certificateKey, zapLogger)
+	httpClientObj, err := utils.GetHttpClient(clientTimeOutInSeconds, providerData.verifyca, certificate, certificateKey, zapLogger)
+	if err != nil {
+		resp.Diagnostics.AddError("Error creating HTTP client", err.Error())
+		return
+	}
 
 	var authenticate *auth.AuthenticationObj
 

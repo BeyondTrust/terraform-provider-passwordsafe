@@ -202,7 +202,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	errorsInInputs := utils.ValidateInputs(params)
 
 	if errorsInInputs != nil {
-		return nil, diag.FromErr(err)
+		return nil, diag.FromErr(errorsInInputs)
 	}
 
 	httpClientObj, err := utils.GetHttpClient(45, verifyca, certificate, certificateKey, zapLogger)
