@@ -179,7 +179,7 @@ func (p *PasswordSafeProvider) buildAuthenticationObj(httpClient utils.HttpClien
 		Logger:                     zapLogger,
 		RetryMaxElapsedTimeSeconds: 30,
 	}
-	if data.APIKey.ValueString() != "" {
+	if strings.TrimSpace(data.APIKey.ValueString()) != "" {
 		base.ApiKey = fmt.Sprintf("%v;runas=%v;", strings.TrimSpace(data.APIKey.ValueString()), strings.TrimSpace(data.APIAccountName.ValueString()))
 		return auth.AuthenticateUsingApiKey(base)
 	}
