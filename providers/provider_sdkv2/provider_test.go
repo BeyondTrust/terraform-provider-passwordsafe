@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"terraform-provider-passwordsafe/providers/constants"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,10 +20,10 @@ func TestProvider(t *testing.T) {
 
 func TestProviderConfigureWithApiKey(t *testing.T) {
 	resourceData := schema.TestResourceDataRaw(t, Provider().Schema, map[string]interface{}{
-		"url":                             "https://example.com",
+		"url":                             constants.FakeApiUrl,
 		"api_account_name":                "test-account",
-		"client_id":                       "test-client-id",
-		"client_secret":                   "test-client-secret",
+		"client_id":                       "",
+		"client_secret":                   "",
 		"api_key":                         "test-api-key",
 		"verify_ca":                       true,
 		"client_certificate_name":         "",
@@ -37,10 +39,10 @@ func TestProviderConfigureWithApiKey(t *testing.T) {
 
 func TestProviderConfigureWithCredentials(t *testing.T) {
 	resourceData := schema.TestResourceDataRaw(t, Provider().Schema, map[string]interface{}{
-		"url":                             "https://example.com",
+		"url":                             constants.FakeApiUrl,
 		"api_account_name":                "test-account",
-		"client_id":                       "test-client-id",
-		"client_secret":                   "test-client-secret",
+		"client_id":                       "00000000-0000-0000-0000-000000000001",
+		"client_secret":                   "00000000-0000-0000-0000-000000000002",
 		"api_key":                         "",
 		"verify_ca":                       true,
 		"client_certificate_name":         "",
