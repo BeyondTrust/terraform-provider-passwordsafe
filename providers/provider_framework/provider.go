@@ -170,6 +170,24 @@ func (p *PasswordSafeProvider) GetCertificateData(resp *provider.ConfigureRespon
 	return "", ""
 }
 
+func (p *PasswordSafeProvider) buildAuthenticationObj(httpClient utils.HttpClientObj, backoffDefinition *backoff.ExponentialBackOff, data ProviderModel) (*auth.AuthenticationObj, error) {
+	base := auth.AuthenticationParametersObj{
+		HTTPClient:                 httpClient,
+		BackoffDefinition:          backoffDefinition,
+		EndpointURL:                strings.TrimSpace(data.Url.ValueString()),
+		APIVersion:                 data.APIVersion.ValueString(),
+		Logger:                     zapLogger,
+		RetryMaxElapsedTimeSeconds: 30,
+	}
+	if data.APIKey.ValueString() != "" {
+		base.ApiKey = fmt.Sprintf("%v;runas=%v;", strings.TrimSpace(data.APIKey.ValueString()), strings.TrimSpace(data.APIAccountName.ValueString()))
+		return auth.AuthenticateUsingApiKey(base)
+	}
+	base.ClientID = data.ClientId.ValueString()
+	base.ClientSecret = data.ClientSecret.ValueString()
+	return auth.Authenticate(base)
+}
+
 func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 
 	var data ProviderModel
@@ -238,42 +256,10 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 		return
 	}
 
-	var authenticate *auth.AuthenticationObj
-
-	// authenticate using api key
-	if providerData.apiKey != "" {
-		authParamsApiKey := &auth.AuthenticationParametersObj{
-			HTTPClient:                 *httpClientObj,
-			BackoffDefinition:          backoffDefinition,
-			EndpointURL:                strings.TrimSpace(data.Url.ValueString()),
-			APIVersion:                 data.APIVersion.ValueString(),
-			ClientID:                   "",
-			ClientSecret:               "",
-			ApiKey:                     fmt.Sprintf("%v;runas=%v;", strings.TrimSpace(data.APIKey.ValueString()), strings.TrimSpace(data.APIAccountName.ValueString())),
-			Logger:                     zapLogger,
-			RetryMaxElapsedTimeSeconds: 30,
-		}
-		authenticate, err = auth.AuthenticateUsingApiKey(*authParamsApiKey)
-		if err != nil {
-			resp.Diagnostics.AddError("Error in Provider", err.Error())
-		}
-	} else {
-		// authenticate using client_id and client secret
-		authParamsOauth := &auth.AuthenticationParametersObj{
-			HTTPClient:                 *httpClientObj,
-			BackoffDefinition:          backoffDefinition,
-			EndpointURL:                strings.TrimSpace(data.Url.ValueString()),
-			APIVersion:                 data.APIVersion.ValueString(),
-			ClientID:                   data.ClientId.ValueString(),
-			ClientSecret:               data.ClientSecret.ValueString(),
-			ApiKey:                     "",
-			Logger:                     zapLogger,
-			RetryMaxElapsedTimeSeconds: 30,
-		}
-		authenticate, err = auth.Authenticate(*authParamsOauth)
-		if err != nil {
-			resp.Diagnostics.AddError("Error in Provider", err.Error())
-		}
+	authenticate, err := p.buildAuthenticationObj(*httpClientObj, backoffDefinition, data)
+	if err != nil {
+		resp.Diagnostics.AddError("Error in Provider", err.Error())
+		return
 	}
 
 	// authenticating
