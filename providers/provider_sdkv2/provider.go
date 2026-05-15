@@ -142,6 +142,24 @@ func ValidateCredentialsAndConfig(apikey string, clientId string, clientSecret s
 }
 
 // Provider Init Config.
+func buildAuthenticationObj(httpClient utils.HttpClientObj, backoffDefinition *backoff.ExponentialBackOff, apikey, url, apiVersion, accountName, clientId, clientSecret string, retryMaxElapsedTimeMinutes int) (*auth.AuthenticationObj, error) {
+	base := auth.AuthenticationParametersObj{
+		HTTPClient:                 httpClient,
+		BackoffDefinition:          backoffDefinition,
+		EndpointURL:                url,
+		APIVersion:                 apiVersion,
+		Logger:                     zapLogger,
+		RetryMaxElapsedTimeSeconds: retryMaxElapsedTimeMinutes,
+	}
+	if apikey != "" {
+		base.ApiKey = fmt.Sprintf("%v;runas=%v;", apikey, accountName)
+		return auth.AuthenticateUsingApiKey(base)
+	}
+	base.ClientID = clientId
+	base.ClientSecret = clientSecret
+	return auth.Authenticate(base)
+}
+
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 
 	apikey := d.Get("api_key").(string)
@@ -210,39 +228,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diag.FromErr(err)
 	}
 
-	// If this variable is set, we're using API Key authentication
-	// (previous/old authentication method)
-	if apikey != "" {
-		authParamsApiKey := &auth.AuthenticationParametersObj{
-			HTTPClient:                 *httpClientObj,
-			BackoffDefinition:          backoffDefinition,
-			EndpointURL:                url,
-			APIVersion:                 apiVersion,
-			ClientID:                   "",
-			ClientSecret:               "",
-			ApiKey:                     fmt.Sprintf("%v;runas=%v;", apikey, accountName),
-			Logger:                     zapLogger,
-			RetryMaxElapsedTimeSeconds: retryMaxElapsedTimeMinutes,
-		}
-		authenticate, err := auth.AuthenticateUsingApiKey(*authParamsApiKey)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-		return authenticate, diags
-	}
-
-	authParamsOauth := &auth.AuthenticationParametersObj{
-		HTTPClient:                 *httpClientObj,
-		BackoffDefinition:          backoffDefinition,
-		EndpointURL:                url,
-		APIVersion:                 apiVersion,
-		ClientID:                   clientId,
-		ClientSecret:               clientSecret,
-		ApiKey:                     "",
-		Logger:                     zapLogger,
-		RetryMaxElapsedTimeSeconds: retryMaxElapsedTimeMinutes,
-	}
-	authenticate, err := auth.Authenticate(*authParamsOauth)
+	authenticate, err := buildAuthenticationObj(*httpClientObj, backoffDefinition, apikey, url, apiVersion, accountName, clientId, clientSecret, retryMaxElapsedTimeMinutes)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
