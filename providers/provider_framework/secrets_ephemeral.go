@@ -119,12 +119,13 @@ func (e *EphemeralSecret) Open(ctx context.Context, request ephemeral.OpenReques
 		return
 	}
 
+	sep := "/"
 	if data.Separator.ValueString() != "" {
-		separator = data.Separator.ValueString()
+		sep = data.Separator.ValueString()
 	}
 
 	// getting single secret from PS API
-	secret, err := secretObj.GetSecret(data.Path.ValueString()+separator+data.Title.ValueString(), separator)
+	secret, err := secretObj.GetSecret(data.Path.ValueString()+sep+data.Title.ValueString(), sep)
 
 	if err != nil {
 		response.Diagnostics.AddError("Error getting secret", err.Error())

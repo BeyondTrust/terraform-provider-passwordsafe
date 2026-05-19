@@ -137,12 +137,14 @@ func getManagedAccountSchema() map[string]*schema.Schema {
 			Optional: true,
 		},
 		"private_key": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"passphrase": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
 		},
 		"password_fallback_flag": &schema.Schema{
 			Type:     schema.TypeBool,

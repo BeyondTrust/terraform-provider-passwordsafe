@@ -455,3 +455,25 @@ func TestResourceManagedAccountDeleteAuthenticationError(t *testing.T) {
 		t.Errorf("Expected authentication error when passing nil authentication object, but got nil")
 	}
 }
+
+// TestGetManagedAccountSchemaSensitiveFields guards against regressions where a
+// secret-bearing attribute on the managed_account schema accidentally drops the
+// Sensitive flag. password (the historical reference) plus private_key and
+// passphrase must all be marked Sensitive so Terraform never logs or echoes
+// their values in plan/apply output.
+func TestGetManagedAccountSchemaSensitiveFields(t *testing.T) {
+	managedAccountSchema := getManagedAccountSchema()
+
+	sensitiveAttributes := []string{"password", "private_key", "passphrase"}
+
+	for _, attrName := range sensitiveAttributes {
+		attr, ok := managedAccountSchema[attrName]
+		if !ok {
+			t.Errorf("Expected schema attribute %q to exist on managed_account schema", attrName)
+			continue
+		}
+		if !attr.Sensitive {
+			t.Errorf("Expected schema attribute %q to be marked Sensitive=true, got Sensitive=%v", attrName, attr.Sensitive)
+		}
+	}
+}
