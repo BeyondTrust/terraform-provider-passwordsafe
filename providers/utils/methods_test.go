@@ -1,11 +1,12 @@
 package utils
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"terraform-provider-passwordsafe/providers/constants"
 	"terraform-provider-passwordsafe/providers/entities"
 	"testing"
@@ -86,180 +87,169 @@ func InitializeGlobalConfig() {
 	}
 }
 
-func TestAuthenticate(t *testing.T) {
+// newAuthObjAtServer builds an *AuthenticationObj wired to the given test
+// server. The test server is expected to handle /Auth/connect/token and
+// /Auth/SignAppIn (and optionally /Auth/Signout).
+func newAuthObjAtServer(t *testing.T, server *httptest.Server) *authentication.AuthenticationObj {
+	t.Helper()
+	authObj, err := authentication.Authenticate(*authParams)
+	if err != nil {
+		t.Fatalf("Authenticate: %v", err)
+	}
+	server.URL = server.URL + constants.APIPath
+	apiUrl, _ := url.Parse(server.URL)
+	authObj.ApiUrl = *apiUrl
+	return authObj
+}
 
+func TestInitSharedAuth_Success(t *testing.T) {
 	InitializeGlobalConfig()
+	ResetSharedAuthForTest()
 
-	// mocking Password Safe API
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// mocking Response according to the endpoint path
 		switch r.URL.Path {
 		case constants.APIPath + "/Auth/connect/token":
-			_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
-			if err != nil {
-				t.Error(err.Error())
-			}
-
+			_, _ = w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
 		case constants.APIPath + "/Auth/SignAppIn":
-			_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
-
-			if err != nil {
-				t.Error(err.Error())
-			}
-
+			_, _ = w.Write([]byte(`{"UserId":1, "UserName":"jdoe", "EmailAddress":"test@beyondtrust.com"}`))
 		}
-
 	}))
+	defer server.Close()
 
-	var authenticateObj, _ = authentication.Authenticate(*authParams)
-	server.URL = server.URL + constants.APIPath
-	apiUrl, _ := url.Parse(server.URL)
+	authObj := newAuthObjAtServer(t, server)
 
-	authenticateObj.ApiUrl = *apiUrl
-
-	var signInCount uint64
-	var mu sync.Mutex
-
-	_, err := Authenticate(*authenticateObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		t.Error(err)
+	var buildCalls int32
+	build := func() (*authentication.AuthenticationObj, error) {
+		atomic.AddInt32(&buildCalls, 1)
+		return authObj, nil
 	}
 
-	// Increment counter
-	_, err = Authenticate(*authenticateObj, &mu, &signInCount, zapLogger)
+	authObj1, signAppin, err := InitSharedAuth("test-key-success", build)
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("first InitSharedAuth: %v", err)
+	}
+	if authObj1 == nil {
+		t.Fatal("expected non-nil authObj")
+	}
+	if signAppin.UserName != "jdoe" {
+		t.Errorf("expected UserName 'jdoe', got %q", signAppin.UserName)
+	}
+
+	authObj2, _, err := InitSharedAuth("test-key-success", build)
+	if err != nil {
+		t.Fatalf("second InitSharedAuth: %v", err)
+	}
+	if authObj1 != authObj2 {
+		t.Errorf("expected same authObj pointer; got %p vs %p", authObj1, authObj2)
+	}
+	if got := atomic.LoadInt32(&buildCalls); got != 1 {
+		t.Errorf("expected build closure to fire once, fired %d times", got)
 	}
 }
 
-func TestAuthenticateErrorGettingToken(t *testing.T) {
+func TestInitSharedAuth_BuildError(t *testing.T) {
+	ResetSharedAuthForTest()
+	wantErr := errors.New("boom")
 
+	authObj, _, err := InitSharedAuth("test-key-build-error", func() (*authentication.AuthenticationObj, error) {
+		return nil, wantErr
+	})
+	if !errors.Is(err, wantErr) {
+		t.Errorf("expected build error to propagate, got %v", err)
+	}
+	if authObj != nil {
+		t.Error("expected nil authObj on build failure")
+	}
+
+	// After a failed init, the next call retries with the supplied closure
+	// so a transient failure does not pin the cache to an error state.
+	var retryCalls int32
+	_, _, err = InitSharedAuth("test-key-build-error", func() (*authentication.AuthenticationObj, error) {
+		atomic.AddInt32(&retryCalls, 1)
+		return nil, wantErr
+	})
+	if got := atomic.LoadInt32(&retryCalls); got != 1 {
+		t.Errorf("expected retry build closure to fire once, got %d", got)
+	}
+	if !errors.Is(err, wantErr) {
+		t.Errorf("expected build error to propagate again, got %v", err)
+	}
+}
+
+func TestInitSharedAuth_SignInError(t *testing.T) {
 	InitializeGlobalConfig()
+	ResetSharedAuthForTest()
 
-	// mocking Password Safe API
+	// Token returns 400 — SignAppin can never succeed.
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == constants.APIPath+"/Auth/connect/token" {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"error": "invalid_client"}`))
+		}
+	}))
+	defer server.Close()
 
-		// mocking Response according to the endpoint path
+	authObj := newAuthObjAtServer(t, server)
+
+	gotObj, _, err := InitSharedAuth("test-key-signin-error", func() (*authentication.AuthenticationObj, error) {
+		return authObj, nil
+	})
+	if err == nil {
+		t.Fatal("expected sign-in error, got nil")
+	}
+	if gotObj != nil {
+		t.Errorf("expected nil authObj on sign-in failure, got %p", gotObj)
+	}
+
+	// Calling Shutdown after a failed init should be a no-op (no panic, no API hit).
+	if shutdownErr := ShutdownSharedAuth(); shutdownErr != nil {
+		t.Errorf("ShutdownSharedAuth after failed init: %v", shutdownErr)
+	}
+}
+
+func TestShutdownSharedAuth_Idempotent(t *testing.T) {
+	InitializeGlobalConfig()
+	ResetSharedAuthForTest()
+
+	var signoutCalls int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case constants.APIPath + "/Auth/connect/token":
-			w.WriteHeader(http.StatusBadRequest)
-			_, err := w.Write([]byte(`{"error": "invalid_client"}`))
-			if err != nil {
-				t.Error(err.Error())
-			}
-		}
-
-	}))
-
-	var authenticateObj, _ = authentication.Authenticate(*authParams)
-	server.URL = server.URL + constants.APIPath
-	apiUrl, _ := url.Parse(server.URL)
-
-	authenticateObj.ApiUrl = *apiUrl
-
-	var signInCount uint64
-	var mu sync.Mutex
-
-	expectedError := `error - status code: 400 - {"error": "invalid_client"}`
-
-	_, err := Authenticate(*authenticateObj, &mu, &signInCount, zapLogger)
-	if err.Error() != expectedError {
-		t.Errorf("Test case Failed %v, %v", err.Error(), expectedError)
-	}
-
-}
-
-func TestSignOut(t *testing.T) {
-
-	InitializeGlobalConfig()
-
-	// mocking Password Safe API
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// mocking Response according to the endpoint path
-		switch r.URL.Path {
-
+			_, _ = w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+		case constants.APIPath + "/Auth/SignAppIn":
+			_, _ = w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
 		case constants.APIPath + "/Auth/Signout":
-			_, err := w.Write([]byte(``))
-			if err != nil {
-				t.Error(err.Error())
-			}
+			atomic.AddInt32(&signoutCalls, 1)
+			_, _ = w.Write([]byte(``))
 		}
-
 	}))
+	defer server.Close()
 
-	var authenticateObj, _ = authentication.Authenticate(*authParams)
-	server.URL = server.URL + constants.APIPath
-	apiUrl, _ := url.Parse(server.URL)
+	authObj := newAuthObjAtServer(t, server)
 
-	authenticateObj.ApiUrl = *apiUrl
-
-	var signInCount uint64
-	var mu sync.Mutex
-
-	// First call: signInCount = 1 means this is the last caller, so SignOut
-	// should hit the API and decrement the counter back to 0.
-	signInCount = 1
-	err := SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		t.Error(err)
-	}
-	if signInCount != 0 {
-		t.Errorf("expected signInCount to be 0 after final signout, got %d", signInCount)
+	if _, _, err := InitSharedAuth("test-key-shutdown", func() (*authentication.AuthenticationObj, error) {
+		return authObj, nil
+	}); err != nil {
+		t.Fatalf("InitSharedAuth: %v", err)
 	}
 
-	// Second call: signInCount = 2 exercises the "decrement without signing
-	// out" branch — another caller still holds the session, so the counter
-	// drops to 1 but the API is not called.
-	signInCount = 2
-	err = SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
-	if err != nil {
-		t.Error(err)
+	if err := ShutdownSharedAuth(); err != nil {
+		t.Errorf("first ShutdownSharedAuth: %v", err)
 	}
-	if signInCount != 1 {
-		t.Errorf("expected signInCount to be 1 after non-final signout, got %d", signInCount)
+	if err := ShutdownSharedAuth(); err != nil {
+		t.Errorf("second ShutdownSharedAuth: %v", err)
+	}
+
+	if got := atomic.LoadInt32(&signoutCalls); got != 1 {
+		t.Errorf("expected /Auth/Signout to be hit once, got %d", got)
 	}
 }
 
-func TestSignOutError(t *testing.T) {
-
-	InitializeGlobalConfig()
-
-	// mocking Password Safe API
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// mocking Response according to the endpoint path
-		switch r.URL.Path {
-
-		case constants.APIPath + "/Auth/Signout":
-			w.WriteHeader(http.StatusBadRequest)
-			_, err := w.Write([]byte(``))
-			if err != nil {
-				t.Error(err.Error())
-			}
-		}
-
-	}))
-
-	var authenticateObj, _ = authentication.Authenticate(*authParams)
-	server.URL = server.URL + constants.APIPath
-	apiUrl, _ := url.Parse(server.URL)
-
-	authenticateObj.ApiUrl = *apiUrl
-
-	var signInCount uint64
-	var mu sync.Mutex
-
-	signInCount = 1
-
-	expectedError := `error - status code: 400 - `
-
-	err := SignOut(*authenticateObj, &mu, &signInCount, zapLogger)
-	if err.Error() != expectedError {
-		t.Errorf("Test case Failed %v, %v", err.Error(), expectedError)
+func TestShutdownSharedAuth_NoInit(t *testing.T) {
+	ResetSharedAuthForTest()
+	if err := ShutdownSharedAuth(); err != nil {
+		t.Errorf("expected nil error when init never ran, got %v", err)
 	}
-
 }
 
 // Test ValidateChangeFrequencyDays function
@@ -644,127 +634,4 @@ func TestGetBoolAttribute(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Test DeleteAssetByID function
-func TestDeleteAssetByID(t *testing.T) {
-	InitializeGlobalConfig()
-
-	// Test case 1: Successful deletion
-	t.Run("Successful deletion", func(t *testing.T) {
-		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch r.URL.Path {
-			case constants.APIPath + "/Auth/connect/token":
-				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
-				if err != nil {
-					t.Error(err.Error())
-				}
-			case constants.APIPath + "/Auth/SignAppIn":
-				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
-				if err != nil {
-					t.Error(err.Error())
-				}
-			case "/BeyondTrust/api/public/v3/Assets/123":
-				if r.Method == "DELETE" {
-					w.WriteHeader(http.StatusOK)
-					_, err := w.Write([]byte(`{}`))
-					if err != nil {
-						t.Error(err.Error())
-					}
-				}
-			case constants.APIPath + "/Auth/Signout":
-				_, err := w.Write([]byte(``))
-				if err != nil {
-					t.Error(err.Error())
-				}
-			}
-		}))
-		defer server.Close()
-
-		authenticateObj, _ := authentication.Authenticate(*authParams)
-		server.URL = server.URL + constants.APIPath
-		apiUrl, _ := url.Parse(server.URL)
-		authenticateObj.ApiUrl = *apiUrl
-
-		var signInCount uint64
-		var mu sync.Mutex
-
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
-		if err != nil {
-			t.Errorf("Expected no error, but got: %s", err.Error())
-		}
-	})
-
-	// Test case 2: Error when deleting asset
-	t.Run("Delete error", func(t *testing.T) {
-		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch r.URL.Path {
-			case constants.APIPath + "/Auth/connect/token":
-				_, err := w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
-				if err != nil {
-					t.Error(err.Error())
-				}
-			case constants.APIPath + "/Auth/SignAppIn":
-				_, err := w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
-				if err != nil {
-					t.Error(err.Error())
-				}
-			case "/BeyondTrust/api/public/v3/Assets/123":
-				if r.Method == "DELETE" {
-					w.WriteHeader(http.StatusBadRequest)
-					_, err := w.Write([]byte(`{"error": "not found"}`))
-					if err != nil {
-						t.Error(err.Error())
-					}
-				}
-			case constants.APIPath + "/Auth/Signout":
-				_, err := w.Write([]byte(``))
-				if err != nil {
-					t.Error(err.Error())
-				}
-			}
-		}))
-		defer server.Close()
-
-		authenticateObj, _ := authentication.Authenticate(*authParams)
-		server.URL = server.URL + constants.APIPath
-		apiUrl, _ := url.Parse(server.URL)
-		authenticateObj.ApiUrl = *apiUrl
-
-		var signInCount uint64
-		var mu sync.Mutex
-
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
-		if err == nil {
-			t.Error("Expected error when deleting asset, but got none")
-		}
-	})
-
-	// Test case 3: Authentication error
-	t.Run("Authentication error", func(t *testing.T) {
-		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch r.URL.Path {
-			case constants.APIPath + "/Auth/connect/token":
-				w.WriteHeader(http.StatusBadRequest)
-				_, err := w.Write([]byte(`{"error": "invalid_client"}`))
-				if err != nil {
-					t.Error(err.Error())
-				}
-			}
-		}))
-		defer server.Close()
-
-		authenticateObj, _ := authentication.Authenticate(*authParams)
-		server.URL = server.URL + constants.APIPath
-		apiUrl, _ := url.Parse(server.URL)
-		authenticateObj.ApiUrl = *apiUrl
-
-		var signInCount uint64
-		var mu sync.Mutex
-
-		err := DeleteAssetByID(*authenticateObj, 123, &mu, &signInCount, zapLogger)
-		if err == nil {
-			t.Error("Expected error due to authentication failure, but got none")
-		}
-	})
 }

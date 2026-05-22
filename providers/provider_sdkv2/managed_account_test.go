@@ -110,7 +110,7 @@ func TestResourceManagedAccountCreate(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceManagedAccountCreate(data, authenticate)
+	err := resourceManagedAccountCreate(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -181,7 +181,7 @@ func TestResourceManagedAccountCreateError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceManagedAccountCreate(data, authenticate)
+	err := resourceManagedAccountCreate(data, &providerMeta{authObj: authenticate})
 	if err.Error() != "managed system system0101 was not found in managed system list" {
 		t.Errorf("Test case Failed %v, %v", err.Error(), " managed system system0101 was not found in managed system list")
 	}
@@ -274,7 +274,7 @@ func TestGetManagedAccountReadContext(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := getManagedAccountReadContext(context.Background(), data, authenticate)
+	err := getManagedAccountReadContext(context.Background(), data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -340,7 +340,7 @@ func TestResourceManagedAccountDelete(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceManagedAccountDelete(data, authenticate)
+	err := resourceManagedAccountDelete(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -369,7 +369,7 @@ func TestResourceManagedAccountDeleteInvalidID(t *testing.T) {
 
 	var authenticate, _ = authentication.Authenticate(*authParams)
 
-	err := resourceManagedAccountDelete(data, authenticate)
+	err := resourceManagedAccountDelete(data, &providerMeta{authObj: authenticate})
 
 	if err == nil {
 		t.Errorf("Expected error for invalid ID, but got nil")
@@ -427,7 +427,7 @@ func TestResourceManagedAccountDeleteError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceManagedAccountDelete(data, authenticate)
+	err := resourceManagedAccountDelete(data, &providerMeta{authObj: authenticate})
 
 	if err == nil {
 		t.Errorf("Expected error when deleting non-existent managed account, but got nil")

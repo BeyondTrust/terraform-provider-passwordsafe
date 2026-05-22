@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"go.uber.org/zap"
+	localutils "terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 
@@ -249,29 +250,30 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 	backoffDefinition.MaxElapsedTime = time.Duration(retryMaxElapsedTimeMinutes) * time.Second
 	backoffDefinition.RandomizationFactor = 0.5
 
-	// creating a http client
-	httpClientObj, err := utils.GetHttpClient(clientTimeOutInSeconds, providerData.verifyca, certificate, certificateKey, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating HTTP client", err.Error())
-		return
-	}
+	cacheKey := strings.Join([]string{
+		providerData.url,
+		providerData.apiVersion,
+		providerData.apiKey,
+		providerData.clientId,
+		providerData.clientSecret,
+		providerData.accountname,
+		fmt.Sprintf("%t", providerData.verifyca),
+		providerData.clientCertificateName,
+	}, "|")
 
-	authenticate, err := p.buildAuthenticationObj(*httpClientObj, backoffDefinition, data)
+	authenticate, signAppin, err := localutils.InitSharedAuth(cacheKey, func() (*auth.AuthenticationObj, error) {
+		httpClientObj, err := utils.GetHttpClient(clientTimeOutInSeconds, providerData.verifyca, certificate, certificateKey, zapLogger)
+		if err != nil {
+			return nil, err
+		}
+		return p.buildAuthenticationObj(*httpClientObj, backoffDefinition, data)
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error in Provider", err.Error())
 		return
 	}
 
-	// authenticating
-	userObject, err := authenticate.GetPasswordSafeAuthentication()
-	if err != nil {
-		resp.Diagnostics.AddError("Error in Provider", err.Error())
-		return
-	}
-
-	providerData.userName = userObject.UserName
-
-	// pass authentication obj to ephemeral resources
+	providerData.userName = signAppin.UserName
 	providerData.authenticationObj = authenticate
 
 	// pass data to ephemeral resources

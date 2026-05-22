@@ -3,40 +3,18 @@
 package provider
 
 import (
-	"terraform-provider-passwordsafe/providers/utils"
-
 	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// authenticate get Password Safe authentication.
-func authenticate(d *schema.ResourceData, m interface{}) (entities.SignAppinResponse, error) {
-	authenticationObj := m.(*auth.AuthenticationObj)
-	var err error
-	var signAppinResponse entities.SignAppinResponse
-
-	signAppinResponse, err = utils.Authenticate(*authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		zapLogger.Error(err.Error())
-		return signAppinResponse, err
-	}
-
-	return signAppinResponse, nil
-}
-
-// signOut sign Password Safe out
-func signOut(d *schema.ResourceData, m interface{}) error {
-	authenticationObj := m.(*auth.AuthenticationObj)
-
-	err := utils.SignOut(*authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		zapLogger.Error(err.Error())
-		return err
-	}
-
-	return nil
-
+// providerMeta is what providerConfigure stores in the schema.ResourceData meta
+// slot. Both halves are needed at resource-call time: authObj holds the shared
+// HTTP client (with its cookie jar carrying the session), and signAppin carries
+// the UserName/UserId/EmailAddress used when constructing owner records.
+type providerMeta struct {
+	authObj   *auth.AuthenticationObj
+	signAppin entities.SignAppinResponse
 }
 
 // getOwnersSchema get Owners schema.

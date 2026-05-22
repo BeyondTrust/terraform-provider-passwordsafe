@@ -80,18 +80,6 @@ func (d *FunctionalAccountDataResource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	_, err := utils.Authenticate(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
-	defer func() {
-		if err := utils.SignOut(*d.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
-			resp.Diagnostics.AddError("Error signing out", err.Error())
-		}
-	}()
-
 	// instantiating functional account obj
 	functionalAccountObj, _ := functional_accounts.NewFuncionalAccount(*d.providerInfo.authenticationObj, zapLogger)
 

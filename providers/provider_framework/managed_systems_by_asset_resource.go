@@ -219,8 +219,6 @@ func (r *managedSystemResource) Create(ctx context.Context, req resource.CreateR
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
 	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
-	APISignOut(resp, *r.providerInfo.authenticationObj)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -241,22 +239,10 @@ func (r *managedSystemResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// Delete managed system using helper function
-	err = utils.DeleteManagedSystemByID(*r.providerInfo.authenticationObj, int(data.ManagedSystemID.ValueInt32()), zapLogger)
+	err := utils.DeleteManagedSystemByID(*r.providerInfo.authenticationObj, int(data.ManagedSystemID.ValueInt32()), zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting managed system", err.Error())
-		return
-	}
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
 	}
 }
