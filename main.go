@@ -10,6 +10,7 @@ import (
 
 	providerFramework "terraform-provider-passwordsafe/providers/provider_framework" // new version of provider, ephemeral resources implemented. (terraform-plugin-framework)
 	providerSdkv2 "terraform-provider-passwordsafe/providers/provider_sdkv2"         // first version of provider. (terraform-plugin-sdk/v2)
+	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
 )
@@ -34,13 +35,19 @@ func main() {
 
 	var serveOpts []tf5server.ServeOpt
 
-	err = tf5server.Serve(
+	serveErr := tf5server.Serve(
 		"registry.terraform.io/providers/BeyondTrust/passwordsafe",
 		muxServer.ProviderServer,
 		serveOpts...,
 	)
 
-	if err != nil {
-		log.Fatal(err)
+	// Signout unconditionally before checking serveErr — log.Fatal would call
+	// os.Exit and skip any deferreds, so do not defer this.
+	if shutdownErr := utils.ShutdownSharedAuth(); shutdownErr != nil {
+		log.Printf("warning: shared auth signout failed: %v", shutdownErr)
+	}
+
+	if serveErr != nil {
+		log.Fatal(serveErr)
 	}
 }

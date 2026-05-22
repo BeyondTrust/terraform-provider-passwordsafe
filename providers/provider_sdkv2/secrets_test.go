@@ -139,7 +139,7 @@ func TestResourceFileSecretCreate(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceFileSecretCreate(data, authenticate)
+	err := resourceFileSecretCreate(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -248,7 +248,7 @@ func TestResourceFileSecretCreateError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceFileSecretCreate(data, authenticate)
+	err := resourceFileSecretCreate(data, &providerMeta{authObj: authenticate})
 
 	if err.Error() != "folder not_found_folder_test was not found in folder list" {
 		t.Errorf("Test case Failed %v, %v", err.Error(), "folder not_found_folder_test was not found in folder list")
@@ -382,7 +382,7 @@ func TestResourceCredentialSecretCreate(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceCredentialSecretCreate(data, authenticate)
+	err := resourceCredentialSecretCreate(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -516,7 +516,7 @@ func TestResourceCredentialSecretCreateError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceCredentialSecretCreate(data, authenticate)
+	err := resourceCredentialSecretCreate(data, &providerMeta{authObj: authenticate})
 
 	if err.Error() != "The field 'Username' is required." {
 		t.Errorf("Test case Failed %v, %v", err.Error(), "The field 'Username' is required.")
@@ -606,7 +606,7 @@ func TestGetSecretByPathReadContext(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := getSecretByPathReadContext(context.Background(), data, authenticate)
+	err := getSecretByPathReadContext(context.Background(), data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -696,7 +696,7 @@ func TestGetSecretByPathReadContextError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	diags := getSecretByPathReadContext(context.Background(), data, authenticate)
+	diags := getSecretByPathReadContext(context.Background(), data, &providerMeta{authObj: authenticate})
 
 	if diags[0].Summary != "error SecretGetSecretByPath, Secret was not found: StatusCode: 404 " {
 		t.Errorf("Test case Failed %v, %v", diags[0].Summary, "error SecretGetSecretByPath, Secret was not found: StatusCode: 404 ")
@@ -825,7 +825,7 @@ func TestResourceTextSecretCreate(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceTextSecretCreate(data, authenticate)
+	err := resourceTextSecretCreate(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -954,7 +954,7 @@ func TestResourceTextSecretCreateError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceTextSecretCreate(data, authenticate)
+	err := resourceTextSecretCreate(data, &providerMeta{authObj: authenticate})
 
 	if err.Error() != "The field 'Text' is required." {
 		t.Errorf("Test case Failed %v, %v", err.Error(), "The field 'Text' is required.")
@@ -1054,7 +1054,7 @@ func TestResourceSecretDelete(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceSecretDelete(data, authenticate)
+	err := resourceSecretDelete(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -1142,7 +1142,7 @@ func TestResourceSecretDeleteEmptyID(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceSecretDelete(data, authenticate)
+	err := resourceSecretDelete(data, &providerMeta{authObj: authenticate})
 
 	if err == nil || err.Error() != "secret ID is empty" {
 		t.Errorf("Expected 'secret ID is empty' error, but got: %v", err)
@@ -1234,7 +1234,7 @@ func TestResourceSecretDeleteError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceSecretDelete(data, authenticate)
+	err := resourceSecretDelete(data, &providerMeta{authObj: authenticate})
 
 	if err == nil {
 		t.Errorf("Expected error when deleting non-existent secret, but got nil")

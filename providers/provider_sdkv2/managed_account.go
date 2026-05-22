@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strconv"
 
-	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	managed_accounts "github.com/BeyondTrust/go-client-library-passwordsafe/api/managed_account"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,15 +54,10 @@ func resourceManagedAccount() *schema.Resource {
 // Create context for resourceManagedAccount Resource.
 func resourceManagedAccountCreate(d *schema.ResourceData, m interface{}) error {
 
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 	system_name := d.Get("system_name").(string)
 
-	_, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*authenticationObj, zapLogger)
+	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*meta.authObj, zapLogger)
 
 	accountDetailsObj := entities.AccountDetails{
 		AccountName:                       d.Get("account_name").(string),
@@ -103,14 +97,7 @@ func resourceManagedAccountCreate(d *schema.ResourceData, m interface{}) error {
 		ObjectID:                          d.Get("object_id").(string),
 	}
 
-	var createResponse entities.CreateManagedAccountsResponse
-	createResponse, err = manageAccountObj.ManageAccountCreateFlow(system_name, accountDetailsObj)
-
-	if err != nil {
-		return err
-	}
-
-	err = signOut(d, m)
+	createResponse, err := manageAccountObj.ManageAccountCreateFlow(system_name, accountDetailsObj)
 	if err != nil {
 		return err
 	}
@@ -135,14 +122,9 @@ func resourceManagedAccountDelete(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("authentication object is nil")
 	}
 
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 
-	_, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	manageAccountObj, err := managed_accounts.NewManagedAccountObj(*authenticationObj, zapLogger)
+	manageAccountObj, err := managed_accounts.NewManagedAccountObj(*meta.authObj, zapLogger)
 	if err != nil {
 		return err
 	}
@@ -158,11 +140,6 @@ func resourceManagedAccountDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = signOut(d, m)
-	if err != nil {
-		return err
-	}
-
 	d.SetId("")
 	return nil
 }
@@ -172,31 +149,18 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 
 	var diags diag.Diagnostics
 
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 
 	system_name := d.Get("system_name").(string)
 	account_name := d.Get("account_name").(string)
 
-	_, err := authenticate(d, m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*authenticationObj, zapLogger)
+	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*meta.authObj, zapLogger)
 	gotManagedAccount, err := manageAccountObj.GetSecret(system_name+"/"+account_name, "/")
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("value", gotManagedAccount)
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = signOut(d, m)
-	if err != nil {
+	if err := d.Set("value", gotManagedAccount); err != nil {
 		return diag.FromErr(err)
 	}
 

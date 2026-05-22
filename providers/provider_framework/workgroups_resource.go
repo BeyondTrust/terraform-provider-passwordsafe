@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/workgroups"
@@ -83,12 +82,6 @@ func (r *WorkGroupResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// instantiating workgroup obj
 	workGroupObj, err := workgroups.NewWorkGroupObj(*r.providerInfo.authenticationObj, zapLogger)
 
@@ -115,12 +108,6 @@ func (r *WorkGroupResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	data.Id = types.Int32Value(int32(createdWorkGroup.ID))
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

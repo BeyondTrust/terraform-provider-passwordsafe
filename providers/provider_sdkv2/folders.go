@@ -5,7 +5,6 @@ package provider
 import (
 	"fmt"
 
-	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
 
@@ -45,15 +44,10 @@ func resourceFolder() *schema.Resource {
 
 // Create context for resourceFolder Resource.
 func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 	parent_folder_name := d.Get("parent_folder_name").(string)
 
-	_, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
+	secretObj, _ := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, false)
 
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
@@ -67,12 +61,6 @@ func resourceFolderCreate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	createdFolder, err := secretObj.CreateFolderFlow(parent_folder_name, folder)
-
-	if err != nil {
-		return err
-	}
-
-	err = signOut(d, m)
 	if err != nil {
 		return err
 	}
@@ -97,14 +85,9 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("authentication object is nil")
 	}
 
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 
-	_, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
+	secretObj, err := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, false)
 	if err != nil {
 		return err
 	}
@@ -117,11 +100,6 @@ func resourceFolderDelete(d *schema.ResourceData, m interface{}) error {
 
 	// Delete the folder using the proper folder deletion method
 	err = secretObj.DeleteFolderById(folderID)
-	if err != nil {
-		return err
-	}
-
-	err = signOut(d, m)
 	if err != nil {
 		return err
 	}
