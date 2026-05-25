@@ -1,19 +1,22 @@
 name: SonarQube
-env:
-  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_PUBLIC_REPOS }}
 
 on:
   pull_request:
-    types: [opened, synchronize]
-  workflow_dispatch:
+    branches:
+      - main
+  push:
+    branches:
+      - main
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
-  sonarqube:
+  unit-tests:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -36,41 +39,26 @@ jobs:
           export TF_ACC=1
           go mod tidy
           go test ./providers/... -cover -coverprofile=coverage.out -v
-          ls -alt
           go tool cover -func="coverage.out"
 
-      - name: SonarQube Scan on PR
-        if: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'dependabot/') }} 
-        uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+      - name: Save unit tests coverage
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.pullrequest.key=${{ github.event.number }}
-            -Dsonar.pullrequest.branch=${{ github.head_ref }}
-            -Dsonar.pullrequest.base=${{ github.base_ref }}
-            -Dsonar.exclusions=**/*_test.go
-            -Dsonar.go.coverage.reportPaths=coverage.out
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
-          
-      - name: SonarQube Scan on branch
-        if: ${{ github.event_name != 'pull_request' && !startsWith(github.head_ref, 'dependabot/') }} 
-        uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
-        with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=${{ github.event.repository.name }}
-            -Dsonar.exclusions=**/*_test.go
-            -Dsonar.go.coverage.reportPaths=coverage.out
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ env.SONAR_HOST_URL}}
+          name: coverage-report
+          path: coverage.out
 
-      - name: SonarQube Quality Gate check
-        if: ${{ github.event_name != 'pull_request' && !startsWith(github.head_ref, 'dependabot/') }}
-        uses: sonarsource/sonarqube-quality-gate-action@cf038b0e0cdecfa9e56c198bbb7d21d751d62c3b # v1.2.0
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ env.SONAR_TOKEN }}
+  sonarqube:
+    needs: [unit-tests]
+    uses: BeyondTrust/workflows/.github/workflows/sonarqube.yaml@51e9f52f8446a28edae9c7277ce1a612b86570ea # v4.13.1
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    with:
+      coverage_artifact: coverage-report
+      coverage_artifact_path: .
+      required_coverage_files: coverage.out
+      extra_flags: >-
+        -Dsonar.exclusions=**/*_test.go
+        -Dsonar.go.coverage.reportPaths=coverage.out
+    secrets: inherit

@@ -2,7 +2,8 @@ name: Go Lint
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    branches:
+      - main
   push:
     branches:
       - main

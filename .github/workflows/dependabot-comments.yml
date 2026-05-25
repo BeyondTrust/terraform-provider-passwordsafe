@@ -7,22 +7,11 @@ on:
 permissions: {}
 
 jobs:
-  release:
-    name: Release run
-    if: startsWith(github.head_ref, 'dependabot/')
-    permissions:
-      contents: write
-      id-token: write
-      actions: read
-    secrets: inherit
-    uses: ./.github/workflows/release.yml
-
   pr_runs:
     name: PR's workflow runs
     if: ${{ always() && startsWith(github.head_ref, 'dependabot/') }}
-    needs: release
     runs-on: ubuntu-latest
-    permissions: 
+    permissions:
       contents: read
       pull-requests: read
       issues: read
@@ -47,7 +36,7 @@ jobs:
             pr.data.forEach(element => {
               if (element.number === context.issue.number) {
                 head_sha = element.head.sha;
-              }  
+              }
             });
             const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
@@ -62,10 +51,10 @@ jobs:
             });
             core.setOutput("results", results);
             core.setOutput("pr_sha", head_sha);
-    
+
   verifier:
     name: Comment for Dependabot PR
-    needs: [release, pr_runs]
+    needs: pr_runs
     runs-on: ubuntu-latest
     if: ${{ always() && startsWith(github.head_ref, 'dependabot/') }}
     permissions:
@@ -77,14 +66,13 @@ jobs:
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
-      
+
       - name: Make comment
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
             var release_url;
             var output;
-            var release_result = '${{ needs.release.result }}';
             var pr_runs_result = ${{ needs.pr_runs.outputs.results }};
             const workflow = await github.request('GET /repos/{owner}/{repo}/actions/runs', {
               owner: context.repo.owner,
@@ -96,13 +84,8 @@ jobs:
                 release_url = element.html_url;
               }
             });
-            if (release_result === 'success' &&
-                pr_runs_result.linter.conclusion === 'success') {
+            if (pr_runs_result.linter.conclusion === 'success') {
               output = `## Dependabot PR Readiness Checked
-
-              Release Workflow **${{ needs.release.result }}**
-              - Build **success**
-              - Unit testing **success**
 
               Linter Workflow **${pr_runs_result.linter.conclusion}**
               - golangci linter **success**
@@ -111,11 +94,9 @@ jobs:
               ## Ready to Merge
               `;
             } else {
-              let names = ['Release', 'Linter'];
-              let conclusions = [ release_result,
-                pr_runs_result.linter.conclusion];
-              let urls = [release_url,
-                pr_runs_result.linter.url];
+              let names = ['Linter'];
+              let conclusions = [pr_runs_result.linter.conclusion];
+              let urls = [pr_runs_result.linter.url];
 
               output = '## Dependabot PR Readiness Checked';
 
@@ -125,14 +106,13 @@ jobs:
                 }
               }
 
-              output +='\n## Please ask DevOps or Development teams to take a look at the possible issues.';
-            
-            } 
+              output+='\n## Please ask DevOps or Development teams to take a look at the possible issues.';
+            }
             const fs = require('fs');
             fs.writeFile('message.txt', output, (err) => {
               if (err) throw err;
             });
-                        
+
       - name: Post Comment
         uses: mshick/add-pr-comment@b8f338c590a895d50bcbfa6c5859251edc8952fc # v2.8.2
         with:
