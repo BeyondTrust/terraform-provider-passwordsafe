@@ -14,7 +14,6 @@ var (
 	sharedAuthMu       sync.Mutex
 	sharedAuth         *auth.AuthenticationObj
 	sharedSignAppinRsp libentities.SignAppinResponse
-	sharedInitErr      error
 	sharedCacheKey     string
 )
 
@@ -44,17 +43,14 @@ func InitSharedAuth(cacheKey string, build func() (*auth.AuthenticationObj, erro
 	}
 	sharedAuth = nil
 	sharedSignAppinRsp = libentities.SignAppinResponse{}
-	sharedInitErr = nil
 	sharedCacheKey = ""
 
 	authObj, err := build()
 	if err != nil {
-		sharedInitErr = err
 		return nil, libentities.SignAppinResponse{}, err
 	}
 	signAppin, err := authObj.GetPasswordSafeAuthentication()
 	if err != nil {
-		sharedInitErr = err
 		return nil, libentities.SignAppinResponse{}, err
 	}
 
@@ -76,7 +72,6 @@ func ResetSharedAuthForTest() {
 	defer sharedAuthMu.Unlock()
 	sharedAuth = nil
 	sharedSignAppinRsp = libentities.SignAppinResponse{}
-	sharedInitErr = nil
 	sharedCacheKey = ""
 }
 
