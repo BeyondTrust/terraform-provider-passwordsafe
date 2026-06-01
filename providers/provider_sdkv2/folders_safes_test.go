@@ -72,7 +72,7 @@ func TestSecretSafeFlow(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceSafeCreate(data, authenticate)
+	err := resourceSafeCreate(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -153,7 +153,7 @@ func TestSecretFolderFlow(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceFolderCreate(data, authenticate)
+	err := resourceFolderCreate(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -234,7 +234,7 @@ func TestSecretFolderFlowError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceFolderCreate(data, authenticate)
+	err := resourceFolderCreate(data, &providerMeta{authObj: authenticate})
 
 	if err.Error() != "parent folder name must not be empty" {
 		t.Errorf("Test case Failed %v, %v", err.Error(), "parent folder name must not be empty")
@@ -319,7 +319,7 @@ func TestResourceFolderDelete(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceFolderDelete(data, authenticate)
+	err := resourceFolderDelete(data, &providerMeta{authObj: authenticate})
 
 	if err != nil {
 		t.Errorf("Test case Failed: %v", err)
@@ -392,7 +392,7 @@ func TestResourceFolderDeleteEmptyID(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceFolderDelete(data, authenticate)
+	err := resourceFolderDelete(data, &providerMeta{authObj: authenticate})
 
 	if err == nil || err.Error() != "folder ID is empty" {
 		t.Errorf("Expected 'folder ID is empty' error, but got: %v", err)
@@ -469,7 +469,7 @@ func TestResourceFolderDeleteError(t *testing.T) {
 	apiUrl, _ := url.Parse(testConfig.server.URL + "/")
 	authenticate.ApiUrl = *apiUrl
 
-	err := resourceFolderDelete(data, authenticate)
+	err := resourceFolderDelete(data, &providerMeta{authObj: authenticate})
 
 	if err == nil {
 		t.Errorf("Expected error when deleting non-existent folder, but got nil")

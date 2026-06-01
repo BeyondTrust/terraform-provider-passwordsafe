@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/assets"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
@@ -71,8 +70,13 @@ func (r *assetResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &utils.AuthMu, &utils.SignInCount, zapLogger)
+	assetObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
 	if err != nil {
+		resp.Diagnostics.AddError("Error creating asset object", err.Error())
+		return
+	}
+
+	if err := assetObj.DeleteAssetById(int(data.AssetID.ValueInt32())); err != nil {
 		resp.Diagnostics.AddError("Error deleting asset", err.Error())
 		return
 	}
@@ -148,23 +152,11 @@ func NewAssetByWorkgGroypIdResource() resource.Resource {
 }
 
 func getAssetObj(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj, dataInterface interface{}) (*assets.AssetObj, error) {
-
-	_, err := utils.Authenticate(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return nil, err
-	}
-
 	assetGroupObj, err := assets.NewAssetObj(authenticationObj, zapLogger)
-
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating authentication object", err.Error())
-		if signOutErr := utils.SignOut(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); signOutErr != nil {
-			resp.Diagnostics.AddError("Error Signing Out", signOutErr.Error())
-		}
 		return nil, err
 	}
-
 	return assetGroupObj, nil
 }
 
@@ -182,12 +174,6 @@ func (r *assetResourceByWorkGroupId) Create(ctx context.Context, req resource.Cr
 	if err != nil {
 		return
 	}
-
-	defer func() {
-		if err := utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
-			resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		}
-	}()
 
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
@@ -219,8 +205,13 @@ func (r *assetResourceByWorkGroupId) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &utils.AuthMu, &utils.SignInCount, zapLogger)
+	assetObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
 	if err != nil {
+		resp.Diagnostics.AddError("Error creating asset object", err.Error())
+		return
+	}
+
+	if err := assetObj.DeleteAssetById(int(data.AssetID.ValueInt32())); err != nil {
 		resp.Diagnostics.AddError("Error deleting asset", err.Error())
 		return
 	}
@@ -307,12 +298,6 @@ func (r *assetResourceByWorkGroupName) Create(ctx context.Context, req resource.
 		return
 	}
 
-	defer func() {
-		if err := utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger); err != nil {
-			resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		}
-	}()
-
 	assetDetails := entities.AssetDetails{
 		IPAddress:       data.IPAddress.ValueString(),
 		AssetName:       data.AssetName.ValueString(),
@@ -343,8 +328,13 @@ func (r *assetResourceByWorkGroupName) Delete(ctx context.Context, req resource.
 		return
 	}
 
-	err := utils.DeleteAssetByID(*r.providerInfo.authenticationObj, data.AssetID.ValueInt32(), &utils.AuthMu, &utils.SignInCount, zapLogger)
+	assetObj, err := assets.NewAssetObj(*r.providerInfo.authenticationObj, zapLogger)
 	if err != nil {
+		resp.Diagnostics.AddError("Error creating asset object", err.Error())
+		return
+	}
+
+	if err := assetObj.DeleteAssetById(int(data.AssetID.ValueInt32())); err != nil {
 		resp.Diagnostics.AddError("Error deleting asset", err.Error())
 		return
 	}

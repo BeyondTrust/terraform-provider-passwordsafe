@@ -14,6 +14,8 @@ import (
 	backoff "github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 
+	localutils "terraform-provider-passwordsafe/providers/utils"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -223,15 +225,27 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		return nil, diag.FromErr(errorsInInputs)
 	}
 
-	httpClientObj, err := utils.GetHttpClient(45, verifyca, certificate, certificateKey, zapLogger)
-	if err != nil {
-		return nil, diag.FromErr(err)
-	}
+	cacheKey := strings.Join([]string{
+		url,
+		apiVersion,
+		apikey,
+		clientId,
+		clientSecret,
+		accountName,
+		fmt.Sprintf("%t", verifyca),
+		clientCertificateName,
+	}, "|")
 
-	authenticate, err := buildAuthenticationObj(*httpClientObj, backoffDefinition, apikey, url, apiVersion, accountName, clientId, clientSecret, retryMaxElapsedTimeMinutes)
+	authenticate, signAppin, err := localutils.InitSharedAuth(cacheKey, func() (*auth.AuthenticationObj, error) {
+		httpClientObj, err := utils.GetHttpClient(45, verifyca, certificate, certificateKey, zapLogger)
+		if err != nil {
+			return nil, err
+		}
+		return buildAuthenticationObj(*httpClientObj, backoffDefinition, apikey, url, apiVersion, accountName, clientId, clientSecret, retryMaxElapsedTimeMinutes)
+	})
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
-	return authenticate, diags
+	return &providerMeta{authObj: authenticate, signAppin: signAppin}, diags
 
 }
