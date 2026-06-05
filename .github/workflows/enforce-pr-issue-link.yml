@@ -8,12 +8,19 @@ on:
       - edited
       - synchronize
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
   enforce-link:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     name: Enforce PR link to Jira
+    permissions:
+      contents: read
     steps:
       - name: Check linkage
         run: |
