@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"maps"
 
-	auth "github.com/BeyondTrust/go-client-library-passwordsafe/api/authentication"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
 	"github.com/google/uuid"
@@ -136,15 +135,10 @@ func resourceFileSecret() *schema.Resource {
 
 // Create context for resourceCredentialSecret Resource.
 func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error {
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
+	secretObj, _ := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, false)
 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
@@ -159,24 +153,18 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 		SecretDetailsBaseConfig: entities.SecretDetailsBaseConfig{
 			Title:       title,
 			Description: description,
-			Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+			Urls:        getUrlsDetailsList(d, ownerType, groupId, meta.signAppin),
 			Notes:       notes,
 		},
 		Username:        username,
 		Password:        password,
 		OwnerId:         ownerId,
 		OwnerType:       ownerType,
-		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
-		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
+		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, meta.signAppin),
+		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, meta.signAppin),
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, credentialSecretInput)
-
-	if err != nil {
-		return err
-	}
-
-	err = signOut(d, m)
 	if err != nil {
 		return err
 	}
@@ -187,15 +175,10 @@ func resourceCredentialSecretCreate(d *schema.ResourceData, m interface{}) error
 
 // Create context for resourceTextSecret Resource.
 func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
+	secretObj, _ := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, false)
 
 	text := d.Get("text").(string)
 	title := d.Get("title").(string)
@@ -209,23 +192,17 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 		SecretDetailsBaseConfig: entities.SecretDetailsBaseConfig{
 			Title:       title,
 			Description: description,
-			Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+			Urls:        getUrlsDetailsList(d, ownerType, groupId, meta.signAppin),
 			Notes:       notes,
 		},
 		Text:            text,
 		OwnerId:         ownerId,
 		OwnerType:       ownerType,
-		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
-		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
+		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, meta.signAppin),
+		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, meta.signAppin),
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, textSecretInput)
-
-	if err != nil {
-		return err
-	}
-
-	err = signOut(d, m)
 	if err != nil {
 		return err
 	}
@@ -236,15 +213,10 @@ func resourceTextSecretCreate(d *schema.ResourceData, m interface{}) error {
 
 // Create context for resourceFileSecret Resource.
 func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 	folderName := d.Get("folder_name").(string)
 
-	signAppinResponse, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
+	secretObj, _ := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, false)
 
 	fileName := d.Get("file_name").(string)
 	fileContent := d.Get("file_content").(string)
@@ -259,24 +231,18 @@ func resourceFileSecretCreate(d *schema.ResourceData, m interface{}) error {
 		SecretDetailsBaseConfig: entities.SecretDetailsBaseConfig{
 			Title:       title,
 			Description: description,
-			Urls:        getUrlsDetailsList(d, ownerType, groupId, signAppinResponse),
+			Urls:        getUrlsDetailsList(d, ownerType, groupId, meta.signAppin),
 			Notes:       notes,
 		},
 		FileName:        fileName,
 		FileContent:     fileContent,
 		OwnerId:         ownerId,
 		OwnerType:       ownerType,
-		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, signAppinResponse),
-		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, signAppinResponse),
+		OwnersByOwnerId: getOwnerDetailsOwnerIdList(d, ownerType, groupId, meta.signAppin),
+		OwnersByGroupId: getOwnerDetailsGroupIdList(d, ownerType, groupId, meta.signAppin),
 	}
 
 	createdSecret, err := secretObj.CreateSecretFlow(folderName, fileSecretInput)
-
-	if err != nil {
-		return err
-	}
-
-	err = signOut(d, m)
 	if err != nil {
 		return err
 	}
@@ -301,14 +267,9 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("authentication object is nil")
 	}
 
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 
-	_, err := authenticate(d, m)
-	if err != nil {
-		return err
-	}
-
-	secretObj, err := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, false)
+	secretObj, err := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, false)
 	if err != nil {
 		return err
 	}
@@ -325,11 +286,6 @@ func resourceSecretDelete(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	err = signOut(d, m)
-	if err != nil {
-		return err
-	}
-
 	d.SetId("")
 	return nil
 }
@@ -339,33 +295,20 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 
 	var diags diag.Diagnostics
 
-	authenticationObj := m.(*auth.AuthenticationObj)
+	meta := m.(*providerMeta)
 
 	secretPath := d.Get("path").(string)
 	secretTitle := d.Get("title").(string)
 	separator := d.Get("separator").(string)
 	decrypt := d.Get("decrypt").(bool)
 
-	_, err := authenticate(d, m)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	secretObj, _ := secrets.NewSecretObj(*authenticationObj, zapLogger, 5000000, decrypt)
+	secretObj, _ := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, decrypt)
 	secret, err := secretObj.GetSecret(secretPath+separator+secretTitle, separator)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	err = d.Set("value", secret)
-
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	err = signOut(d, m)
-	if err != nil {
+	if err := d.Set("value", secret); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -85,12 +84,6 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 		return
 	}
 
-	_, err := utils.Authenticate(*e.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		response.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// instantiating managed account obj
 	manageAccountObj, err := managed_accounts.NewManagedAccountObj(*e.providerInfo.authenticationObj, zapLogger)
 
@@ -109,12 +102,6 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 
 	// setting secret to value attribute
 	data.Value = types.StringValue(gotManagedAccount)
-
-	err = utils.SignOut(*e.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		response.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
 
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 

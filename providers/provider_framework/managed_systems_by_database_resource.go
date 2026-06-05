@@ -130,8 +130,6 @@ func (r *managedSystemByDatabaseResource) Create(ctx context.Context, req resour
 	data.ManagedSystemID = types.Int32Value(int32(createdDataBase.ManagedSystemID))
 	data.ManagedSystemName = types.StringValue(createdDataBase.SystemName)
 
-	APISignOut(resp, *r.providerInfo.authenticationObj)
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -152,22 +150,10 @@ func (r *managedSystemByDatabaseResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// Delete managed system using helper function
-	err = utils.DeleteManagedSystemByID(*r.providerInfo.authenticationObj, int(data.ManagedSystemID.ValueInt32()), zapLogger)
+	err := utils.DeleteManagedSystemByID(*r.providerInfo.authenticationObj, int(data.ManagedSystemID.ValueInt32()), zapLogger)
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting managed system", err.Error())
-		return
-	}
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
 	}
 }
@@ -178,34 +164,15 @@ func (r *managedSystemByDatabaseResource) ImportState(ctx context.Context, req r
 
 // getManagedSystemObj get managedSystemObj for create manage system by asset, workgroup, database.
 func getManagedSystemObj(changeFrequencyType string, changeFrequencyDays int, resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) (*managed_systems.ManagedSystemObj, error) {
-	err := utils.ValidateChangeFrequencyDays(changeFrequencyType, changeFrequencyDays)
-
-	if err != nil {
+	if err := utils.ValidateChangeFrequencyDays(changeFrequencyType, changeFrequencyDays); err != nil {
 		resp.Diagnostics.AddError("Error in inputs", err.Error())
 		return nil, err
 	}
 
-	_, err = utils.Authenticate(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return nil, err
-	}
-
-	// Instantiating managed system obj
 	managedSystemObj, err := managed_systems.NewManagedSystem(authenticationObj, zapLogger)
-
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating managed account object", err.Error())
 		return nil, err
 	}
 	return managedSystemObj, nil
-}
-
-// APISignOut close connection with Password Safe API.
-func APISignOut(resp *resource.CreateResponse, authenticationObj authentication.AuthenticationObj) {
-	err := utils.SignOut(authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
 }

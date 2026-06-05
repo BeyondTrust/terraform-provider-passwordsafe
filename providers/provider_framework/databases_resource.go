@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -107,12 +106,6 @@ func (r *databaseResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// instantiating database obj
 	databaseObj, err := databases.NewDatabaseObj(*r.providerInfo.authenticationObj, zapLogger)
 
@@ -140,12 +133,6 @@ func (r *databaseResource) Create(ctx context.Context, req resource.CreateReques
 
 	data.DatabaseID = types.Int32Value(int32(createdDataBase.DatabaseID))
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -166,12 +153,6 @@ func (r *databaseResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// instantiating database obj
 	databaseObj, err := databases.NewDatabaseObj(*r.providerInfo.authenticationObj, zapLogger)
 	if err != nil {
@@ -183,12 +164,6 @@ func (r *databaseResource) Delete(ctx context.Context, req resource.DeleteReques
 	err = databaseObj.DeleteDatabaseById(int(data.DatabaseID.ValueInt32()))
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting database", err.Error())
-		return
-	}
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
 	}
 }

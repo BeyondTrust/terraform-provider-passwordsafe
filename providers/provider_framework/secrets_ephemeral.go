@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/secrets"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -98,12 +97,6 @@ func (e *EphemeralSecret) Open(ctx context.Context, request ephemeral.OpenReques
 		return
 	}
 
-	_, err := utils.Authenticate(*e.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		response.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	var decryptValue bool
 	if data.Decrypt.IsNull() {
 		decryptValue = true
@@ -134,12 +127,6 @@ func (e *EphemeralSecret) Open(ctx context.Context, request ephemeral.OpenReques
 
 	// setting secret to value attribute
 	data.Value = types.StringValue(secret)
-
-	err = utils.SignOut(*e.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		response.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
 
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 

@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/functional_accounts"
@@ -146,12 +145,6 @@ func (r *FunctionalAccountResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// instantiating functional account obj
 	functionalAccountObj, err := functional_accounts.NewFuncionalAccount(*r.providerInfo.authenticationObj, zapLogger)
 
@@ -187,12 +180,6 @@ func (r *FunctionalAccountResource) Create(ctx context.Context, req resource.Cre
 
 	data.FunctionalAccountID = types.Int32Value(int32(createdFunctionalAccount.FunctionalAccountID))
 
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
-		return
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 }
@@ -214,12 +201,6 @@ func (r *FunctionalAccountResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	_, err := utils.Authenticate(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error getting Authentication", err.Error())
-		return
-	}
-
 	// instantiating functional account obj
 	functionalAccountObj, err := functional_accounts.NewFuncionalAccount(*r.providerInfo.authenticationObj, zapLogger)
 	if err != nil {
@@ -231,12 +212,6 @@ func (r *FunctionalAccountResource) Delete(ctx context.Context, req resource.Del
 	err = functionalAccountObj.DeleteFunctionalAccountById(int(data.FunctionalAccountID.ValueInt32()))
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting functional account", err.Error())
-		return
-	}
-
-	err = utils.SignOut(*r.providerInfo.authenticationObj, &utils.AuthMu, &utils.SignInCount, zapLogger)
-	if err != nil {
-		resp.Diagnostics.AddError("Error Signing Out", err.Error())
 		return
 	}
 }

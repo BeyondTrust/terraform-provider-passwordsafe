@@ -2,9 +2,12 @@ package provider
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"terraform-provider-passwordsafe/providers/constants"
+	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
@@ -18,14 +21,34 @@ func TestProvider(t *testing.T) {
 	assert.NoError(t, err, "Provider validation should not return an error")
 }
 
+// newSignInMockServer returns a mock Password Safe server that handles the
+// OAuth token exchange and SignAppIn. Tests that drive providerConfigure end
+// to end need this because the new InitSharedAuth performs the handshake
+// during Configure (the old providerConfigure only built the authObj).
+func newSignInMockServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	return httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case constants.APIPath + "/Auth/connect/token":
+			_, _ = w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+		case constants.APIPath + "/Auth/SignAppIn":
+			_, _ = w.Write([]byte(`{"UserId":1, "UserName":"test", "EmailAddress":"test@beyondtrust.com"}`))
+		}
+	}))
+}
+
 func TestProviderConfigureWithApiKey(t *testing.T) {
+	server := newSignInMockServer(t)
+	defer server.Close()
+	utils.ResetSharedAuthForTest()
+
 	resourceData := schema.TestResourceDataRaw(t, Provider().Schema, map[string]interface{}{
-		"url":                             constants.FakeApiUrl,
+		"url":                             server.URL + constants.APIPath,
 		"api_account_name":                "test-account",
 		"client_id":                       "",
 		"client_secret":                   "",
 		"api_key":                         "test-api-key",
-		"verify_ca":                       true,
+		"verify_ca":                       false,
 		"client_certificate_name":         "",
 		"client_certificates_folder_path": "",
 		"client_certificate_password":     "",
@@ -38,13 +61,17 @@ func TestProviderConfigureWithApiKey(t *testing.T) {
 }
 
 func TestProviderConfigureWithCredentials(t *testing.T) {
+	server := newSignInMockServer(t)
+	defer server.Close()
+	utils.ResetSharedAuthForTest()
+
 	resourceData := schema.TestResourceDataRaw(t, Provider().Schema, map[string]interface{}{
-		"url":                             constants.FakeApiUrl,
+		"url":                             server.URL + constants.APIPath,
 		"api_account_name":                "test-account",
 		"client_id":                       "00000000-0000-0000-0000-000000000001",
 		"client_secret":                   "00000000-0000-0000-0000-000000000002",
 		"api_key":                         "",
-		"verify_ca":                       true,
+		"verify_ca":                       false,
 		"client_certificate_name":         "",
 		"client_certificates_folder_path": "",
 		"client_certificate_password":     "",
