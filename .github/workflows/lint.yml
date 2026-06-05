@@ -97,6 +97,12 @@ jobs:
       - name: Setup Go
         uses: ./.github/actions/setup-go
 
+      # tfplugindocs needs a Terraform binary to export the provider schema.
+      # Providing one on PATH avoids tfplugindocs downloading its own (whose
+      # bundled HashiCorp release key has expired, breaking checksum verification).
+      - name: Setup Terraform
+        uses: ./.github/actions/setup-terraform
+
       - name: Install tfplugindocs
         run: go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@v0.24.0
 
