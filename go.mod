@@ -1,7 +1,6 @@
 module terraform-provider-passwordsafe
 
-go 1.26
-toolchain go1.26.4
+go 1.26.4
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
