@@ -40,7 +40,7 @@ resource "passwordsafe_managed_system_by_workgroup" "managed_system_by_workgroup
 
 # create managed system by workgroup id / API Version: 3.1
 resource "passwordsafe_managed_system_by_workgroup" "managed_system_by_workgroup" {
-   workgroup_id                           = "55"
+  workgroup_id                           = "55"
   entity_type_id                         = 1
   host_name                              = "example-host"
   ip_address                             = "222.222.222.22"
@@ -81,7 +81,7 @@ resource "passwordsafe_managed_system_by_workgroup" "managed_system_by_workgroup
 
 # create managed system by workgroup id / API Version: 3.2
 resource "passwordsafe_managed_system_by_workgroup" "managed_system_by_workgroup" {
-   workgroup_id                           = "55"
+  workgroup_id                           = "55"
   entity_type_id                         = 1
   host_name                              = "example-host"
   ip_address                             = "222.222.222.22"

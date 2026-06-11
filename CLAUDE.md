@@ -31,7 +31,7 @@ gocognit -ignore "_test|testdata" -over 10 .   # CI fails any function with cogn
 
 CI is in `.github/workflows/` — `golint.yml` (lint + gocognit), `coverage-report.yml` (tests), `automation-tests.yaml` (release-time integration), `release.yml`, `wiz.yml`, `sonarqube.yml`.
 
-Go version is pinned to **1.26.2** (see `go.mod` and `golint.yml`). `goreleaser.yml` builds release artifacts (CGO disabled, multi-arch).
+Go version is pinned to **1.26.4** (see `go.mod`; CI reads it via `go-version-file` in the `.github/actions/setup-go` composite action). `.goreleaser.yml` builds release artifacts (CGO disabled, multi-arch).
 
 ### Local end-to-end testing against a real Password Safe instance
 
