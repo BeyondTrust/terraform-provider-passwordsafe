@@ -54,6 +54,7 @@ func Provider() *schema.Provider {
 			"api_key": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "The API key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
 			},
 			"client_id": &schema.Schema{
@@ -64,6 +65,7 @@ func Provider() *schema.Provider {
 			"client_secret": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Description: "API OAuth Client Secret.",
 			},
 			"url": &schema.Schema{
@@ -103,6 +105,7 @@ func Provider() *schema.Provider {
 			"client_certificate_password": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				Default:     "",
 				Description: "The password associated with the Client Certificate. For use when authenticating with an API key using a Client Certificate",
 			},
