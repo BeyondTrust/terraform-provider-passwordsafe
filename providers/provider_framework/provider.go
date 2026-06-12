@@ -93,6 +93,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "The API key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
 			},
 			"client_id": schema.StringAttribute{
@@ -101,6 +102,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"client_secret": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "API OAuth Client Secret.",
 			},
 			"url": schema.StringAttribute{
@@ -129,6 +131,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"client_certificate_password": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "The password associated with the Client Certificate. For use when authenticating with an API key using a Client Certificate",
 			},
 		},
