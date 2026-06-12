@@ -11,6 +11,9 @@
 # Test binary, built with `go test -c`
 *.test
 
+# Provider debug logs (opt-in via PS_LOG_FILE) and any stray log files
+*.log
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
