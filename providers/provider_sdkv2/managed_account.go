@@ -4,8 +4,6 @@ package provider
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 
@@ -164,12 +162,11 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.SetId(hash(gotManagedAccount))
+	// Derive the resource ID from the non-secret managed-account coordinates
+	// (system_name/account_name) rather than from the secret value. Terraform
+	// resource IDs are never redacted and are printed verbatim to console/CI
+	// logs, so a secret-derived ID would leak crackable material about the
+	// vault password.
+	d.SetId(system_name + "/" + account_name)
 	return diags
-}
-
-// hash function.
-func hash(s string) string {
-	sha := sha256.Sum256([]byte(s))
-	return hex.EncodeToString(sha[:])
 }
