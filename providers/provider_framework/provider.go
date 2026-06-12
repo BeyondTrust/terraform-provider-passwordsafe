@@ -208,7 +208,7 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 		url:                       strings.TrimSpace(data.Url.ValueString()),
 		apiVersion:                data.APIVersion.ValueString(),
 		accountname:               strings.TrimSpace(data.APIAccountName.ValueString()),
-		verifyca:                  data.VerifyCA.IsNull() || data.VerifyCA.ValueBool(),
+		verifyca:                  data.VerifyCA.IsNull() || data.VerifyCA.IsUnknown() || data.VerifyCA.ValueBool(),
 		clientCertificatePath:     data.ClientCertificatesFolderPath.ValueString(),
 		clientCertificateName:     data.ClientCertificateName.ValueString(),
 		clientCertificatePassword: data.ClientCertificatePassword.ValueString(),
