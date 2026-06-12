@@ -312,7 +312,12 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 
-	d.SetId(hash(secret))
+	// Derive the resource ID from the non-secret secret coordinates
+	// (path + separator + title) rather than from the secret value. Terraform
+	// resource IDs are never redacted and are printed verbatim to console/CI
+	// logs, so a secret-derived ID would leak crackable material about the
+	// secret value.
+	d.SetId(secretPath + separator + secretTitle)
 
 	return diags
 }

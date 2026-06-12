@@ -22,3 +22,6 @@ go.work
 
 # Terraform files
 terraform/
+
+# Provider debug logs (build artifacts written by zap)
+*.log
