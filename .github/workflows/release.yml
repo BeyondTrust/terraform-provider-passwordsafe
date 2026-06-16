@@ -1,27 +1,16 @@
 name: Release
 
-# Release pipeline. release-please keeps a release PR up to date on every push to
-# main (version bump + CHANGELOG). When that PR is merged, release-please creates
-# the git tag and a DRAFT GitHub release; GoReleaser then builds and GPG-signs the
-# artifacts and uploads them to that release; finally the release is published,
-# which is what the Terraform Registry webhook ingests.
-#
-# Everything runs as dependent jobs in a SINGLE workflow run, so the release does
-# not rely on the tag push triggering a separate workflow (events created with the
-# default GITHUB_TOKEN do not trigger other workflows) — no PAT or GitHub App token
-# is required.
-#
-# Reference: https://developer.hashicorp.com/terraform/registry/providers/publishing
+# release-please maintains a release PR; merging it tags a draft release, GoReleaser
+# signs and uploads artifacts, then publish flips it out of draft for the Terraform
+# Registry webhook. All in one run so no PAT is needed to chain off the tag push.
+# https://developer.hashicorp.com/terraform/registry/providers/publishing
 
 on:
   push:
     branches:
       - main
 
-# Serialize releases: only one release pipeline runs at a time. cancel-in-progress is
-# false so a newer push queues behind the in-flight run instead of cancelling it — a
-# cancelled run can leave a partially-populated draft release/tag, and overlapping runs
-# could race on the same draft release/tag.
+# Serialize releases; queue newer pushes rather than cancel (a half-done draft/tag is worse).
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
@@ -107,22 +96,15 @@ jobs:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
 
       - name: Attest build provenance
-        # Signed SLSA provenance for the published zips AND the SHA256SUMS manifest —
-        # the checksum file is the integrity anchor consumers verify against, so it is
-        # attested too (verify with `gh attestation verify <file> --repo <owner>/<repo>`).
-        # Supplementary to the GPG signature the Terraform Registry verifies.
+        # SLSA provenance for the zips and the SHA256SUMS manifest consumers verify against.
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
           subject-path: |
             dist/*.zip
             dist/*_SHA256SUMS
 
-  # GitHub's Dependency Graph REST API returns an SPDX 2.3 SBOM directly;
-  # the advanced-security/sbom-generator-action wrapper is deprecated in favor of this
-  # endpoint. Note: this is a DEPENDENCY-GRAPH SBOM (the default branch's resolved
-  # dependencies), not a build-time SBOM of the compiled binaries — it reflects what the
-  # module depends on, not a per-artifact bill of materials. It is best-effort and never
-  # blocks publish (see the publish job's `if`).
+  # Dependency-graph SBOM (resolved module deps, not a per-artifact BOM). Best-effort:
+  # never blocks publish (see the publish job's `if`).
   sbom:
     name: Generate SBOM
     runs-on: ubuntu-latest
@@ -130,7 +112,7 @@ jobs:
     needs: [release-please, goreleaser]
     if: needs.release-please.outputs.release_created == 'true'
     permissions:
-      contents: write  # read the dependency graph and attach the SBOM to the release
+      contents: read  # read the dependency graph to generate the SBOM
     steps:
       - name: Generate SBOM
         id: sbom
@@ -145,31 +127,28 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
 
-      - name: Attach SBOM to draft release
-        run: gh release upload --clobber "$TAG_NAME" "${{ steps.sbom.outputs.file }}"
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+      - name: Upload SBOM as workflow artifact
+        # Not a release asset: the Terraform Registry rejects a release with a *.spdx.json
+        # ("invalid file extension found (.json)"), so keep the SBOM on the run instead.
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom
+          path: ${{ steps.sbom.outputs.file }}
+          retention-days: 90
+          if-no-files-found: error
 
   publish:
     name: Publish Release
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [release-please, goreleaser, sbom]
-    # Runs after sbom for ordering, but the SBOM is best-effort: publish proceeds
-    # even if sbom failed, as long as the signed artifacts (goreleaser) are present.
-    if: >-
-      always() &&
-      needs.release-please.outputs.release_created == 'true' &&
-      needs.goreleaser.result == 'success'
+    # Not gated on sbom: it's a workflow artifact, so it runs in parallel and never blocks publish.
+    needs: [release-please, goreleaser]
+    if: needs.release-please.outputs.release_created == 'true'
     permissions:
       contents: write  # flip the release out of draft
     steps:
       - name: Publish GitHub release
-        # Signed artifacts and checksums (and the SBOM, when it succeeded) are now
-        # attached. Flipping the release out of draft fires the "release: published"
-        # event that the Terraform Registry webhook listens for, so the registry
-        # ingests a complete release in a single pass.
+        # Flips the draft out, firing the "release: published" event the Registry ingests.
         run: gh release edit "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest
         env:
           GITHUB_TOKEN: ${{ github.token }}
