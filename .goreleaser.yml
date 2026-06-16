@@ -9,9 +9,7 @@ before:
 
 builds:
   - env:
-      # goreleaser does not work with CGO, it could also complicate
-      # usage by users in CI/CD systems like Terraform Cloud where
-      # they are unable to install libraries.
+      # CGO off: portable static binaries for Terraform Cloud and other CI.
       - CGO_ENABLED=0
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
@@ -53,22 +51,21 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this in a GitHub action or some other automated pipeline, you
-      # need to pass the batch flag to indicate its not interactive.
       - "--batch"
       - "--local-user"
-      - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
+      - "{{ .Env.GPG_FINGERPRINT }}"
       - "--output"
       - "${signature}"
       - "--detach-sign"
       - "${artifact}"
 
 release:
-  # Keep the release in draft; the Release workflow's `publish` job flips it out of
-  # draft once every artifact (and the SBOM) is attached, so the Terraform Registry
-  # webhook only fires for a complete release.
+  # Stay in draft; the workflow's publish job flips it out once artifacts are attached.
   draft: true
-  # release-please owns the release notes (CHANGELOG); keep its body untouched.
+  # Upload into release-please's existing draft; without this GoReleaser 404s on the
+  # get-release-by-tag lookup (drafts aren't returned) and creates a duplicate.
+  use_existing_draft: true
+  # release-please owns the release notes; keep its body untouched.
   mode: keep-existing
   extra_files:
     - glob: 'terraform-registry-manifest.json'
