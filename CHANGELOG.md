@@ -1,14 +1,81 @@
-# Change Log
- 
-## [v1.0.2] - 20204-01-12
+# Changelog
 
-Security Fixes:
-- Fix vulnerabilities in go:1.19.12 CVE-2023-39321, CVE-2023-39322, CVE-2023-39318, CVE-2023-39319.
+## [1.3.0](https://github.com/BeyondTrust/terraform-provider-passwordsafe/compare/v1.2.3...v1.3.0) (2026-06-16)
 
-## [v1.0.1] - 20203-07-07
- 
-Make Password Safe Terraform Provider available in the Public Terraform Registry [published here](https://registry.terraform.io/providers/BeyondTrust/passwordsafe/1.0.1).
- 
-### Added
-- Version [v1.0.1](https://github.com/BeyondTrust/terraform-provider-passwordsafe/releases/tag/v1.0.1)
-  released on Github.
+
+### Features
+
+* [BIPS-28460] [BIPS-28461] [BIPS-28462] implement deletion methods on resources ([#169](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/169)) ([485f25c](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/485f25cfd87eef3ed9546f716b61631bb921e180))
+* add client certificate to the requests to secret safe ([ea34f23](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/ea34f2370b44b75027840e821d9229eae4447a9d))
+* add creating Assets feature in terraform provider ([#109](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/109)) ([3aa47aa](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/3aa47aac2c6c2f03537c4e78275c6ea623df1bb2))
+* add creating Databases feature in terraform provider ([#110](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/110)) ([7ff6525](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/7ff652588efb3a9ea6227c6c7536960ffad9cf34))
+* add creating folders feature in terraform provider ([#90](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/90)) ([259cf7c](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/259cf7cf57847bf2954c1f10f45f464e6a80444a))
+* add creating Managed System feature associated with Asset ([#112](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/112)) ([a989eaa](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/a989eaad97212e5d2d6ea16e4a0013fec48fa692))
+* add creating Managed System feature associated with Databases ([#115](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/115)) ([b2f2cd0](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b2f2cd0406ea066fa4938c6181a2b68a756ef7c4))
+* add creating Managed System feature associated with Workgroups ([#114](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/114)) ([8f60f7b](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/8f60f7bcbde653e4f8b80ec81fd0bb3a18b19790))
+* add creating safes feature in terraform provider ([#91](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/91)) ([32fb78c](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/32fb78c0ef953540b1fe04704c8bb3da9c8d47ce))
+* Add creating Workgroups feature in terraform provider ([#108](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/108)) ([616d323](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/616d323b244cd9d9a3fda2f6f11623c92d90aa4e))
+* add error to log file ([b14604a](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b14604a504c2dfa19e19ccc7c69c8839144361df))
+* add error to log file ([b1f787a](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b1f787ae0f828c212b3cd02ac740526c3d4c2a71))
+* add get lists datasources to terraform provider ([#120](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/120)) ([fd5b3c9](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/fd5b3c97e0e8acbe4e5574b51a01c28912f72f37))
+* add logger object and log file ([5b0b6e8](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/5b0b6e8342f963c253d876639d86770ee363a09a))
+* add retry logic when 500 errors occur ([8afbb68](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/8afbb689f1c75faa81bcfdf63a88a87807223ed8))
+* add retry logic when 500 errors occur ([a4b9bc1](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/a4b9bc19fb3a95804c3677d6e16e3ff8151504e2))
+* add support for API version (3.0, 3.1) in create credential, text and file features  ([#132](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/132)) ([4338027](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/433802763a1dc168b403df950f38c64093d083be))
+* add support for decrypt parameter on get secret by path endpoint ([#184](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/184)) ([cc32115](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/cc32115214ec19d283e56d6c13d950c498990071))
+* add unit tests ([9350055](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/9350055f8e88d0106dd2035c70c84613cbb3b881))
+* add unit tests ([7606004](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/76060048c12667c0c06e259ae1e0db92e01d66d9))
+* add writing managed accounts feature in terraform provider ([#86](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/86)) ([085c067](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/085c067463464a0496a5b2393c884c968c0c1e82))
+* add writing secrets feature in terraform provider ([#89](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/89)) ([d6c2565](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/d6c25654cb7676eba89d7579895a3d16739a58a2))
+* adding go linter ([#85](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/85)) ([049fe35](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/049fe352c2b14fd88ccc52dc5e9cdc9897520f4b))
+* ASG-232 - Add WizCLI ([#152](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/152)) ([559c500](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/559c500f98e2b4d51b4f98692b905fb98b95be3f))
+* BIPS-15405 Enforce PR link to Jira ([#80](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/80)) ([ac103ff](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/ac103ff06f255b89c0b648cf78aaff9759a26a3b))
+* BIPS-32651 add API v3.2 support for create Secrets ([#192](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/192)) ([bd7d835](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/bd7d835a1ba2b9f3bce3ce6c4fb3b268caecd740))
+* enhance a terraform provider - get secrets safe secrets ([a19c390](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/a19c3903943076d23fae25ffc29c23d31eab3f28))
+* Frogbot implementation & build step fixed ([#39](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/39)) ([e871e33](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/e871e333b2f7d250de8b65a85bf7279a25206b53))
+* implement ephemeral resources in terraform provider ([#105](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/105)) ([37032ce](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/37032ce099dceacefbf68ba789c93c00fe5e6e6d))
+* Include API version parameter ([#98](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/98)) ([ba3aee4](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/ba3aee4cfbbe14592fbc4a14edcb364aaea467d5))
+* Include Go library in Terraform Provider ([#81](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/81)) ([c1c1344](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/c1c13447f7cdf629ccfa194480b8f53eac948aa7))
+* Pipeline updated ([86b72fa](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/86b72fa95a04a898bba0f580211db46d478cd8ca))
+* read get secret by path endpoint response as list ([978cdee](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/978cdee0671955e3aee2e75b19ab46e99d7d257b))
+* remove MAC address parameter of assets creation ([#123](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/123)) ([b7c6e81](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b7c6e8174dee6606763276bf04fe47ddc9bb2db4))
+* remove writing cert and ket files logic ([3ce6b6b](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/3ce6b6b10f37b5868a43270490406bad58861356))
+* remove writing cert and ket files logic ([e0d8cf9](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/e0d8cf9a7bb3b377bdf8e126664147e54ce57089))
+* Sonarqube added ([#40](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/40)) ([b4c280e](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b4c280e6018598715cdd524291e8f23a4392a66c))
+* unifiy status code validation ([c861d1f](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/c861d1fe9de01266d0f0e89da1036413bba44ef4))
+* unifiy status code validation ([4dab537](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/4dab537d452c2aa36e33af2384b86cce9291d46e))
+* update terraform registry documentation ([#124](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/124)) ([b403307](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b403307e871d559a94ffce1fe6285f5be2aa3da0))
+* upgrade go client library version to v0.22.1 ([#135](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/135)) ([2e6b866](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/2e6b866e42f796da4ff09726d870fc31f51cb066))
+* Upgrade go version to the latest version (1.24.2) ([#133](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/133)) ([be607af](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/be607af2d829391e885b5d1c8db5715999499eaf))
+
+
+### Bug Fixes
+
+* add validation when provider can not see API server ([eeb177f](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/eeb177fda58a818090b6c98a383f67ccb01bc976))
+* add validation when provider can not see API server ([88ea071](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/88ea071bde4a3089802d0276c176313fd0b46ee5))
+* artifactory documentation updated ([#76](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/76)) ([bfde282](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/bfde282e0e5c4d30cac3a9d99c294ad6a8bf394a))
+* BIPS-35966/35972/35987/35993/35997 security and correctness fixes ([#193](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/193)) ([06e1006](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/06e1006253e17279ef5305197f701dcd84a398ae))
+* BIPS-38641 upgrade golang.org/x/crypto to v0.52.0 ([#207](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/207)) ([faf5643](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/faf564377bdee09e09c2160bee954998d558445b))
+* check unmarshal method reponse ([1fbac46](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/1fbac4697d4ae42db08a0f5f3c575d4ddf6fec8f))
+* check unmarshal method reponse ([13c8c57](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/13c8c577dc31109c70129622dc4f5641ea6a0585))
+* error 404 when api returns empty array ([cc0be18](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/cc0be18cfe6569cd86577c3ab163005b8a5f84e8))
+* fix the race between concurrent signin and signout ([#190](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/190)) ([c6a4c6a](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/c6a4c6a841354a42f3f22fcf4239152db33886fa))
+* fix wrong spanish error message in validator ([#103](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/103)) ([7b2fc95](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/7b2fc95ebc97388be0fd6406c9ad7815b318b6ae))
+* Fixing Linter workflow errors ([#87](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/87)) ([f212936](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/f2129366caa4a06807682ddac75e7b911a924d0f))
+* force TSL 12 ([728cf12](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/728cf129f2c80ec871a2a36df4e1064785fc1bd0))
+* force TSL 12 ([ce8bc3f](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/ce8bc3f4723a3d4cd83979c516b64098f2b6c675))
+* goreleaser ([#4](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/4)) ([b997276](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b997276dd4422499fca18150d5d93ef350c4cd8d))
+* managed system creation by asset has wrong default values ([#126](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/126)) ([0da06ac](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/0da06ac9459ef9c2cf6f0e68c0f687d29ce8f0bc))
+* mark secrets as sensitive (Sensitive: true). ([#145](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/145)) ([0df3ec1](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/0df3ec1df9e80f54c4d9dc6f9e5b9bd7e06f6628))
+* move signin and signount logic to provider ([a5305ef](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/a5305efec63ef1bca2beb80d0c54c8c3c5e49160))
+* move signin and signout logic to provider ([47dcf5a](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/47dcf5ae5285d37081d1aea854dc92410d49f7d7))
+* plugin crashed - with nonexistent API server ([#104](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/104)) ([eb334cd](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/eb334cd78c898ff871f633830bc91df8e3d1f4b0))
+* prevent early api signout. ([c72f6c6](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/c72f6c6b9081bb0888e26f613f3c7c225747cc23))
+* problems found running go mod tidy ([8ce014c](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/8ce014cd278708c877a94aec91379a04a0506274))
+* release pipeline corrections [DX-4896] ([#208](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/208)) ([2066291](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/20662910d0bf91dc27577d87b5f35301582bfcf0))
+* release workflow updates ([2066291](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/20662910d0bf91dc27577d87b5f35301582bfcf0))
+* resolve package vulnerabilities ([#70](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/70)) ([089f9a3](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/089f9a3ff897b1acbd9f64e9538bc52c8270c4da))
+* switch to dx promotion workflow ([#180](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/180)) ([ca089aa](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/ca089aaadb54c46d7a0eb73e90f047dfcebb9ea3))
+* Typo on coverage file fixed ([#49](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/49)) ([2d1db8f](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/2d1db8f1c47bdeb8446a4a62e4872128d32e8ec7))
+* upgrade crypto in go files ([faf5643](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/faf564377bdee09e09c2160bee954998d558445b))
+* version tracking for release-please ([aa2f551](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/aa2f551afb7b490088b20381113e332fe430d791))
