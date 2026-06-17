@@ -151,9 +151,10 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 
 	system_name := d.Get("system_name").(string)
 	account_name := d.Get("account_name").(string)
+	coordinate := system_name + "/" + account_name
 
 	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*meta.authObj, zapLogger)
-	gotManagedAccount, err := manageAccountObj.GetSecret(system_name+"/"+account_name, "/")
+	gotManagedAccount, err := manageAccountObj.GetSecret(coordinate, "/")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -163,10 +164,10 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// Derive the resource ID from the non-secret managed-account coordinates
-	// (system_name/account_name) rather than from the secret value. Terraform
-	// resource IDs are never redacted and are printed verbatim to console/CI
-	// logs, so a secret-derived ID would leak crackable material about the
-	// vault password.
-	d.SetId(system_name + "/" + account_name)
+	// (system_name/account_name) rather than from the retrieved credential.
+	// Terraform resource IDs are never redacted and are printed verbatim to
+	// console/CI logs, so a secret-derived ID would leak crackable material
+	// about the managed account credential.
+	d.SetId(coordinate)
 	return diags
 }
