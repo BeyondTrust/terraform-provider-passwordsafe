@@ -301,9 +301,10 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 	secretTitle := d.Get("title").(string)
 	separator := d.Get("separator").(string)
 	decrypt := d.Get("decrypt").(bool)
+	coordinate := secretPath + separator + secretTitle
 
 	secretObj, _ := secrets.NewSecretObj(*meta.authObj, zapLogger, 5000000, decrypt)
-	secret, err := secretObj.GetSecret(secretPath+separator+secretTitle, separator)
+	secret, err := secretObj.GetSecret(coordinate, separator)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -312,7 +313,12 @@ func getSecretByPathReadContext(ctx context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(err)
 	}
 
-	d.SetId(hash(secret))
+	// Derive the resource ID from the non-secret secret coordinates
+	// (path + separator + title) rather than from the secret value. Terraform
+	// resource IDs are never redacted and are printed verbatim to console/CI
+	// logs, so a secret-derived ID would leak crackable material about the
+	// secret value.
+	d.SetId(coordinate)
 
 	return diags
 }
