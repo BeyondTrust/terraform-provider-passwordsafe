@@ -181,6 +181,13 @@ func (p *PasswordSafeProvider) buildAuthenticationObj(httpClient utils.HttpClien
 	return auth.Authenticate(base)
 }
 
+// effectiveVerifyCA maps a types.Bool VerifyCA attribute to the effective
+// bool value used during provider configuration. Null and Unknown values
+// both default to true (verify the CA) to preserve the safe default.
+func effectiveVerifyCA(v types.Bool) bool {
+	return v.IsNull() || v.IsUnknown() || v.ValueBool()
+}
+
 func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 
 	var data ProviderModel
@@ -200,7 +207,7 @@ func (p *PasswordSafeProvider) Configure(ctx context.Context, req provider.Confi
 		url:                       strings.TrimSpace(data.Url.ValueString()),
 		apiVersion:                data.APIVersion.ValueString(),
 		accountname:               strings.TrimSpace(data.APIAccountName.ValueString()),
-		verifyca:                  data.VerifyCA.IsNull() || data.VerifyCA.ValueBool(),
+		verifyca:                  effectiveVerifyCA(data.VerifyCA),
 		clientCertificatePath:     data.ClientCertificatesFolderPath.ValueString(),
 		clientCertificateName:     data.ClientCertificateName.ValueString(),
 		clientCertificatePassword: data.ClientCertificatePassword.ValueString(),
