@@ -23,15 +23,16 @@ func BuildProviderLogger(logFileEnvVar string) *zap.Logger {
 	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 	level := zap.NewAtomicLevelAt(zap.DebugLevel)
 
-	cores := []zapcore.Core{
-		zapcore.NewCore(encoder, zapcore.Lock(os.Stderr), level),
-	}
+	writers := []zapcore.WriteSyncer{zapcore.Lock(os.Stderr)}
 
 	if path := os.Getenv(logFileEnvVar); path != "" {
 		if file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
-			cores = append(cores, zapcore.NewCore(encoder, zapcore.AddSync(file), level))
+			// OpenFile only applies perms on create; tighten existing files too.
+			_ = os.Chmod(path, 0o600)
+			writers = append(writers, zapcore.Lock(zapcore.AddSync(file)))
 		}
 	}
 
-	return zap.New(zapcore.NewTee(cores...))
+	core := zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(writers...), level)
+	return zap.New(core)
 }
