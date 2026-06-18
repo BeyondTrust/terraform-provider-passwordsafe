@@ -27,12 +27,19 @@ func BuildProviderLogger(logFileEnvVar string) *zap.Logger {
 
 	if path := os.Getenv(logFileEnvVar); path != "" {
 		if file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o600); err == nil {
-			// OpenFile only applies perms on create; tighten existing files too.
-			_ = os.Chmod(path, 0o600)
+			// OpenFile only applies perms on create; tighten existing files too via
+			// the file descriptor (avoids the TOCTOU/symlink race of a path-based chmod).
+			_ = file.Chmod(0o600)
 			writers = append(writers, zapcore.Lock(zapcore.AddSync(file)))
 		}
 	}
 
 	core := zapcore.NewCore(encoder, zapcore.NewMultiWriteSyncer(writers...), level)
-	return zap.New(core)
+	// Match the diagnostic context previously provided by zap.Config.Build():
+	// caller info, stacktraces at error level, and error output to stderr.
+	return zap.New(core,
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.ErrorLevel),
+		zap.ErrorOutput(zapcore.Lock(os.Stderr)),
+	)
 }
