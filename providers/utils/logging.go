@@ -17,8 +17,10 @@ import (
 // opt-in: when the environment variable named by logFileEnvVar holds a non-empty
 // path, the logger additionally appends to that file. The file is opened (or
 // created) with 0600 permissions so the debug output is not group/world-readable.
-// If the file cannot be opened the logger falls back to stderr-only rather than
-// failing provider startup.
+// On Windows the 0600 mode bits do not map to POSIX permissions — access is
+// governed by NTFS ACLs — so the 0600 guarantee is Unix/POSIX-specific and
+// best-effort on Windows. If the file cannot be opened the logger falls back to
+// stderr-only rather than failing provider startup.
 func BuildProviderLogger(logFileEnvVar string) *zap.Logger {
 	encoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 	level := zap.NewAtomicLevelAt(zap.DebugLevel)
