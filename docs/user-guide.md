@@ -1113,4 +1113,4 @@ See available API versions for this resource: [Password Safe APIs](https://docs.
     - **last**: Changes scheduled for the last day of the month.
     - **xdays**: Changes scheduled every x days (see **ChangeFrequencyDays**).
   - **ChangeFrequencyDays**: (days: 1-999, required if **ChangeFrequencyType** is xdays) When **ChangeFrequencyType** is **xdays**, password changes take place this configured number of days.
-  - **ChangeTime**: (24hr format: 00:00-23:59, default: 23
+  - **ChangeTime**: (24hr format: 00:00-23:59, default: 23:30) UTC time of day scheduled password changes take place.
