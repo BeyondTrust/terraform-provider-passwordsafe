@@ -47,3 +47,9 @@ jobs:
           name: coverage
           path: providers/coverage.txt
           retention-days: 5
+
+      # Run native Go fuzz targets for a short, bounded time. -run='^$' skips
+      # the unit tests (already covered above) so only the fuzz pass executes.
+      - name: Run fuzz tests
+        run: go test -run='^$' -fuzz='^FuzzValidateChangeFrequencyDays$' -fuzztime=30s ./utils/
+        working-directory: providers
