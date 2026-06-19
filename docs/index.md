@@ -76,6 +76,35 @@ provider "passwordsafe" {
 }
 ```
 
+### Debug logging (`PS_LOG_FILE`)
+
+By default the provider writes its logs to stderr only. Persisting debug-level
+logs to a file is **opt-in** through the `PS_LOG_FILE` environment variable,
+because the debug output of a secrets-handling provider should not be written to
+a predictable, broadly-readable location by default.
+
+When `PS_LOG_FILE` is set to a non-empty path, the provider additionally appends
+its debug logs to that file. On Unix-like systems the file is created (or
+opened) with `0600` permissions so the output is not group/world-readable. On
+Windows the `0600` mode bits do not map to POSIX permissions — access is
+governed by NTFS ACLs — so the `0600` guarantee is Unix-specific and
+best-effort on Windows; restrict access via ACLs if needed. If the file cannot
+be opened, the provider falls back to stderr-only logging instead of failing
+startup.
+
+```bash
+# Linux/macOS
+export PS_LOG_FILE="/path/to/passwordsafe-debug.log"
+terraform apply
+
+# Windows (PowerShell)
+$env:PS_LOG_FILE = "C:\path\to\passwordsafe-debug.log"
+terraform apply
+```
+
+> Note: the log file may contain debug information. Treat it as sensitive,
+> restrict access to it, and remove it when it is no longer needed.
+
 ### Get secrets and managed account secrets
 
 ```terraform

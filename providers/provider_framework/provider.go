@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"go.uber.org/zap"
 	localutils "terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -36,17 +35,10 @@ var (
 type PasswordSafeProvider struct {
 }
 
-// Define the zap configuration
-var config = zap.Config{
-	Level:            zap.NewAtomicLevelAt(zap.DebugLevel),
-	Encoding:         "console", // You can use "json" for structured logging
-	EncoderConfig:    zap.NewDevelopmentEncoderConfig(),
-	OutputPaths:      []string{"stderr", "providerFramework.log"}, // Logs to both stderr and the file
-	ErrorOutputPaths: []string{"stderr"},
-}
-
-// Build the logger with the configuration
-var logger, _ = config.Build()
+// Build the logger. Logs go to stderr only by default; an on-disk debug log is
+// opt-in via the PS_LOG_FILE environment variable and is created with 0600
+// permissions. See localutils.BuildProviderLogger.
+var logger = localutils.BuildProviderLogger("PS_LOG_FILE")
 
 // create a zap logger wrapper
 var zapLogger = logging.NewZapLogger(logger)
@@ -93,6 +85,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 		Attributes: map[string]schema.Attribute{
 			"api_key": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "The API key for making requests to the Password Safe instance. For use when authenticating to Password Safe.",
 			},
 			"client_id": schema.StringAttribute{
@@ -101,6 +94,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"client_secret": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "API OAuth Client Secret.",
 			},
 			"url": schema.StringAttribute{
@@ -129,6 +123,7 @@ func (p *PasswordSafeProvider) Schema(ctx context.Context, req provider.SchemaRe
 			},
 			"client_certificate_password": schema.StringAttribute{
 				Optional:    true,
+				Sensitive:   true,
 				Description: "The password associated with the Client Certificate. For use when authenticating with an API key using a Client Certificate",
 			},
 		},
