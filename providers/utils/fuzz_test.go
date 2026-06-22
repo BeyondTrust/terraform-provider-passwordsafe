@@ -94,7 +94,7 @@ func FuzzValidateChangeFrequencyDays(f *testing.F) {
 }
 
 // FuzzAuthenticationFlow drives the OAuth sign-in handshake
-// (GetPasswordSafeAuthentication -> GetToken -> SignAppin) against a server that
+// (GetPasswordSafeAuthentication -> GetToken -> SignAppIn) against a server that
 // returns fuzzer-controlled bodies and status codes for the token and SignAppIn
 // endpoints. The invariant is simply that parsing untrusted auth responses never
 // panics; an error return is an acceptable outcome for garbage input.
@@ -140,8 +140,8 @@ func FuzzAuthenticationFlow(f *testing.F) {
 // FuzzGetSecretFlow exercises the "get secret by path" retrieval flow
 // (SecretObj.GetSecret -> SecretGetSecretByPath, and the file-download branch
 // when the secret type is FILE) with a fuzzer-controlled path, separator and
-// server payloads. The invariant: the flow never panics, and when it returns a
-// value without error that value matches what the mock served.
+// server payloads. The invariant: the flow never panics; an error return is an
+// acceptable outcome for arbitrary or malformed payloads.
 func FuzzGetSecretFlow(f *testing.F) {
 	// Credential secret found. The full coordinate is "<path><sep><title>".
 	f.Add("path/path2/credential_title", "/",
@@ -182,17 +182,12 @@ func FuzzGetSecretFlow(f *testing.F) {
 
 		// Must never panic. The returned value/err pair is exercised, not asserted,
 		// because valid-but-arbitrary payloads have many legitimate outcomes.
-		got, err := secretObj.GetSecret(secretPath, separator)
-		if err == nil && got == "" && secretListJSON != "" {
-			// No assertion failure here; this is just a touch of the success path
-			// to keep the compiler from eliding `got`.
-			_ = got
-		}
+		_, _ = secretObj.GetSecret(secretPath, separator)
 	})
 }
 
 // FuzzManageAccountFlow exercises the managed-account retrieval flow
-// (ManagedAccountstObj.GetSecret -> ManageAccountFlow), which chains four API
+// (ManagedAccountObj.GetSecret -> ManageAccountFlow), which chains four API
 // calls: ManagedAccountGet, create Request, CredentialByRequestId and check-in.
 // Each step's response body is fuzzer-controlled. The invariant is that the
 // chain never panics for arbitrary system/account paths or server payloads.
