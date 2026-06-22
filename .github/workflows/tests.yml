@@ -50,6 +50,19 @@ jobs:
 
       # Run native Go fuzz targets for a short, bounded time. -run='^$' skips
       # the unit tests (already covered above) so only the fuzz pass executes.
+      # -fuzz accepts a single target per invocation, so loop over each one.
+      # These cover the auth handshake, secret retrieval and managed-account
+      # retrieval flows (against mock servers) plus the change-frequency validator.
       - name: Run fuzz tests
-        run: go test -run='^$' -fuzz='^FuzzValidateChangeFrequencyDays$' -fuzztime=30s ./utils/
+        run: |
+          set -euo pipefail
+          for target in \
+            FuzzValidateChangeFrequencyDays \
+            FuzzAuthenticationFlow \
+            FuzzGetSecretFlow \
+            FuzzManageAccountFlow; do
+            echo "::group::fuzz ${target}"
+            go test -run='^$' -fuzz="^${target}$" -fuzztime=30s ./utils/
+            echo "::endgroup::"
+          done
         working-directory: providers
