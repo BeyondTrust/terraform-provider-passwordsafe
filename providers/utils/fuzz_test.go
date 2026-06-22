@@ -114,7 +114,7 @@ func FuzzAuthenticationFlow(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, tokenBody string, signAppinBody string, tokenStatus int) {
 		// net/http panics on a status code outside [100, 999]; keep it in the
-		// plausible response range so we fuzz behavior, not the stdlib guard.
+		// standard HTTP status-code range [100, 599] so we fuzz behavior, not the stdlib guard.
 		if tokenStatus < 100 || tokenStatus > 599 {
 			tokenStatus = http.StatusOK
 		}
