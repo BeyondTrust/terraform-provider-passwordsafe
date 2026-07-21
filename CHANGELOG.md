@@ -5,6 +5,7 @@
 
 ### Features
 
+
 * [BIPS-28460] [BIPS-28461] [BIPS-28462] implement deletion methods on resources ([#169](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/169)) ([485f25c](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/485f25cfd87eef3ed9546f716b61631bb921e180))
 * add client certificate to the requests to secret safe ([ea34f23](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/ea34f2370b44b75027840e821d9229eae4447a9d))
 * add creating Assets feature in terraform provider ([#109](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/109)) ([3aa47aa](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/3aa47aac2c6c2f03537c4e78275c6ea623df1bb2))
