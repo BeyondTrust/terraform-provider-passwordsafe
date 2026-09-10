@@ -24,12 +24,12 @@ data "passwordsafe_managed_account" "manage_account_01" {
 
 ### Required
 
-- `account_name` (String)
-- `system_name` (String)
+- `account_name` (String) Managed account name.
+- `system_name` (String) System account name. It can contain "/" characters.
 
 ### Optional
 
-- `value` (String, Sensitive)
+- `value` (String, Sensitive) Managed account credential.
 
 ### Read-Only
 
