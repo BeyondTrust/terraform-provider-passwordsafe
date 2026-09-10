@@ -282,6 +282,104 @@ func TestGetManagedAccountReadContext(t *testing.T) {
 
 }
 
+// TestGetManagedAccountReadContextSystemNameWithSeparator covers a system name
+// that contains the "/" character, which used to be split as a path separator
+// and rejected with "empty managed account list" (BIPS-37662).
+func TestGetManagedAccountReadContextSystemNameWithSeparator(t *testing.T) {
+
+	InitializeGlobalConfig()
+
+	systemNameWithSeparator := "Accounts - AD/EntraID"
+
+	rawData := map[string]interface{}{
+		"system_name":  systemNameWithSeparator,
+		"account_name": "account_name",
+		"value":        "",
+	}
+
+	var resourceSchema = map[string]*schema.Schema{
+		"system_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"account_name": &schema.Schema{
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"value": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	}
+
+	data := schema.TestResourceDataRaw(t, resourceSchema, rawData)
+
+	var authenticate, _ = authentication.Authenticate(*authParams)
+
+	var gotSystemName string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		var err error
+
+		switch r.URL.Path {
+
+		case "/Auth/connect/token":
+			_, err = w.Write([]byte(`{"access_token": "fake_token", "expires_in": 600, "token_type": "Bearer", "scope": "publicapi"}`))
+
+		case "/Auth/SignAppIn":
+			_, err = w.Write([]byte(`{"UserId":1, "EmailAddress":"test@beyondtrust.com"}`))
+
+		case "/Auth/Signout":
+			_, err = w.Write([]byte(``))
+
+		case "/ManagedAccounts":
+			gotSystemName = r.URL.Query().Get("systemName")
+			_, err = w.Write([]byte(`{"SystemId":1,"AccountId":10}`))
+
+		case "/Requests":
+			_, err = w.Write([]byte(`124`))
+
+		case "/Credentials/124":
+			_, err = w.Write([]byte(`"fake_credential"`))
+
+		case "/Requests/124/checkin":
+			_, err = w.Write([]byte(``))
+
+		default:
+			http.NotFound(w, r)
+		}
+
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+	}))
+	defer server.Close()
+
+	apiUrl, _ := url.Parse(server.URL + "/")
+	authenticate.ApiUrl = *apiUrl
+
+	diags := getManagedAccountReadContext(context.Background(), data, &providerMeta{authObj: authenticate})
+
+	if diags != nil {
+		t.Fatalf("Test case Failed: %v", diags)
+	}
+
+	if gotSystemName != systemNameWithSeparator {
+		t.Errorf("expected systemName query %q, got %q", systemNameWithSeparator, gotSystemName)
+	}
+
+	if data.Get("value").(string) != "fake_credential" {
+		t.Errorf("expected value %q, got %q", "fake_credential", data.Get("value").(string))
+	}
+
+	if data.Id() != systemNameWithSeparator+"/account_name" {
+		t.Errorf("expected id %q, got %q", systemNameWithSeparator+"/account_name", data.Id())
+	}
+
+}
+
 func TestResourceManagedAccountDelete(t *testing.T) {
 
 	InitializeGlobalConfig()
