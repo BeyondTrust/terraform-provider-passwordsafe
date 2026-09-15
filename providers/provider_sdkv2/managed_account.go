@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/BeyondTrust/go-client-library-passwordsafe/api/entities"
 	managed_accounts "github.com/BeyondTrust/go-client-library-passwordsafe/api/managed_account"
@@ -159,10 +158,10 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 
 	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*meta.authObj, zapLogger)
 
-	// system_name and account_name are passed as separate values instead of a
-	// concatenated "<system_name>/<account_name>" path, so a system name that
-	// contains the "/" separator is retrieved correctly.
-	gotManagedAccount, err := utils.GetManagedAccountSecret(meta.authObj, manageAccountObj, system_name, account_name)
+	// GetManagedAccountSecret takes system_name and account_name as separate
+	// values instead of a concatenated "<system_name>/<account_name>" path, so
+	// a system name that contains the "/" separator is retrieved correctly.
+	gotManagedAccount, err := manageAccountObj.GetManagedAccountSecret(system_name, account_name)
 	if err != nil {
 		return diag.FromErr(err)
 	}

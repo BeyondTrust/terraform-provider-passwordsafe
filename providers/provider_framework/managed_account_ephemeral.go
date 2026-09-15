@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"terraform-provider-passwordsafe/providers/utils"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
@@ -93,11 +92,11 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 		return
 	}
 
-	// getting single managed account from PS API, passing system name and
-	// account name as separate values instead of a concatenated
+	// getting single managed account from PS API. GetManagedAccountSecret takes
+	// system name and account name as separate values instead of a concatenated
 	// "<system_name>/<account_name>" path, so a system name that contains the
 	// "/" separator is retrieved correctly.
-	gotManagedAccount, err := utils.GetManagedAccountSecret(e.providerInfo.authenticationObj, manageAccountObj, data.SystemName.ValueString(), data.AccountName.ValueString())
+	gotManagedAccount, err := manageAccountObj.GetManagedAccountSecret(data.SystemName.ValueString(), data.AccountName.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError("Error getting managed account", err.Error())
