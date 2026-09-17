@@ -20,17 +20,20 @@ func getManagedAccount() *schema.Resource {
 		ReadContext: getManagedAccountReadContext,
 		Schema: map[string]*schema.Schema{
 			"system_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "System account name. It can contain \"/\" characters.",
 			},
 			"account_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Managed account name.",
 			},
 			"value": &schema.Schema{
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Managed account credential.",
 			},
 		},
 	}
@@ -154,7 +157,11 @@ func getManagedAccountReadContext(ctx context.Context, d *schema.ResourceData, m
 	coordinate := system_name + "/" + account_name
 
 	manageAccountObj, _ := managed_accounts.NewManagedAccountObj(*meta.authObj, zapLogger)
-	gotManagedAccount, err := manageAccountObj.GetSecret(coordinate, "/")
+
+	// GetManagedAccountSecret takes system_name and account_name as separate
+	// values instead of a concatenated "<system_name>/<account_name>" path, so
+	// a system name that contains the "/" separator is retrieved correctly.
+	gotManagedAccount, err := manageAccountObj.GetManagedAccountSecret(system_name, account_name)
 	if err != nil {
 		return diag.FromErr(err)
 	}

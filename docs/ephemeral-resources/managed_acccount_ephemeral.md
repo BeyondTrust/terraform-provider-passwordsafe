@@ -25,8 +25,8 @@ ephemeral "passwordsafe_managed_acccount_ephemeral" "managed_account" {
 
 ### Required
 
-- `account_name` (String) Managed account name
-- `system_name` (String) System account name
+- `account_name` (String) Managed account name.
+- `system_name` (String) System account name. It can contain "/" characters.
 
 ### Read-Only
 

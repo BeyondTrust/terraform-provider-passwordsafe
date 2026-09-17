@@ -40,14 +40,14 @@ func (e *EphemeralManagedAccount) Schema(ctx context.Context, _ ephemeral.Schema
 
 		Attributes: map[string]schema.Attribute{
 			"system_name": schema.StringAttribute{
-				Description: "System account name",
+				Description: "System account name. It can contain \"/\" characters.",
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 128),
 				},
 			},
 			"account_name": schema.StringAttribute{
-				Description: "Managed account name",
+				Description: "Managed account name.",
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 245),
@@ -92,8 +92,11 @@ func (e *EphemeralManagedAccount) Open(ctx context.Context, request ephemeral.Op
 		return
 	}
 
-	// getting single managed account from PS API
-	gotManagedAccount, err := manageAccountObj.GetSecret(data.SystemName.ValueString()+"/"+data.AccountName.ValueString(), "/")
+	// getting single managed account from PS API. GetManagedAccountSecret takes
+	// system name and account name as separate values instead of a concatenated
+	// "<system_name>/<account_name>" path, so a system name that contains the
+	// "/" separator is retrieved correctly.
+	gotManagedAccount, err := manageAccountObj.GetManagedAccountSecret(data.SystemName.ValueString(), data.AccountName.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError("Error getting managed account", err.Error())
