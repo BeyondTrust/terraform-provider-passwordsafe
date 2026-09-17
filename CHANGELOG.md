@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.1](https://github.com/BeyondTrust/terraform-provider-passwordsafe/compare/v1.3.0...v1.3.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* BIPS-37662 retrieve managed accounts when system_name contains a "/" ([#224](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/224)) ([1b864e4](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/1b864e44db3c4b260e0adecd2dfea5a88cc89b3e))
+* **deps:** BIPS-40840 remediate GHSA-hrxh-6v49-42gf and 3 other Go vulnerabilities ([#219](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/219)) ([f64bca4](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/f64bca43527fae99575c1d9e8f4fc52e055014a2))
+* **deps:** BIPS-41631 bump go directive to 1.26.7 for 4 stdlib advisories ([a0101be](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/a0101be47daae82646a0f98f0d9189737713585b))
+* **deps:** BIPS-41631 bump go directive to 1.26.7 to clear 4 reachable stdlib advisories ([#222](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/222)) ([a0101be](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/a0101be47daae82646a0f98f0d9189737713585b))
+* **deps:** remediate GHSA-hrxh-6v49-42gf and 3 other Go vulnerabilities ([f64bca4](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/f64bca43527fae99575c1d9e8f4fc52e055014a2))
+
 ## [1.3.0](https://github.com/BeyondTrust/terraform-provider-passwordsafe/compare/v1.2.3...v1.3.0) (2026-06-16)
 
 
