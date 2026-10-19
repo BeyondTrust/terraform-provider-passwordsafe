@@ -285,12 +285,17 @@ func getTotpEnabledOnCreate(d *schema.ResourceData) *bool {
 
 // getTotpUpdate returns the TOTP fields of a credential secret update. When neither TOTP
 // attribute changed, nothing is sent (nil) and the server leaves the TOTP setting untouched.
-// Otherwise totp_enabled is sent as is (unset means false, which disables TOTP).
+// Otherwise totp_enabled is sent as is (unset means false, which disables TOTP). The seed is
+// sent only when enabling: the API rejects a seed alongside TotpEnabled=false, so a retained
+// totp_secret_key must not block disabling TOTP.
 func getTotpUpdate(d *schema.ResourceData) (*bool, string) {
 	if !d.HasChanges("totp_enabled", "totp_secret_key") {
 		return nil, ""
 	}
 	enabled := d.Get("totp_enabled").(bool)
+	if !enabled {
+		return &enabled, ""
+	}
 	return &enabled, d.Get("totp_secret_key").(string)
 }
 

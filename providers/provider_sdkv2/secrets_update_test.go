@@ -274,6 +274,24 @@ func TestResourceCredentialSecretUpdateEnablesTotp(t *testing.T) {
 	assert.Equal(t, testTotpSeed, payload["TotpSecretKey"])
 }
 
+func TestResourceCredentialSecretUpdateDisablesTotpRetainingSeed(t *testing.T) {
+	mock := newSecretMockServer(t)
+	meta := newSecretTestMeta(t, mock, "3.3")
+
+	// Toggling only totp_enabled to false while keeping totp_secret_key must not send the seed.
+	prior := credentialSecretAttributes(map[string]interface{}{"totp_enabled": true, "totp_secret_key": testTotpSeed})
+	config := credentialSecretAttributes(map[string]interface{}{"totp_enabled": false, "totp_secret_key": testTotpSeed})
+
+	_, err := applySecretUpdate(t, resourceCredentialSecret(), prior, config, meta)
+	require.NoError(t, err)
+
+	requests := mock.recorded()
+	require.Len(t, requests, 1)
+	payload := decodeBody(t, requests[0].body)
+	assert.Equal(t, false, payload["TotpEnabled"])
+	assert.NotContains(t, payload, "TotpSecretKey")
+}
+
 func TestResourceCredentialSecretUpdateReplacesTotpSeed(t *testing.T) {
 	mock := newSecretMockServer(t)
 	meta := newSecretTestMeta(t, mock, "3.3")
