@@ -161,6 +161,7 @@ List of available datasources:
 - **passwordsafe_secret**: retrieve a secret
 - **passwordsafe_managed_acccount_ephemeral**: retrieve a managed account secret. (ephemeral datasource)
 - **passwordsafe_secret_ephemeral**: retrieve a secret. (ephemeral datasource)
+- **passwordsafe_secret_totp_code_ephemeral**: retrieve the current TOTP code of a credential secret, API version 3.3. (ephemeral datasource)
 
 **Datasources to retrieve lists**
 
@@ -326,6 +327,16 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
 > 
 > Ephemeral resources are available in Terraform v1.10 and later.
 
+#### Get the current TOTP code of a credential secret
+
+_passwordsafe_secret_totp_code_ephemeral_ returns the current TOTP code of a credential secret with TOTP enabled, and the window in which the code is valid (`valid_from_utc` inclusive, `valid_to_utc` exclusive). It requires `api_version = "3.3"`.
+
+```
+ephemeral "passwordsafe_secret_totp_code_ephemeral" "totp" {
+  secret_id = passwordsafe_credential_secret.my_credenial_secret.id
+}
+```
+
 ### Create Secrets, folder and safes
 
  You can create three types of secrets: 
@@ -336,13 +347,15 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
 
 You need to define the parent folder name. If the parent folder does not exist, you must create it before creating the secret.
 
+Changes to a secret are applied in place, except `folder_name`: the API does not move a secret to another folder, so changing it replaces the secret. An update replaces the whole secret with the configuration.
+
 #### Create Credential Secret
 
 > ✅ **Example**
 
 ```
 # create credential secret
-# Supported versions: 3.0, 3.1, and 3.2.
+# Supported versions: 3.0, 3.1, 3.2 and 3.3.
 resource "passwordsafe_credential_secret" "my_credenial_secret" {
   folder_name = "folder1"
   title = "Credential_Secret_from_Terraform"
@@ -390,6 +403,30 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
 - A password or a PasswordRuleID is required.
   - If a PasswordRuleID is passed in, then a password is generated (based on the Password Policy defined by the PasswordPolicyID).
   - If a password is passed in instead, the same behavior is followed (using that as the password).
+
+#### Credential Secret with TOTP
+
+With `api_version = "3.3"` (Secrets Safe 26.3 or later), a credential secret can hold a TOTP seed.
+
+> ✅ **Example**
+
+```
+resource "passwordsafe_credential_secret" "totp_secret" {
+  folder_name     = "folder1"
+  title           = "Credential_Secret_with_TOTP"
+  username        = "my_user_name"
+  password        = "password_content"
+  owner_type      = "User"
+  group_id        = 1
+  totp_enabled    = true
+  totp_secret_key = var.totp_seed
+}
+```
+
+- `totp_secret_key` is a Base32 secret or an `otpauth://` URI, up to 1024 characters. The API never returns it.
+- `totp_enabled = true` requires `totp_secret_key`, and `totp_secret_key` requires `totp_enabled = true`.
+- Changing `totp_secret_key` replaces the seed. Setting `totp_enabled = false`, or removing both attributes, disables TOTP.
+- The TOTP attributes are rejected with API versions below 3.3.
 
 #### Create Text Secret
 

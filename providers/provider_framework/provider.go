@@ -322,6 +322,7 @@ func (p *PasswordSafeProvider) EphemeralResources(ctx context.Context) []func() 
 	return []func() ephemeral.EphemeralResource{
 		NewEphemeralSecret,
 		NewEphemeralManagedAccount,
+		NewEphemeralSecretTotpCode,
 	}
 }
 
