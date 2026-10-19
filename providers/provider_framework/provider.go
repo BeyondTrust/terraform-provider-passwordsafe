@@ -302,6 +302,7 @@ func (p *PasswordSafeProvider) DataSources(ctx context.Context) []func() datasou
 		NewManagedAccountDataSource,
 		NewManagedSystemDataSource,
 		NewAssetDataSource,
+		NewSecretTotpCodeDataSource,
 	}
 }
 

@@ -4,7 +4,6 @@ package provider_framework
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -15,9 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
-
-// totpApiVersion is the first Password Safe API version that returns TOTP codes.
-const totpApiVersion = "3.3"
 
 var uuidRegex = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
 
@@ -88,13 +84,6 @@ func (e *EphemeralSecretTotpCode) Open(ctx context.Context, request ephemeral.Op
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	// The TOTP code endpoint only exists in API v3.3; fail with a clear message instead of a
-	// server 404 that reads like "TOTP is not enabled".
-	if e.providerInfo.apiVersion != totpApiVersion {
-		response.Diagnostics.AddError("Error getting TOTP code", fmt.Sprintf("TOTP codes require api_version %v in the provider configuration, got: %q", totpApiVersion, e.providerInfo.apiVersion))
 		return
 	}
 

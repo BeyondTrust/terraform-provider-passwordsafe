@@ -117,15 +117,6 @@ func TestEphemeralSecretTotpCodeNotCredentialSecret(t *testing.T) {
 	})
 }
 
-func TestEphemeralSecretTotpCodeRequiresApiVersion33(t *testing.T) {
-	server := newTotpCodeMockServer(t, http.StatusOK, `{"Code": "123456"}`)
-
-	runTotpCodeTest(t, resource.TestStep{
-		Config:      totpCodeTestConfig(server.URL, "3.2", totpCodeSecretId),
-		ExpectError: regexp.MustCompile(`TOTP codes require api_version 3.3`),
-	})
-}
-
 func TestEphemeralSecretTotpCodeInvalidSecretId(t *testing.T) {
 	server := newTotpCodeMockServer(t, http.StatusOK, `{"Code": "123456"}`)
 
