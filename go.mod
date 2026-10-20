@@ -16,8 +16,6 @@ require (
 )
 
 require (
-	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
-	github.com/AdamKorcz/go-118-fuzz-build v0.0.0-20250520111509-a70c2aa677fa // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
@@ -43,7 +41,7 @@ require (
 )
 
 require (
-	github.com/BeyondTrust/go-client-library-passwordsafe v1.3.5-0.20261016170724-d671b1dc0aac
+	github.com/BeyondTrust/go-client-library-passwordsafe v1.4.0
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
