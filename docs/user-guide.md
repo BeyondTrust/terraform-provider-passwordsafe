@@ -161,6 +161,8 @@ List of available datasources:
 - **passwordsafe_secret**: retrieve a secret
 - **passwordsafe_managed_acccount_ephemeral**: retrieve a managed account secret. (ephemeral datasource)
 - **passwordsafe_secret_ephemeral**: retrieve a secret. (ephemeral datasource)
+- **passwordsafe_secret_totp_code**: retrieve the current TOTP code of a credential secret, API version 3.3.
+- **passwordsafe_secret_totp_code_ephemeral**: retrieve the current TOTP code of a credential secret, API version 3.3. (ephemeral datasource)
 
 **Datasources to retrieve lists**
 
@@ -248,9 +250,9 @@ Sends data to Password Safe API.
 List of Available Resources:
 
 - **passwordsafe_managed_account**: create managed account.
-- **passwordsafe_credential_secret**: create credential secret.
-- **passwordsafe_text_secret**: create text secret.
-- **passwordsafe_file_secret**: create file secret.
+- **passwordsafe_credential_secret**: create and update credential secret (TOTP with API version 3.3).
+- **passwordsafe_text_secret**: create and update text secret.
+- **passwordsafe_file_secret**: create and update file secret.
 - **passwordsafe_folder**: create folder.
 - **passwordsafe_safe**: create safe.
 - **passwordsafe_workgroup**: create workgroup.
@@ -301,6 +303,18 @@ data "passwordsafe_secret" "secret_file" {
 }
 ```
 
+#### Get the current TOTP code of a credential secret
+
+_passwordsafe_secret_totp_code_ returns the current TOTP code of a credential secret with TOTP enabled, and the window in which the code is valid (`valid_from_utc` inclusive, `valid_to_utc` exclusive). It requires `api_version = "3.3"`.
+
+The code is read again on every plan and refresh. It is stored in the state as a sensitive value and is only valid for its window (usually 30 seconds), so read it in the same run that uses it. To keep the code out of the state, use _passwordsafe_secret_totp_code_ephemeral_ (see below).
+
+```
+data "passwordsafe_secret_totp_code" "totp" {
+  secret_id = passwordsafe_credential_secret.my_credenial_secret.id
+}
+```
+
 ### Configure Secrets Retrieval using ephemeral resources
 
 The first data block in the example below, _passwordsafe_managed_account_ephemeral_, is used to retrieve managed account secrets using an ephemeral resource.
@@ -326,6 +340,16 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
 > 
 > Ephemeral resources are available in Terraform v1.10 and later.
 
+#### Get the current TOTP code of a credential secret using an ephemeral resource
+
+_passwordsafe_secret_totp_code_ephemeral_ returns the same attributes as _passwordsafe_secret_totp_code_ (`code`, `valid_from_utc`, `valid_to_utc`) without storing the code in the state. It requires `api_version = "3.3"`.
+
+```
+ephemeral "passwordsafe_secret_totp_code_ephemeral" "totp" {
+  secret_id = passwordsafe_credential_secret.my_credenial_secret.id
+}
+```
+
 ### Create Secrets, folder and safes
 
  You can create three types of secrets: 
@@ -336,13 +360,15 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
 
 You need to define the parent folder name. If the parent folder does not exist, you must create it before creating the secret.
 
+Changes to a secret are applied in place, except `folder_name`: the API does not move a secret to another folder, so changing it replaces the secret. An update replaces the whole secret with the configuration.
+
 #### Create Credential Secret
 
 > ✅ **Example**
 
 ```
 # create credential secret
-# Supported versions: 3.0, 3.1, and 3.2.
+# Supported versions: 3.0, 3.1, 3.2 and 3.3.
 resource "passwordsafe_credential_secret" "my_credenial_secret" {
   folder_name = "folder1"
   title = "Credential_Secret_from_Terraform"
@@ -391,13 +417,37 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
   - If a PasswordRuleID is passed in, then a password is generated (based on the Password Policy defined by the PasswordPolicyID).
   - If a password is passed in instead, the same behavior is followed (using that as the password).
 
+#### Credential Secret with TOTP
+
+With `api_version = "3.3"` (Secrets Safe 26.3 or later), a credential secret can hold a TOTP seed.
+
+> ✅ **Example**
+
+```
+resource "passwordsafe_credential_secret" "totp_secret" {
+  folder_name     = "folder1"
+  title           = "Credential_Secret_with_TOTP"
+  username        = "my_user_name"
+  password        = "password_content"
+  owner_type      = "User"
+  group_id        = 1
+  totp_enabled    = true
+  totp_secret_key = var.totp_seed
+}
+```
+
+- `totp_secret_key` is a Base32 secret or an `otpauth://` URI, up to 1024 characters. The API never returns it.
+- `totp_enabled = true` requires `totp_secret_key`, and `totp_secret_key` requires `totp_enabled = true`.
+- Changing `totp_secret_key` replaces the seed. Setting `totp_enabled = false`, or removing both attributes, disables TOTP.
+- With API versions below 3.3, `totp_enabled = true` and `totp_secret_key` are rejected before any request is sent. `totp_enabled = false` is accepted, because TOTP is off by default.
+
 #### Create Text Secret
 
 > ✅ **Example**
 
 ```
 # create text secret
-# Supported versions: 3.0, 3.1, and 3.2.
+# Supported versions: 3.0, 3.1, 3.2 and 3.3.
 resource "passwordsafe_text_secret" "my_text_secret" {
   folder_name = "folder1"
   title = "Text_Secret_from_Terraform"
@@ -444,7 +494,7 @@ resource "passwordsafe_text_secret" "my_text_secret" {
 
 ```
 # create file secret
-# Supported versions: 3.0, 3.1, and 3.2.
+# Supported versions: 3.0, 3.1, 3.2 and 3.3.
 resource "passwordsafe_file_secret" "my_file_secret" {
   folder_name = "folder1"
   title = "File_Secret_from_Terraform"

@@ -153,9 +153,25 @@ ephemeral "passwordsafe_secret_ephemeral" "secret" {
 }
 ```
 
+### Get the current TOTP code of a credential secret (API version 3.3)
+
+```terraform
+# stored in the state as a sensitive value, read again on every plan and refresh
+data "passwordsafe_secret_totp_code" "totp" {
+  secret_id = passwordsafe_credential_secret.my_totp_credenial_secret.id
+}
+
+# not stored in the state
+ephemeral "passwordsafe_secret_totp_code_ephemeral" "totp" {
+  secret_id = passwordsafe_credential_secret.my_totp_credenial_secret.id
+}
+```
+
 ### Create Secrets, folder and safes
 
 There are three types of secrets you can create: credential, text, and file. You need to define the parent folder name. If the parent folder does not exist, you must create it before creating the secret.
+
+Changes to a secret are applied in place, except `folder_name`, which replaces the secret. With API version 3.3, credential secrets support TOTP through `totp_enabled` and `totp_secret_key`.
 
 ```terraform
 # create credential secret
@@ -181,6 +197,17 @@ resource "passwordsafe_credential_secret" "my_credenial_secret" {
     credential_id = 1
     url = "https://www.beyondtrust.com/"
   }
+}
+
+# create credential secret with TOTP (API version 3.3)
+resource "passwordsafe_credential_secret" "my_totp_credenial_secret" {
+  folder_name     = "folder1"
+  title           = "Credential_Secret_TOTP_from_Terraform"
+  username        = "my_user_name"
+  password        = "password_content"
+  owner_type      = "User"
+  totp_enabled    = true
+  totp_secret_key = var.totp_seed
 }
 
 # create text secret

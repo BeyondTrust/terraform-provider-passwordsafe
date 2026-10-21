@@ -302,6 +302,7 @@ func (p *PasswordSafeProvider) DataSources(ctx context.Context) []func() datasou
 		NewManagedAccountDataSource,
 		NewManagedSystemDataSource,
 		NewAssetDataSource,
+		NewSecretTotpCodeDataSource,
 	}
 }
 
@@ -322,6 +323,7 @@ func (p *PasswordSafeProvider) EphemeralResources(ctx context.Context) []func() 
 	return []func() ephemeral.EphemeralResource{
 		NewEphemeralSecret,
 		NewEphemeralManagedAccount,
+		NewEphemeralSecretTotpCode,
 	}
 }
 
