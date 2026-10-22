@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/BeyondTrust/terraform-provider-passwordsafe/compare/v1.3.1...v1.4.0) (2026-10-22)
+
+
+### Features
+
+* BIPS-43270 support PAPI 3.3 TOTP and in-place secret updates ([#226](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/226)) ([5fd51ff](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/5fd51ff89b08962bc5ed66032e552430ea8e30e5))
+
+
+### Bug Fixes
+
+* **deps:** bump go directive to 1.26.10 ([4ef9d3a](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/4ef9d3aba7b2d3cc6f344e9bfe13602cb8135d06))
+* **deps:** bump go directive to 1.26.10 for GO-2026-6809 ([#230](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/230)) ([4ef9d3a](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/4ef9d3aba7b2d3cc6f344e9bfe13602cb8135d06))
+* **deps:** bump golang.org/x/net to v0.60.0 and Go to 1.26.9 ([#228](https://github.com/BeyondTrust/terraform-provider-passwordsafe/issues/228)) ([b92d65e](https://github.com/BeyondTrust/terraform-provider-passwordsafe/commit/b92d65ed4d6620ec26b73f524a60699614a7d1b3))
+
 ## [1.3.1](https://github.com/BeyondTrust/terraform-provider-passwordsafe/compare/v1.3.0...v1.3.1) (2026-09-17)
 
 
