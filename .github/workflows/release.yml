@@ -144,6 +144,7 @@ jobs:
     # Not gated on sbom: it's a workflow artifact, so it runs in parallel and never blocks publish.
     needs: [release-please, goreleaser]
     if: needs.release-please.outputs.release_created == 'true'
+    environment: release
     permissions:
       contents: write  # flip the release out of draft
     steps:
