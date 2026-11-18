@@ -1,0 +1,10 @@
+version: 1
+environments:
+  release:
+    wait_for:
+      gate: ps-integration
+    trusted:
+      teams: [password-safe-integrations-contractors]
+    approvers:
+      teams: [password-safe-integrations-admin]
+    untrusted: pending
